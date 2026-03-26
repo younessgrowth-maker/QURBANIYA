@@ -9,6 +9,30 @@ const nextConfig = {
     ],
     formats: ["image/avif", "image/webp"],
   },
+  async redirects() {
+    return [
+      {
+        source: "/offrandes",
+        destination: "/commander",
+        permanent: true,
+      },
+      {
+        source: "/offres",
+        destination: "/commander",
+        permanent: true,
+      },
+      {
+        source: "/sacrifice",
+        destination: "/commander",
+        permanent: true,
+      },
+      {
+        source: "/sacrifice-aid-2026",
+        destination: "/commander",
+        permanent: true,
+      },
+    ];
+  },
   async headers() {
     return [
       {

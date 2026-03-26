@@ -3,6 +3,7 @@ import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import FAQ from "@/components/sections/FAQ";
 import { FAQPageJsonLd, BreadcrumbJsonLd } from "@/components/seo/JsonLd";
+import Breadcrumb from "@/components/ui/Breadcrumb";
 
 export const metadata: Metadata = {
   title: "FAQ — Questions fréquentes sur le sacrifice de l'Aïd",
@@ -28,6 +29,11 @@ export default function FAQPage() {
       ]} />
       <Header />
       <main className="pt-24 pb-16 bg-bg-primary">
+        <div className="max-w-3xl mx-auto px-4">
+          <Breadcrumb items={[
+            { label: "FAQ" },
+          ]} />
+        </div>
         <FAQ />
       </main>
       <Footer />

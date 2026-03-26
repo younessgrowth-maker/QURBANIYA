@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowLeft, Calendar, Clock, ArrowRight } from "lucide-react";
+import { BreadcrumbJsonLd } from "@/components/seo/JsonLd";
 
 export const metadata: Metadata = {
   title: "Date de l\u2019A\u00efd al-Adha 2026 : tout ce qu\u2019il faut savoir",
@@ -54,6 +55,11 @@ export default function ArticleDateAid() {
   return (
     <>
       <ArticleJsonLd />
+      <BreadcrumbJsonLd items={[
+        { name: "Accueil", url: "https://qurbaniya.fr" },
+        { name: "Blog", url: "https://qurbaniya.fr/blog" },
+        { name: "Date Aïd al-Adha 2026", url: "https://qurbaniya.fr/blog/date-aid-al-adha-2026" },
+      ]} />
       <article className="max-w-3xl mx-auto px-4">
         {/* Breadcrumb */}
         <nav className="flex items-center gap-2 text-sm text-text-muted-light mb-8 font-inter">

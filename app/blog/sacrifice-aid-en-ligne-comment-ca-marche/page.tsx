@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowLeft, Calendar, Clock, ArrowRight, Check } from "lucide-react";
+import { BreadcrumbJsonLd } from "@/components/seo/JsonLd";
 
 export const metadata: Metadata = {
   title: "Sacrifice de l'Aid en ligne : comment ca marche ?",
@@ -54,6 +55,11 @@ export default function ArticleSacrificeEnLigne() {
   return (
     <>
       <ArticleJsonLd />
+      <BreadcrumbJsonLd items={[
+        { name: "Accueil", url: "https://qurbaniya.fr" },
+        { name: "Blog", url: "https://qurbaniya.fr/blog" },
+        { name: "Sacrifice en ligne", url: "https://qurbaniya.fr/blog/sacrifice-aid-en-ligne-comment-ca-marche" },
+      ]} />
       <article className="max-w-3xl mx-auto px-4">
         {/* Breadcrumb */}
         <nav className="flex items-center gap-2 text-sm text-text-muted-light mb-8 font-inter">

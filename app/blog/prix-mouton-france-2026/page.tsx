@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowLeft, Calendar, Clock, ArrowRight, X, Check } from "lucide-react";
+import { BreadcrumbJsonLd } from "@/components/seo/JsonLd";
 
 export const metadata: Metadata = {
   title: "Prix du mouton en France 2026 : pourquoi déléguer est plus malin",
@@ -54,6 +55,11 @@ export default function ArticlePrixMouton() {
   return (
     <>
       <ArticleJsonLd />
+      <BreadcrumbJsonLd items={[
+        { name: "Accueil", url: "https://qurbaniya.fr" },
+        { name: "Blog", url: "https://qurbaniya.fr/blog" },
+        { name: "Prix mouton France 2026", url: "https://qurbaniya.fr/blog/prix-mouton-france-2026" },
+      ]} />
       <article className="max-w-3xl mx-auto px-4">
         {/* Breadcrumb */}
         <nav className="flex items-center gap-2 text-sm text-text-muted-light mb-8 font-inter">

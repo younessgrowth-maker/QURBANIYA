@@ -3,6 +3,7 @@ import Header from "@/components/layout/Header";
 import OrderForm from "@/components/forms/OrderForm";
 import OrderSummary from "@/components/forms/OrderSummary";
 import { ProductJsonLd, BreadcrumbJsonLd } from "@/components/seo/JsonLd";
+import Breadcrumb from "@/components/ui/Breadcrumb";
 
 export const metadata: Metadata = {
   title: "Commander mon sacrifice de l'Aïd 2026 | Mouton + Vidéo nominative",
@@ -29,6 +30,9 @@ export default function CommanderPage() {
       <Header />
       <main className="min-h-screen bg-bg-primary pt-24 pb-16 px-4">
         <div className="max-w-5xl mx-auto">
+          <Breadcrumb items={[
+            { label: "Commander mon sacrifice", },
+          ]} />
           {/* Page header */}
           <div className="text-center mb-10">
             <h1 className="text-3xl md:text-4xl font-black uppercase mb-2">

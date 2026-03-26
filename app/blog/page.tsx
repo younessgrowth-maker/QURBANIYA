@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight, Calendar, Clock } from "lucide-react";
+import { BreadcrumbJsonLd } from "@/components/seo/JsonLd";
 
 export const metadata: Metadata = {
   title: "Blog — Guides et conseils sur le sacrifice de l'Aïd",
@@ -49,6 +50,10 @@ const articles = [
 export default function BlogPage() {
   return (
     <div className="max-w-4xl mx-auto px-4">
+      <BreadcrumbJsonLd items={[
+        { name: "Accueil", url: "https://qurbaniya.fr" },
+        { name: "Blog", url: "https://qurbaniya.fr/blog" },
+      ]} />
       {/* Page header */}
       <div className="text-center mb-12">
         <span className="text-gold text-xs font-bold uppercase tracking-[0.2em] mb-3 block font-inter">
