@@ -31,7 +31,7 @@ export default function Hero({ remainingSlots = 47, aidDate = "Juin 2025" }: Her
     <>
       {/* Fullscreen Hero */}
       <section className="relative min-h-[92vh] flex items-center overflow-hidden">
-        <Image src={HERO_IMAGE} alt="" fill className="object-cover" priority sizes="100vw" aria-hidden="true" />
+        <Image src={HERO_IMAGE} alt="Mouton pour le sacrifice de l'Aïd al-Adha 2026 — Qurbaniya" fill className="object-cover" priority sizes="100vw" />
         <div className="absolute inset-0 bg-gradient-to-r from-[#1B4332]/92 via-[#1B4332]/78 to-[#1B4332]/50" />
         <div className="absolute inset-0 bg-gradient-to-t from-[#1B4332]/50 to-transparent" />
 

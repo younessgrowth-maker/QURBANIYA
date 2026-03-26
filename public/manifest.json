@@ -1,0 +1,16 @@
+{
+  "name": "Qurbaniya — Sacrifice Aïd en ligne",
+  "short_name": "Qurbaniya",
+  "description": "Déléguez votre sacrifice de l'Aïd al-Adha en ligne. Mouton conforme à la Sounnah avec vidéo nominative.",
+  "start_url": "/",
+  "display": "standalone",
+  "theme_color": "#1B4332",
+  "background_color": "#FEFCF8",
+  "icons": [
+    {
+      "src": "/logos/qurbaniya-symbol.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}

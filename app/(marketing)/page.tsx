@@ -1,3 +1,4 @@
+import { ProductJsonLd, FAQPageJsonLd, EventJsonLd, BreadcrumbJsonLd } from "@/components/seo/JsonLd";
 import Hero from "@/components/sections/Hero";
 import StockGauge from "@/components/ui/StockGauge";
 import TrustBar from "@/components/ui/TrustBar";
@@ -23,6 +24,13 @@ function Divider() {
 export default function HomePage() {
   return (
     <>
+      <ProductJsonLd />
+      <FAQPageJsonLd />
+      <EventJsonLd />
+      <BreadcrumbJsonLd items={[
+        { name: "Accueil", url: "https://qurbaniya.fr" },
+        { name: "Sacrifice Aïd 2026", url: "https://qurbaniya.fr/commander" },
+      ]} />
       <Hero />
       <div className="bg-bg-primary section-padding !py-6 md:!py-8">
         <StockGauge />

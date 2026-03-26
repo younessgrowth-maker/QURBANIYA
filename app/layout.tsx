@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter, Playfair_Display } from "next/font/google";
 import "./globals.css";
+import { OrganizationJsonLd, WebSiteJsonLd } from "@/components/seo/JsonLd";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -16,16 +17,79 @@ const playfair = Playfair_Display({
 });
 
 export const metadata: Metadata = {
-  title: "Qurbaniya \u2014 Votre sacrifice conforme \u00e0 la Sunnah",
+  metadataBase: new URL("https://qurbaniya.fr"),
+  title: {
+    default: "Sacrifice Aïd al-Adha 2026 en ligne | Mouton avec vidéo nominative | Qurbaniya",
+    template: "%s | Qurbaniya",
+  },
   description:
-    "Commandez votre mouton pour l\u2019A\u00efd el-K\u00e9bir ou l\u2019Aqiqa. Sacrifice conforme, preuve vid\u00e9o WhatsApp, cheikh dipl\u00f4m\u00e9. 140\u20ac tout inclus.",
+    "Déléguez votre sacrifice de l'Aïd al-Adha 2026 en Afrique. Mouton sacrifié en votre nom, conforme à la Sounnah, avec preuve vidéo nominative. À partir de 140€. +500 contributeurs satisfaits.",
+  keywords: [
+    "sacrifice aid 2026",
+    "mouton aid en ligne",
+    "qurban france",
+    "oudhiya en ligne",
+    "sacrifice aid al adha",
+    "aqiqa en ligne",
+    "sacrifice mouton en ligne",
+    "aid el kebir 2026 sacrifice",
+    "sacrifice aid al adha pas cher",
+    "déléguer sacrifice aid",
+    "sacrifice conforme sounnah",
+    "fête du mouton 2026",
+    "qurban en ligne france",
+  ],
+  authors: [{ name: "Qurbaniya" }],
+  creator: "Qurbaniya",
+  publisher: "Qurbaniya",
+  formatDetection: {
+    email: false,
+    address: false,
+    telephone: false,
+  },
   openGraph: {
-    title: "Qurbaniya \u2014 Sacrifice conforme \u00e0 la Sunnah",
-    description: "Mouton 140\u20ac \u2014 Sacrifice film\u00e9, conforme, preuve vid\u00e9o par WhatsApp.",
+    title: "Sacrifice Aïd al-Adha 2026 — Mouton + Vidéo nominative | Qurbaniya",
+    description:
+      "Déléguez votre sacrifice en toute confiance. Mouton conforme à la Sounnah, vidéo nominative par WhatsApp, à partir de 140€.",
     url: "https://qurbaniya.fr",
     siteName: "Qurbaniya",
     locale: "fr_FR",
     type: "website",
+    images: [
+      {
+        url: "/og-sacrifice-aid-2026.png",
+        width: 1200,
+        height: 630,
+        alt: "Qurbaniya — Sacrifice Aïd al-Adha 2026 avec vidéo nominative",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Sacrifice Aïd al-Adha 2026 — Mouton + Vidéo nominative",
+    description:
+      "Déléguez votre sacrifice en toute confiance. Vidéo nominative, conforme à la Sounnah, à partir de 140€.",
+    images: ["/og-sacrifice-aid-2026.png"],
+  },
+  alternates: {
+    canonical: "https://qurbaniya.fr",
+    languages: {
+      "fr-FR": "https://qurbaniya.fr",
+    },
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-video-preview": -1,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
+  },
+  verification: {
+    // google: "YOUR_GOOGLE_VERIFICATION_CODE",  // To be added later
   },
 };
 
@@ -36,7 +100,17 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="fr" className={`${inter.variable} ${playfair.variable}`}>
-      <body className="antialiased">{children}</body>
+      <head>
+        <link rel="icon" href="/favicon.ico" sizes="any" />
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+        <link rel="manifest" href="/manifest.json" />
+        <meta name="theme-color" content="#1B4332" />
+      </head>
+      <body className="antialiased">
+        <OrganizationJsonLd />
+        <WebSiteJsonLd />
+        {children}
+      </body>
     </html>
   );
 }
