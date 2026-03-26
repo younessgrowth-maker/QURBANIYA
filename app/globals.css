@@ -2,26 +2,268 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@media (prefers-color-scheme: dark) {
+@layer base {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --transition-fast: 150ms;
+    --transition-base: 250ms;
+    --transition-slow: 500ms;
+    --transition-slower: 700ms;
+    --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+    --ease-out-quart: cubic-bezier(0.25, 1, 0.5, 1);
+
+    /* Colors for reuse in CSS animations */
+    --color-gold: #B8860B;
+    --color-gold-light: #D4A843;
+    --color-primary: #1B4332;
+    --color-primary-light: #2D6A4F;
+  }
+
+  body {
+    @apply bg-bg-primary text-text-primary font-inter;
+    font-size: 17px;
+    line-height: 1.7;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-playfair;
+  }
+
+  ::selection {
+    background-color: rgba(27, 67, 50, 0.12);
+    color: #1A1A18;
   }
 }
 
-body {
-  color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
+@layer components {
+  .btn-primary {
+    @apply bg-primary text-white font-inter font-bold uppercase text-base
+           px-8 py-4 rounded-button
+           transition-all duration-300
+           hover:bg-primary-light
+           shadow-glow-primary;
+  }
+
+  .section-padding {
+    @apply px-5 py-12 md:px-8 lg:py-16;
+  }
+
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
+  .glass {
+    backdrop-filter: blur(16px) saturate(180%);
+    -webkit-backdrop-filter: blur(16px) saturate(180%);
+  }
+
+  .section-divider {
+    @apply w-full h-px bg-gradient-to-r from-transparent via-primary/10 to-transparent;
+  }
+
+  /* ── Button shine effect ── */
+  .btn-shine {
+    position: relative;
+    overflow: hidden;
+  }
+  .btn-shine::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+      120deg,
+      transparent 30%,
+      rgba(255, 255, 255, 0.15) 50%,
+      transparent 70%
+    );
+    transition: left var(--transition-slow) var(--ease-out-expo);
+    pointer-events: none;
+  }
+
+  /* ── Nav link animated underline ── */
+  .nav-link-animated {
+    position: relative;
+  }
+  .nav-link-animated::after {
+    content: "";
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    width: 0;
+    height: 1.5px;
+    background: var(--color-gold);
+    transition: width var(--transition-base) var(--ease-out-expo);
+  }
+
+  /* ── Footer link animated underline ── */
+  .footer-link-animated {
+    position: relative;
+    display: inline;
+  }
+  .footer-link-animated::after {
+    content: "";
+    position: absolute;
+    bottom: -1px;
+    left: 0;
+    width: 0;
+    height: 1px;
+    background: var(--color-gold);
+    transition: width var(--transition-base) var(--ease-out-expo);
+  }
+
+  /* ── Highlight text animation ── */
+  .highlight-accent {
+    position: relative;
+    display: inline;
+  }
+  .highlight-accent::after {
+    content: "";
+    position: absolute;
+    bottom: 2px;
+    left: -2px;
+    right: -2px;
+    height: 35%;
+    background: rgba(27, 67, 50, 0.08);
+    border-radius: 2px;
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform var(--transition-slower) var(--ease-out-expo);
+  }
+  .highlight-accent.is-visible::after {
+    transform: scaleX(1);
+  }
+
+  /* ── Gradient text utility ── */
+  .text-gradient-gold {
+    background: linear-gradient(135deg, var(--color-gold), var(--color-gold-light), var(--color-gold));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* ── Gradient border card ── */
+  .gradient-border {
+    position: relative;
+    border: none !important;
+  }
+  .gradient-border::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 2px;
+    background: linear-gradient(135deg, var(--color-gold-light), var(--color-gold), var(--color-gold-light));
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+  }
+
+  /* ── Dot pattern background ── */
+  .dot-pattern {
+    background-image: radial-gradient(circle, rgba(27, 67, 50, 0.04) 1px, transparent 1px);
+    background-size: 24px 24px;
+  }
+
+  /* ── Scroll progress bar ── */
+  .scroll-progress {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--color-gold), var(--color-gold-light));
+    transform-origin: left;
+    z-index: 100;
+    pointer-events: none;
+  }
+
+  /* ── Animated gradient background ── */
+  .animated-gradient-bg {
+    background-size: 200% 200%;
+    animation: gradient-shift 20s ease infinite;
+  }
+
+  /* ── Input focus glow ── */
+  .input-glow:focus {
+    box-shadow: 0 0 0 3px rgba(184, 134, 11, 0.12);
+  }
+
+  /* ── Glow pulse for CTA ── */
+  .glow-pulse {
+    animation: glow-pulse-anim 3s ease-in-out infinite;
+  }
 }
 
-@layer utilities {
-  .text-balance {
-    text-wrap: balance;
+html {
+  scroll-behavior: smooth;
+}
+
+*:focus-visible {
+  outline: 2px solid #1B4332;
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* ── Keyframes ── */
+
+@keyframes gradient-shift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+@keyframes glow-pulse-anim {
+  0%, 100% { box-shadow: 0 4px 20px rgba(184, 134, 11, 0.15); }
+  50% { box-shadow: 0 4px 30px rgba(184, 134, 11, 0.3); }
+}
+
+@keyframes shine-sweep {
+  0% { left: -100%; }
+  100% { left: 100%; }
+}
+
+/* ── Hover media query — only on devices that support hover ── */
+@media (hover: hover) {
+  .btn-shine:hover::after {
+    left: 100%;
+  }
+
+  .nav-link-animated:hover::after {
+    width: 100%;
+  }
+
+  .footer-link-animated:hover::after {
+    width: 100%;
+  }
+}
+
+/* ── Reduced motion ── */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  html {
+    scroll-behavior: auto;
+  }
+
+  .animated-gradient-bg {
+    animation: none;
+  }
+
+  .glow-pulse {
+    animation: none;
   }
 }

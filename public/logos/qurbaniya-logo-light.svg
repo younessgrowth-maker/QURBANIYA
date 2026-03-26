@@ -1,0 +1,14 @@
+<svg width="280" height="56" viewBox="0 0 280 56" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <mask id="crescent2">
+      <circle cx="24" cy="29" r="21" fill="white"/>
+      <circle cx="32" cy="22" r="16" fill="black"/>
+    </mask>
+  </defs>
+  <rect width="280" height="56" fill="#F5F0E8"/>
+  <circle cx="24" cy="29" r="21" fill="#C9A84C" mask="url(#crescent2)"/>
+  <polygon fill="#C9A84C" points="46,10 47.4,13.6 51,15 47.4,16.4 46,20 44.6,16.4 41,15 44.6,13.6"/>
+  <text y="39" font-family="Inter, -apple-system, SF Pro Display, Arial, sans-serif" font-size="30" font-weight="900" letter-spacing="-1.5">
+    <tspan x="62" fill="#1A1A18">QURBANI</tspan><tspan fill="#C9A84C">YA</tspan>
+  </text>
+</svg>
