@@ -32,6 +32,22 @@ const faqs = [
     q: "Puis-je annuler ma commande ?",
     a: "Vous pouvez annuler jusqu\u2019\u00e0 7 jours avant la date du sacrifice pour un remboursement complet. Contactez-nous par email ou WhatsApp.",
   },
+  {
+    q: "Et si je change d\u2019avis ?",
+    a: "Pas de souci. Vous pouvez modifier ou annuler votre commande jusqu\u2019\u00e0 7 jours avant l\u2019A\u00efd pour un remboursement int\u00e9gral. Apr\u00e8s cette date, contactez-nous pour trouver une solution.",
+  },
+  {
+    q: "Comment \u00eatre s\u00fbr que mon sacrifice est bien fait ?",
+    a: "Le sacrifice est effectu\u00e9 par un imam dipl\u00f4m\u00e9 en sciences islamiques, selon les r\u00e8gles strictes de la Sunnah. Vous recevez une vid\u00e9o nominative montrant l\u2019int\u00e9gralit\u00e9 du processus.",
+  },
+  {
+    q: "Quand vais-je recevoir ma vid\u00e9o ?",
+    a: "Votre vid\u00e9o nominative est envoy\u00e9e par WhatsApp dans les 24h suivant le sacrifice. G\u00e9n\u00e9ralement, vous la recevez le jour m\u00eame.",
+  },
+  {
+    q: "Puis-je commander pour plusieurs personnes ?",
+    a: "Oui ! Vous pouvez passer plusieurs commandes avec des noms diff\u00e9rents pour chaque sacrifice. Chaque sacrifice est film\u00e9 individuellement.",
+  },
 ];
 
 export default function FAQ() {
@@ -85,6 +101,27 @@ export default function FAQ() {
           </motion.div>
         ))}
       </div>
+
+      {/* WhatsApp CTA */}
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true }}
+        transition={{ delay: 0.2, duration: 0.4 }}
+        className="max-w-3xl mx-auto mt-8 text-center"
+      >
+        <a
+          href="https://wa.me/33600000000?text=Salam%2C%20j%27ai%20une%20question%20concernant%20le%20sacrifice%20de%20l%27A%C3%AFd%202026"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-2 text-sm font-semibold text-emerald hover:text-emerald-light transition-colors"
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347Z" />
+          </svg>
+          Une autre question ? Écris-nous sur WhatsApp →
+        </a>
+      </motion.div>
     </SectionWrapper>
   );
 }

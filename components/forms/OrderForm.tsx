@@ -92,6 +92,7 @@ function PayPalIcon({ size = 18 }: { size?: number }) {
 
 export default function OrderForm() {
   const [submitSuccess, setSubmitSuccess] = useState(false);
+  const [isGift, setIsGift] = useState(false);
   const {
     register,
     handleSubmit,
@@ -180,6 +181,49 @@ export default function OrderForm() {
             onSelect={() => setValue("intention", "sadaqa")}
           />
         </div>
+      </div>
+
+      {/* ── Mode cadeau ── */}
+      <div>
+        <h3 className="text-lg font-bold text-text-primary uppercase tracking-wide mb-5">
+          Mode
+        </h3>
+        <div className="flex rounded-lg border-2 border-gray-200 overflow-hidden mb-4">
+          <button
+            type="button"
+            onClick={() => setIsGift(false)}
+            className={`flex-1 py-3 text-sm font-semibold font-inter transition-all ${!isGift ? "bg-primary text-white" : "bg-white text-text-muted hover:bg-gray-50"}`}
+          >
+            Pour moi
+          </button>
+          <button
+            type="button"
+            onClick={() => setIsGift(true)}
+            className={`flex-1 py-3 text-sm font-semibold font-inter transition-all ${isGift ? "bg-primary text-white" : "bg-white text-text-muted hover:bg-gray-50"}`}
+          >
+            🎁 Offrir à un proche
+          </button>
+        </div>
+
+        {isGift && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            className="space-y-4 mb-4"
+          >
+            <Field label="Nom du bénéficiaire">
+              <input className={inputClass} placeholder="Prénom et nom du bénéficiaire" />
+            </Field>
+            <Field label="Message personnalisé" optional>
+              <textarea className={`${inputClass} resize-none`} rows={2} placeholder="Un petit message pour accompagner le cadeau..." />
+            </Field>
+            <label className="flex items-center gap-2 text-sm text-text-muted cursor-pointer">
+              <input type="checkbox" className="rounded border-gray-300 text-primary focus:ring-primary" />
+              Envoyer la vidéo au bénéficiaire par email
+            </label>
+          </motion.div>
+        )}
       </div>
 
       {/* ── Niyyah ── */}

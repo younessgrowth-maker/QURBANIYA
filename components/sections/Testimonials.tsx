@@ -69,6 +69,11 @@ function TestimonialCard({ t, index }: { t: Testimonial; index: number }) {
           {t.date}
         </span>
       </div>
+      {/* Verified badge */}
+      <div className="flex items-center gap-1.5 mt-3 pt-3 border-t border-gray-100">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#2D6A4F" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="flex-shrink-0"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+        <span className="text-emerald text-[10px] font-semibold">Contributeur vérifié · {t.date}</span>
+      </div>
     </motion.div>
   );
 }

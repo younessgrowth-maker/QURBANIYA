@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { ShoppingCart, Calendar, Mail } from "lucide-react";
+import { ShoppingCart, Calendar, Video, Mail } from "lucide-react";
 import SectionTitle from "@/components/ui/SectionTitle";
 import type { LucideIcon } from "lucide-react";
 
@@ -16,20 +16,26 @@ const steps: Step[] = [
   {
     num: "01",
     icon: ShoppingCart,
-    title: "VOUS COMMANDEZ",
-    details: ["En 2 minutes", "Paiement 100% sécurisé", "140€"],
+    title: "TU COMMANDES",
+    details: ["Choisis ton sacrifice", "Entre le nom pour la niyyah", "Paiement 100% sécurisé"],
   },
   {
     num: "02",
     icon: Calendar,
-    title: "LE SACRIFICE EST EFFECTUÉ",
-    details: ["Le jour de l'Aïd", "Par notre cheikh diplômé", "Selon la Sunnah"],
+    title: "ON PRÉPARE",
+    details: ["Ton mouton est réservé", "Élevé en plein air", "Sélectionné avec soin"],
   },
   {
     num: "03",
+    icon: Video,
+    title: "LE JOUR J",
+    details: ["Sacrifice conforme à la Sunnah", "Par notre cheikh diplômé", "Filmé en ton nom"],
+  },
+  {
+    num: "04",
     icon: Mail,
-    title: "VOUS RECEVEZ LA PREUVE",
-    details: ["Vidéo nominative", "Directement par WhatsApp", "Le jour même"],
+    title: "TU REÇOIS",
+    details: ["Vidéo nominative", "Certificat de sacrifice", "Envoyés par WhatsApp"],
   },
 ];
 
@@ -38,13 +44,13 @@ export default function HowItWorks() {
     <section className="bg-bg-secondary section-padding dot-pattern" id="comment-ca-marche">
       <div className="max-w-6xl mx-auto">
         <SectionTitle
-          title="3 ÉTAPES, C'EST TOUT"
+          title="4 ÉTAPES, C'EST TOUT"
           accent="C'EST TOUT"
           subtitle="Un processus simple, transparent et conforme."
         />
 
         {/* Desktop: horizontal timeline */}
-        <div className="hidden md:grid md:grid-cols-3 gap-0 relative">
+        <div className="hidden md:grid md:grid-cols-4 gap-0 relative">
           {/* Connector line */}
           <div className="absolute top-[52px] left-[16.67%] right-[16.67%] h-px border-t-2 border-dashed border-gold/30 z-0" aria-hidden="true" />
 
