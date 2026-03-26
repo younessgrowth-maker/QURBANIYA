@@ -10,6 +10,7 @@ import Button from "@/components/ui/Button";
 const NAV_LINKS = [
   { label: "Comment \u00e7a marche", href: "#comment-ca-marche" },
   { label: "T\u00e9moignages", href: "#temoignages" },
+  { label: "Blog", href: "/blog" },
   { label: "FAQ", href: "#faq" },
 ];
 
@@ -112,20 +113,30 @@ export default function Header() {
 
           {/* Desktop nav links */}
           <nav className="hidden lg:flex items-center gap-8" aria-label="Navigation principale">
-            {NAV_LINKS.map((link) => (
-              <a
-                key={link.href}
-                href={link.href}
-                onClick={(e) => handleSmoothScroll(e, link.href)}
-                className={`text-sm transition-colors duration-200 nav-link-animated ${
-                  activeSection === link.href.slice(1)
-                    ? "text-gold font-medium"
-                    : "text-text-muted hover:text-gold"
-                }`}
-              >
-                {link.label}
-              </a>
-            ))}
+            {NAV_LINKS.map((link) =>
+              link.href.startsWith("#") ? (
+                <a
+                  key={link.href}
+                  href={link.href}
+                  onClick={(e) => handleSmoothScroll(e, link.href)}
+                  className={`text-sm transition-colors duration-200 nav-link-animated ${
+                    activeSection === link.href.slice(1)
+                      ? "text-gold font-medium"
+                      : "text-text-muted hover:text-gold"
+                  }`}
+                >
+                  {link.label}
+                </a>
+              ) : (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className="text-sm transition-colors duration-200 nav-link-animated text-text-muted hover:text-gold"
+                >
+                  {link.label}
+                </Link>
+              )
+            )}
           </nav>
 
           {/* Right side */}
@@ -167,19 +178,36 @@ export default function Header() {
             className="fixed inset-0 z-40 bg-bg-primary flex flex-col pt-[60px]"
           >
             <nav className="flex-1 flex flex-col items-center justify-center gap-8 px-6" aria-label="Menu mobile">
-              {NAV_LINKS.map((link, i) => (
-                <motion.a
-                  key={link.href}
-                  href={link.href}
-                  onClick={(e) => handleSmoothScroll(e, link.href)}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: i * 0.08, duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
-                  className="text-2xl font-bold text-text-primary hover:text-gold transition-colors"
-                >
-                  {link.label}
-                </motion.a>
-              ))}
+              {NAV_LINKS.map((link, i) =>
+                link.href.startsWith("#") ? (
+                  <motion.a
+                    key={link.href}
+                    href={link.href}
+                    onClick={(e) => handleSmoothScroll(e, link.href)}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: i * 0.08, duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+                    className="text-2xl font-bold text-text-primary hover:text-gold transition-colors"
+                  >
+                    {link.label}
+                  </motion.a>
+                ) : (
+                  <motion.div
+                    key={link.href}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: i * 0.08, duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+                  >
+                    <Link
+                      href={link.href}
+                      onClick={() => setOpen(false)}
+                      className="text-2xl font-bold text-text-primary hover:text-gold transition-colors"
+                    >
+                      {link.label}
+                    </Link>
+                  </motion.div>
+                )
+              )}
 
               <motion.div
                 initial={{ opacity: 0, y: 20 }}

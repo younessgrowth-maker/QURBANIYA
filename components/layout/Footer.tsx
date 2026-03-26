@@ -10,11 +10,12 @@ const LINK_GROUPS = [
   {
     title: "Liens utiles",
     links: [
+      { label: "Commander mon sacrifice", href: "/commander" },
       { label: "FAQ", href: "/faq" },
+      { label: "Blog", href: "/blog" },
       { label: "Contact", href: "mailto:contact@qurbaniya.fr" },
       { label: "Mentions légales", href: "#" },
       { label: "CGV", href: "#" },
-      { label: "Politique de confidentialité", href: "#" },
     ],
   },
 ];
