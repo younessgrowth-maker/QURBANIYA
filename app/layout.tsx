@@ -101,6 +101,19 @@ export default function RootLayout({
   return (
     <html lang="fr" className={`${inter.variable} ${playfair.variable}`}>
       <head>
+        {/* Preconnect to critical origins */}
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link rel="preconnect" href="https://images.unsplash.com" />
+        {/* DNS prefetch for non-critical origins */}
+        <link rel="dns-prefetch" href="https://wa.me" />
+        {/* Preload hero image for LCP optimization */}
+        <link
+          rel="preload"
+          as="image"
+          href="https://images.unsplash.com/photo-1484557985045-edf25e08da73?w=1600&q=80"
+          fetchPriority="high"
+        />
         <link rel="icon" href="/favicon.ico" sizes="any" />
         <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
         <link rel="manifest" href="/manifest.json" />

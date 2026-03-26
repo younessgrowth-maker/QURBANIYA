@@ -209,6 +209,15 @@
 
 html {
   scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+/* ── Performance: content-visibility for below-fold sections ── */
+/* Lets the browser skip rendering of offscreen content until needed */
+.section-padding {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 600px;
 }
 
 *:focus-visible {

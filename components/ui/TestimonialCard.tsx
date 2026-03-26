@@ -3,6 +3,7 @@
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
 import { Star } from "lucide-react";
+import Image from "next/image";
 
 interface TestimonialCardProps {
   name: string;
@@ -56,10 +57,12 @@ export default function TestimonialCard({
 
       <div className="flex items-center gap-3">
         {avatar ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
+          <Image
             src={avatar}
-            alt={name}
+            alt={`Avis de ${name} sur Qurbaniya`}
+            width={36}
+            height={36}
+            loading="lazy"
             className="w-9 h-9 rounded-full object-cover border border-gold/30"
           />
         ) : (
