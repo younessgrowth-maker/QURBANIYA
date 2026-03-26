@@ -1,4 +1,5 @@
 import Hero from "@/components/sections/Hero";
+import StockGauge from "@/components/ui/StockGauge";
 import SocialProofBar from "@/components/sections/SocialProofBar";
 import ProblemSolution from "@/components/sections/ProblemSolution";
 import HowItWorks from "@/components/sections/HowItWorks";
@@ -16,6 +17,9 @@ export default function HomePage() {
   return (
     <>
       <Hero />
+      <div className="bg-bg-primary section-padding !py-6 md:!py-8">
+        <StockGauge />
+      </div>
       <SocialProofBar />
       <Divider />
       <ProblemSolution />

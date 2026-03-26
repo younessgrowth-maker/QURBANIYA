@@ -3,8 +3,9 @@
 import { motion } from "framer-motion";
 import Link from "next/link";
 import Image from "next/image";
-import { Lock, Zap, Play, ArrowDown } from "lucide-react";
+import { Lock, Zap, Play, ArrowDown, Shield } from "lucide-react";
 import Button from "@/components/ui/Button";
+import CountdownTimer from "@/components/ui/CountdownTimer";
 
 interface HeroProps {
   remainingSlots?: number;
@@ -48,37 +49,20 @@ export default function Hero({ remainingSlots = 47, aidDate = "Juin 2025" }: Her
               className="font-playfair font-bold text-white mb-6"
               style={{ fontSize: "clamp(2.5rem, 6vw, 4.2rem)", lineHeight: 1.05, letterSpacing: "-0.02em" }}
             >
-              <motion.span className="inline-block" variants={fadeUp}>
-                {`D\u00e9l\u00e9guez`}
-              </motion.span>{" "}
-              <motion.span className="inline-block" variants={fadeUp}>
-                {`votre`}
-              </motion.span>
+              Déléguez votre
               <br />
-              <motion.span
-                className="inline-block text-gold-light"
-                variants={{
-                  hidden: { opacity: 0, y: 30, scale: 0.95 },
-                  visible: { opacity: 1, y: 0, scale: 1, transition: { duration: 0.8, ease: easeOutExpo } },
-                }}
-              >
-                sacrifice
-              </motion.span>
+              <span className="text-gold-light">sacrifice</span>
               <br />
-              <motion.span
-                className="inline-block font-light text-white/70"
-                style={{ fontSize: "clamp(1.5rem, 3.5vw, 2.2rem)" }}
-                variants={fadeUp}
-              >
+              <span className="font-light text-white/70" style={{ fontSize: "clamp(1.5rem, 3.5vw, 2.2rem)" }}>
                 en toute confiance
-              </motion.span>
+              </span>
             </motion.h1>
 
             <motion.p variants={fadeUp} className="text-white/65 text-lg md:text-xl font-light leading-relaxed max-w-lg mb-8">
               {`Confiez votre qurban \u00e0 notre cheikh dipl\u00f4m\u00e9. Sacrifice conforme \u00e0 la Sunnah, film\u00e9 et envoy\u00e9 en preuve vid\u00e9o par WhatsApp.`}
             </motion.p>
 
-            <motion.div variants={fadeUp} className="flex flex-wrap gap-3 mb-10">
+            <motion.div variants={fadeUp} className="flex flex-wrap gap-3 mb-8">
               {[`Conforme \u00e0 la Sunnah`, `Preuve vid\u00e9o WhatsApp`, `Cheikh dipl\u00f4m\u00e9`].map((t) => (
                 <span key={t} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/8 text-white/85 text-[11px] font-inter font-medium border border-white/12 backdrop-blur-sm">
                   {`\u2713 ${t}`}
@@ -86,10 +70,15 @@ export default function Hero({ remainingSlots = 47, aidDate = "Juin 2025" }: Her
               ))}
             </motion.div>
 
-            <motion.div variants={fadeUp} className="flex flex-col sm:flex-row gap-3 mb-6">
+            {/* Countdown Timer */}
+            <motion.div variants={fadeUp} className="mb-8">
+              <CountdownTimer />
+            </motion.div>
+
+            <motion.div variants={fadeUp} className="flex flex-col sm:flex-row gap-3 mb-5">
               <Link href="/commander">
                 <Button size="lg" variant="secondary" className="w-full sm:w-auto uppercase glow-pulse">
-                  {`Commander \u2014 140\u20ac`}
+                  {`RÉSERVER MON SACRIFICE — 140€`}
                 </Button>
               </Link>
               <Link href="#comment-ca-marche">
@@ -99,10 +88,14 @@ export default function Hero({ remainingSlots = 47, aidDate = "Juin 2025" }: Her
               </Link>
             </motion.div>
 
-            <motion.div variants={fadeUp} className="flex items-center gap-5 text-sm">
-              <span className="flex items-center gap-1.5 text-white/40">
+            <motion.div variants={fadeUp} className="flex flex-wrap items-center gap-4 text-sm">
+              <span className="flex items-center gap-1.5 text-white/50">
+                <Shield size={13} />
+                Paiement sécurisé
+              </span>
+              <span className="flex items-center gap-1.5 text-white/50">
                 <Lock size={13} />
-                {`Paiement s\u00e9curis\u00e9`}
+                Vidéo garantie
               </span>
               <span className="flex items-center gap-2 text-gold-light font-semibold font-inter">
                 <Zap size={13} className="fill-current" />

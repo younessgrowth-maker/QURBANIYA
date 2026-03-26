@@ -1,7 +1,8 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Check, Lock, CreditCard } from "lucide-react";
+import { Check, Lock, CreditCard, Zap } from "lucide-react";
+import StockGauge from "@/components/ui/StockGauge";
 import Link from "next/link";
 import Button from "@/components/ui/Button";
 import SectionTitle from "@/components/ui/SectionTitle";
@@ -75,17 +76,31 @@ export default function Offer() {
                 ))}
               </ul>
 
+              {/* Stock gauge */}
+              <div className="mb-6">
+                <StockGauge variant="compact" />
+              </div>
+
               {/* CTA */}
               <Link href="/commander" className="block">
-                <Button size="lg" variant="primary" className="w-full text-base">
-                  COMMANDER MON SACRIFICE
+                <Button size="lg" variant="primary" className="w-full text-base glow-pulse">
+                  RÉSERVER MON SACRIFICE MAINTENANT
                 </Button>
               </Link>
 
-              {/* Security line */}
-              <div className="flex items-center justify-center gap-2 mt-4 text-text-muted-light text-xs">
-                <Lock size={12} />
-                <span>Paiement sécurisé · Stripe · PayPal · Virement</span>
+              {/* Micro-text */}
+              <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 mt-3 text-text-muted-light text-xs">
+                <span className="flex items-center gap-1">
+                  <Lock size={11} />
+                  Paiement sécurisé
+                </span>
+                <span>&middot;</span>
+                <span>Vidéo garantie</span>
+                <span>&middot;</span>
+                <span className="flex items-center gap-1 text-gold font-semibold">
+                  <Zap size={11} className="fill-current" />
+                  53 moutons restants
+                </span>
               </div>
             </div>
           </div>

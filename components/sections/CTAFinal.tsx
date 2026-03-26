@@ -56,7 +56,7 @@ export default function CTAFinal() {
         >
           <Link href="/commander">
             <Button size="lg" variant="secondary" className="text-lg px-10 py-5 uppercase glow-pulse">
-              {`Commander mon sacrifice \u2014 140\u20ac`}
+              {`R\u00e9server mon sacrifice \u2014 140\u20ac`}
             </Button>
           </Link>
         </motion.div>

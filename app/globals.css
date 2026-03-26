@@ -200,6 +200,11 @@
   .glow-pulse {
     animation: glow-pulse-anim 3s ease-in-out infinite;
   }
+
+  /* ── Safe area for mobile floating CTA ── */
+  .safe-area-bottom {
+    padding-bottom: max(12px, env(safe-area-inset-bottom));
+  }
 }
 
 html {
