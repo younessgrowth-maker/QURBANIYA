@@ -3,9 +3,11 @@
 import { motion } from "framer-motion";
 import Link from "next/link";
 import Image from "next/image";
-import { Lock, Zap, Play, ArrowDown, Shield } from "lucide-react";
+import { Lock, Zap, ArrowDown, Shield } from "lucide-react";
 import Button from "@/components/ui/Button";
 import CountdownTimer from "@/components/ui/CountdownTimer";
+import VideoPlaceholder from "@/components/ui/VideoPlaceholder";
+import { STOCK } from "@/lib/constants";
 
 interface HeroProps {
   remainingSlots?: number;
@@ -26,7 +28,7 @@ const fadeUp = {
 
 const HERO_IMAGE = "https://images.unsplash.com/photo-1484557985045-edf25e08da73?w=1600&q=80";
 
-export default function Hero({ remainingSlots = 47, aidDate = "Juin 2025" }: HeroProps) {
+export default function Hero({ remainingSlots = STOCK.remaining, aidDate = "Mai 2026" }: HeroProps) {
   return (
     <>
       {/* Fullscreen Hero */}
@@ -40,7 +42,7 @@ export default function Hero({ remainingSlots = 47, aidDate = "Juin 2025" }: Her
 
             <motion.div variants={fadeUp}>
               <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 text-white/90 text-[11px] font-inter font-semibold uppercase tracking-widest mb-8 border border-white/15 backdrop-blur-sm">
-                {`A\u00efd el-K\u00e9bir ${aidDate}`}
+                {`Aïd el-Kébir ${aidDate}`}
               </span>
             </motion.div>
 
@@ -59,13 +61,13 @@ export default function Hero({ remainingSlots = 47, aidDate = "Juin 2025" }: Her
             </motion.h1>
 
             <motion.p variants={fadeUp} className="text-white/65 text-lg md:text-xl font-light leading-relaxed max-w-lg mb-8">
-              {`Confiez votre qurban \u00e0 notre cheikh dipl\u00f4m\u00e9. Sacrifice conforme \u00e0 la Sunnah, film\u00e9 et envoy\u00e9 en preuve vid\u00e9o par WhatsApp.`}
+              Confiez votre qurban à notre cheikh diplômé. Sacrifice conforme à la Sunnah, filmé et envoyé en preuve vidéo par WhatsApp.
             </motion.p>
 
             <motion.div variants={fadeUp} className="flex flex-wrap gap-3 mb-8">
-              {[`Conforme \u00e0 la Sunnah`, `Preuve vid\u00e9o WhatsApp`, `Cheikh dipl\u00f4m\u00e9`].map((t) => (
+              {["Conforme à la Sunnah", "Preuve vidéo WhatsApp", "Cheikh diplômé"].map((t) => (
                 <span key={t} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/8 text-white/85 text-[11px] font-inter font-medium border border-white/12 backdrop-blur-sm">
-                  {`\u2713 ${t}`}
+                  {`✓ ${t}`}
                 </span>
               ))}
             </motion.div>
@@ -83,7 +85,7 @@ export default function Hero({ remainingSlots = 47, aidDate = "Juin 2025" }: Her
               </Link>
               <Link href="#comment-ca-marche">
                 <Button size="lg" variant="ghost" className="w-full sm:w-auto text-white/70 hover:text-white hover:bg-white/8">
-                  {`Comment \u00e7a marche`}
+                  Comment ça marche
                 </Button>
               </Link>
             </motion.div>
@@ -113,16 +115,7 @@ export default function Hero({ remainingSlots = 47, aidDate = "Juin 2025" }: Her
       {/* Video section */}
       <section className="bg-bg-primary section-padding !py-10 md:!py-14">
         <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5 }}>
-          <div className="relative max-w-3xl mx-auto rounded-card overflow-hidden bg-bg-secondary border border-text-primary/6 shadow-medium" style={{ aspectRatio: "16/7" }}>
-            <div className="absolute inset-0 flex flex-col items-center justify-center">
-              <motion.button whileHover={{ scale: 1.08 }} whileTap={{ scale: 0.95 }} className="group w-16 h-16 md:w-20 md:h-20 rounded-full bg-primary text-white flex items-center justify-center shadow-glow-primary transition-all duration-300" aria-label="Lire le message du cheikh">
-                <Play size={26} className="ml-1 group-hover:scale-110 transition-transform" fill="currentColor" />
-              </motion.button>
-              <p className="mt-4 text-sm md:text-base text-text-muted font-medium">
-                Message du cheikh — <span className="text-primary font-semibold">Regardez avant de commander</span>
-              </p>
-            </div>
-          </div>
+          <VideoPlaceholder />
         </motion.div>
       </section>
     </>

@@ -4,14 +4,14 @@ import { ArrowLeft, Calendar, Clock, ArrowRight } from "lucide-react";
 import { BreadcrumbJsonLd } from "@/components/seo/JsonLd";
 
 export const metadata: Metadata = {
-  title: "Date de l\u2019A\u00efd al-Adha 2026 : tout ce qu\u2019il faut savoir",
+  title: "Date de l'Aïd al-Adha 2026 : tout ce qu'il faut savoir",
   description:
-    "L\u2019A\u00efd al-Adha 2026 est pr\u00e9vu le 27 mai. Dates exactes, jours de tachriq (28-30 mai), pr\u00e9parations, et comment r\u00e9server votre sacrifice \u00e0 temps.",
+    "L'Aïd al-Adha 2026 est prévu le 27 mai. Dates exactes, jours de tachriq (28-30 mai), préparations, et comment réserver votre sacrifice à temps.",
   keywords: [
     "date aid al adha 2026",
     "aid el kebir 2026",
     "quand est l'aid 2026",
-    "f\u00eate du mouton 2026",
+    "fête du mouton 2026",
     "date sacrifice 2026",
     "jours tachriq 2026",
   ],
@@ -19,8 +19,8 @@ export const metadata: Metadata = {
     canonical: "https://qurbaniya.fr/blog/date-aid-al-adha-2026",
   },
   openGraph: {
-    title: "Date de l\u2019A\u00efd al-Adha 2026 : tout ce qu\u2019il faut savoir",
-    description: "L\u2019A\u00efd al-Adha 2026 est pr\u00e9vu le 27 mai. Dates, tachriq, pr\u00e9parations.",
+    title: "Date de l'Aïd al-Adha 2026 : tout ce qu'il faut savoir",
+    description: "L'Aïd al-Adha 2026 est prévu le 27 mai. Dates, tachriq, préparations.",
     url: "https://qurbaniya.fr/blog/date-aid-al-adha-2026",
     type: "article",
     publishedTime: "2026-03-15T00:00:00Z",
@@ -31,7 +31,7 @@ function ArticleJsonLd() {
   const schema = {
     "@context": "https://schema.org",
     "@type": "Article",
-    headline: "Date de l\u2019A\u00efd al-Adha 2026 : tout ce qu\u2019il faut savoir",
+    headline: "Date de l'Aïd al-Adha 2026 : tout ce qu'il faut savoir",
     author: { "@type": "Organization", name: "Qurbaniya" },
     datePublished: "2026-03-15",
     dateModified: "2026-03-15",
@@ -67,7 +67,7 @@ export default function ArticleDateAid() {
           <span>/</span>
           <Link href="/blog" className="hover:text-gold transition-colors">Blog</Link>
           <span>/</span>
-          <span className="text-text-primary">Date A\u00efd 2026</span>
+          <span className="text-text-primary">Date Aïd 2026</span>
         </nav>
 
         {/* Meta */}
@@ -83,34 +83,34 @@ export default function ArticleDateAid() {
 
         {/* Title */}
         <h1 className="text-3xl md:text-4xl lg:text-[2.75rem] font-black leading-tight mb-6">
-          Date de l&apos;A\u00efd al-Adha 2026 : <span className="text-gold">tout ce qu&apos;il faut savoir</span>
+          Date de l&apos;Aïd al-Adha 2026 : <span className="text-gold">tout ce qu&apos;il faut savoir</span>
         </h1>
 
         <p className="text-lg text-text-muted leading-relaxed mb-8 border-l-4 border-gold pl-4">
-          L&apos;A\u00efd al-Adha (ou A\u00efd el-K\u00e9bir) est le moment le plus important du calendrier musulman pour le sacrifice rituel. Voici toutes les informations pour bien vous pr\u00e9parer cette ann\u00e9e.
+          L&apos;Aïd al-Adha (ou Aïd el-Kébir) est le moment le plus important du calendrier musulman pour le sacrifice rituel. Voici toutes les informations pour bien vous préparer cette année.
         </p>
 
         {/* Content */}
         <div className="prose-custom space-y-8">
           <section>
-            <h2 className="text-2xl font-bold text-text-primary mb-4">Quelle est la date de l&apos;A\u00efd al-Adha 2026 ?</h2>
+            <h2 className="text-2xl font-bold text-text-primary mb-4">Quelle est la date de l&apos;Aïd al-Adha 2026 ?</h2>
             <p className="text-text-muted leading-relaxed mb-4">
-              Selon les calculs astronomiques, l&apos;A\u00efd al-Adha 2026 est pr\u00e9vu pour le <strong className="text-text-primary">mercredi 27 mai 2026</strong> (10 Dhoul Hijja 1447). Cette date correspond au jour du sacrifice (yawm an-nahr).
+              Selon les calculs astronomiques, l&apos;Aïd al-Adha 2026 est prévu pour le <strong className="text-text-primary">mercredi 27 mai 2026</strong> (10 Dhoul Hijja 1447). Cette date correspond au jour du sacrifice (yawm an-nahr).
             </p>
             <p className="text-text-muted leading-relaxed">
-              Comme chaque ann\u00e9e, la date d\u00e9finitive sera confirm\u00e9e par l&apos;observation du croissant lunaire. Elle pourrait varier d&apos;un jour selon les pays.
+              Comme chaque année, la date définitive sera confirmée par l&apos;observation du croissant lunaire. Elle pourrait varier d&apos;un jour selon les pays.
             </p>
           </section>
 
           <section>
             <h2 className="text-2xl font-bold text-text-primary mb-4">Les jours de tachriq : 28, 29 et 30 mai 2026</h2>
             <p className="text-text-muted leading-relaxed mb-4">
-              Les trois jours qui suivent l&apos;A\u00efd sont les <strong className="text-text-primary">jours de tachriq</strong> (ayyam at-tachriq). Le sacrifice est valide pendant ces jours. Concr\u00e8tement, vous avez du 27 au 30 mai 2026 pour effectuer votre sacrifice.
+              Les trois jours qui suivent l&apos;Aïd sont les <strong className="text-text-primary">jours de tachriq</strong> (ayyam at-tachriq). Le sacrifice est valide pendant ces jours. Concrètement, vous avez du 27 au 30 mai 2026 pour effectuer votre sacrifice.
             </p>
             <div className="bg-bg-secondary rounded-xl p-5 border border-gold/10">
               <h3 className="text-gold font-bold text-sm uppercase tracking-wider mb-3 font-inter">Calendrier complet</h3>
               <ul className="space-y-2 text-text-muted text-sm font-inter">
-                <li className="flex items-center gap-2"><span className="text-gold font-bold">27 mai</span> — Jour de l&apos;A\u00efd (Yawm an-Nahr)</li>
+                <li className="flex items-center gap-2"><span className="text-gold font-bold">27 mai</span> — Jour de l&apos;Aïd (Yawm an-Nahr)</li>
                 <li className="flex items-center gap-2"><span className="text-gold font-bold">28 mai</span> — 1er jour de tachriq</li>
                 <li className="flex items-center gap-2"><span className="text-gold font-bold">29 mai</span> — 2e jour de tachriq</li>
                 <li className="flex items-center gap-2"><span className="text-gold font-bold">30 mai</span> — 3e jour de tachriq (dernier jour)</li>
@@ -121,64 +121,64 @@ export default function ArticleDateAid() {
           <section>
             <h2 className="text-2xl font-bold text-text-primary mb-4">Le jour d&apos;Arafat : 26 mai 2026</h2>
             <p className="text-text-muted leading-relaxed">
-              La veille de l&apos;A\u00efd, le <strong className="text-text-primary">26 mai 2026</strong>, correspond au jour d&apos;Arafat. Le je\u00fbne de ce jour est fortement recommand\u00e9 pour les non-p\u00e8lerins. Selon un hadith authentique, il expie les p\u00e9ch\u00e9s de l&apos;ann\u00e9e pass\u00e9e et de l&apos;ann\u00e9e \u00e0 venir.
+              La veille de l&apos;Aïd, le <strong className="text-text-primary">26 mai 2026</strong>, correspond au jour d&apos;Arafat. Le jeûne de ce jour est fortement recommandé pour les non-pèlerins. Selon un hadith authentique, il expie les péchés de l&apos;année passée et de l&apos;année à venir.
             </p>
           </section>
 
           <section>
-            <h2 className="text-2xl font-bold text-text-primary mb-4">Comment bien pr\u00e9parer son sacrifice ?</h2>
+            <h2 className="text-2xl font-bold text-text-primary mb-4">Comment bien préparer son sacrifice ?</h2>
             <p className="text-text-muted leading-relaxed mb-4">
-              Ne tardez pas \u00e0 r\u00e9server votre mouton. Chaque ann\u00e9e, les stocks s&apos;\u00e9puisent rapidement \u00e0 l&apos;approche de l&apos;A\u00efd. Voici les \u00e9tapes cl\u00e9s :
+              Ne tardez pas à réserver votre mouton. Chaque année, les stocks s&apos;épuisent rapidement à l&apos;approche de l&apos;Aïd. Voici les étapes clés :
             </p>
             <ol className="space-y-3 text-text-muted font-inter">
               <li className="flex gap-3">
                 <span className="flex-shrink-0 w-7 h-7 rounded-full bg-gold/15 text-gold text-sm font-bold flex items-center justify-center">1</span>
-                <span><strong className="text-text-primary">R\u00e9servez t\u00f4t</strong> — Les prix augmentent et les places se rar\u00e9fient \u00e0 l&apos;approche de l&apos;A\u00efd.</span>
+                <span><strong className="text-text-primary">Réservez tôt</strong> — Les prix augmentent et les places se raréfient à l&apos;approche de l&apos;Aïd.</span>
               </li>
               <li className="flex gap-3">
                 <span className="flex-shrink-0 w-7 h-7 rounded-full bg-gold/15 text-gold text-sm font-bold flex items-center justify-center">2</span>
-                <span><strong className="text-text-primary">Choisissez un service de confiance</strong> — V\u00e9rifiez que le sacrifice est conforme \u00e0 la Sunnah et supervis\u00e9 par un imam.</span>
+                <span><strong className="text-text-primary">Choisissez un service de confiance</strong> — Vérifiez que le sacrifice est conforme à la Sunnah et supervisé par un imam.</span>
               </li>
               <li className="flex gap-3">
                 <span className="flex-shrink-0 w-7 h-7 rounded-full bg-gold/15 text-gold text-sm font-bold flex items-center justify-center">3</span>
-                <span><strong className="text-text-primary">Exigez une preuve</strong> — Une vid\u00e9o nominative est la meilleure garantie que votre sacrifice a bien \u00e9t\u00e9 effectu\u00e9.</span>
+                <span><strong className="text-text-primary">Exigez une preuve</strong> — Une vidéo nominative est la meilleure garantie que votre sacrifice a bien été effectué.</span>
               </li>
             </ol>
           </section>
 
           <section>
-            <h2 className="text-2xl font-bold text-text-primary mb-4">Peut-on d\u00e9l\u00e9guer son sacrifice ?</h2>
+            <h2 className="text-2xl font-bold text-text-primary mb-4">Peut-on déléguer son sacrifice ?</h2>
             <p className="text-text-muted leading-relaxed mb-4">
-              Oui, la d\u00e9l\u00e9gation du sacrifice (tawkil) est parfaitement valide selon les quatre \u00e9coles juridiques de l&apos;Islam. C&apos;est d&apos;ailleurs la pratique de nombreux compagnons du Proph\u00e8te (paix et b\u00e9n\u00e9dictions sur lui).
+              Oui, la délégation du sacrifice (tawkil) est parfaitement valide selon les quatre écoles juridiques de l&apos;Islam. C&apos;est d&apos;ailleurs la pratique de nombreux compagnons du Prophète (paix et bénédictions sur lui).
             </p>
             <p className="text-text-muted leading-relaxed">
-              Avec Qurbaniya, votre sacrifice est effectu\u00e9 par un cheikh dipl\u00f4m\u00e9, conforme \u00e0 la Sunnah, et vous recevez une vid\u00e9o nominative comme preuve.
+              Avec Qurbaniya, votre sacrifice est effectué par un cheikh diplômé, conforme à la Sunnah, et vous recevez une vidéo nominative comme preuve.
             </p>
           </section>
 
           {/* CTA mid-article */}
           <div className="bg-gradient-to-r from-primary to-primary-light rounded-xl p-6 md:p-8 text-center my-10">
             <h3 className="text-white font-bold text-lg md:text-xl mb-2 font-playfair">
-              L&apos;A\u00efd approche — R\u00e9servez votre sacrifice
+              L&apos;Aïd approche — Réservez votre sacrifice
             </h3>
             <p className="text-white/70 text-sm mb-4 font-inter">
-              Mouton conforme \u00e0 la Sounnah \u00b7 Vid\u00e9o nominative \u00b7 140\u20ac tout inclus
+              Mouton conforme à la Sounnah · Vidéo nominative · 140€ tout inclus
             </p>
             <Link
               href="/commander"
               className="inline-flex items-center gap-2 bg-gold hover:bg-gold-light text-white font-bold uppercase text-sm px-6 py-3 rounded-xl transition-colors font-inter"
             >
-              R\u00e9server mon sacrifice <ArrowRight size={14} />
+              Réserver mon sacrifice <ArrowRight size={14} />
             </Link>
           </div>
 
           <section>
-            <h2 className="text-2xl font-bold text-text-primary mb-4">Les diff\u00e9rences entre A\u00efd al-Adha et A\u00efd al-Fitr</h2>
+            <h2 className="text-2xl font-bold text-text-primary mb-4">Les différences entre Aïd al-Adha et Aïd al-Fitr</h2>
             <p className="text-text-muted leading-relaxed mb-4">
-              Il ne faut pas confondre les deux A\u00efds. L&apos;A\u00efd al-Fitr marque la fin du Ramadan, tandis que l&apos;A\u00efd al-Adha comm\u00e9more le sacrifice d&apos;Ibrahim (paix sur lui) et co\u00efncide avec le p\u00e8lerinage (Hajj).
+              Il ne faut pas confondre les deux Aïds. L&apos;Aïd al-Fitr marque la fin du Ramadan, tandis que l&apos;Aïd al-Adha commémore le sacrifice d&apos;Ibrahim (paix sur lui) et coïncide avec le pèlerinage (Hajj).
             </p>
             <p className="text-text-muted leading-relaxed">
-              L&apos;A\u00efd al-Adha est consid\u00e9r\u00e9 comme la plus grande f\u00eate de l&apos;Islam. C&apos;est le jour o\u00f9 les musulmans qui en ont les moyens effectuent le sacrifice rituel.
+              L&apos;Aïd al-Adha est considéré comme la plus grande fête de l&apos;Islam. C&apos;est le jour où les musulmans qui en ont les moyens effectuent le sacrifice rituel.
             </p>
           </section>
         </div>
@@ -192,7 +192,7 @@ export default function ArticleDateAid() {
             href="/blog/sacrifice-aid-en-ligne-comment-ca-marche"
             className="flex items-center gap-2 text-gold font-semibold font-inter text-sm"
           >
-            Article suivant : Comment \u00e7a marche ? <ArrowRight size={14} />
+            Article suivant : Comment ça marche ? <ArrowRight size={14} />
           </Link>
         </div>
       </article>

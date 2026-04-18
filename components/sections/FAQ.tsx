@@ -9,44 +9,44 @@ import { cn } from "@/lib/utils";
 
 const faqs = [
   {
-    q: "Le sacrifice est-il vraiment conforme \u00e0 la Sunnah ?",
-    a: "Oui. Le sacrifice est effectu\u00e9 par un cheikh dipl\u00f4m\u00e9, selon les r\u00e8gles islamiques strictes : animal \u00e9ligible, orientation vers la Qibla, mention du nom d\u2019Allah, et respect de l\u2019animal.",
+    q: "Le sacrifice est-il vraiment conforme à la Sunnah ?",
+    a: "Oui. Le sacrifice est effectué par un cheikh diplômé, selon les règles islamiques strictes : animal éligible, orientation vers la Qibla, mention du nom d'Allah, et respect de l'animal.",
   },
   {
-    q: "Comment re\u00e7ois-je la preuve vid\u00e9o ?",
-    a: "Vous recevez votre vid\u00e9o nominative directement par WhatsApp dans les 24h suivant le sacrifice. La vid\u00e9o montre le sacrifice de votre mouton sp\u00e9cifiquement. Assurez-vous que votre num\u00e9ro WhatsApp est correct lors de la commande.",
+    q: "Comment reçois-je la preuve vidéo ?",
+    a: "Vous recevez votre vidéo nominative directement par WhatsApp dans les 24h suivant le sacrifice. La vidéo montre le sacrifice de votre mouton spécifiquement. Assurez-vous que votre numéro WhatsApp est correct lors de la commande.",
   },
   {
-    q: "Puis-je commander pour quelqu\u2019un d\u2019autre ?",
-    a: "Absolument. Lors de la commande, vous indiquez le nom de la personne pour laquelle le sacrifice est effectu\u00e9 (niyyah). Vous pouvez commander pour vous-m\u00eame, votre famille, ou en sadaqa.",
+    q: "Puis-je commander pour quelqu'un d'autre ?",
+    a: "Absolument. Lors de la commande, vous indiquez le nom de la personne pour laquelle le sacrifice est effectué (niyyah). Vous pouvez commander pour vous-même, votre famille, ou en sadaqa.",
   },
   {
-    q: "Quels sont les moyens de paiement accept\u00e9s ?",
-    a: "Nous acceptons la carte bancaire (via Stripe), PayPal, et le virement bancaire. Le paiement est 100% s\u00e9curis\u00e9.",
+    q: "Quels sont les moyens de paiement acceptés ?",
+    a: "Nous acceptons la carte bancaire (via Stripe), PayPal, et le virement bancaire. Le paiement est 100% sécurisé.",
   },
   {
-    q: "Que devient la viande apr\u00e8s le sacrifice ?",
-    a: "La viande est distribu\u00e9e aux familles n\u00e9cessiteuses sur place, conform\u00e9ment \u00e0 la tradition islamique. Environ 15 repas sont servis par mouton.",
+    q: "Que devient la viande après le sacrifice ?",
+    a: "La viande est distribuée aux familles nécessiteuses sur place, conformément à la tradition islamique. Chaque mouton permet de nourrir jusqu'à 30 personnes, soit environ 5 familles.",
   },
   {
     q: "Puis-je annuler ma commande ?",
-    a: "Vous pouvez annuler jusqu\u2019\u00e0 7 jours avant la date du sacrifice pour un remboursement complet. Contactez-nous par email ou WhatsApp.",
+    a: "Vous pouvez annuler jusqu'à 7 jours avant la date du sacrifice pour un remboursement complet. Contactez-nous par email ou WhatsApp.",
   },
   {
-    q: "Et si je change d\u2019avis ?",
-    a: "Pas de souci. Vous pouvez modifier ou annuler votre commande jusqu\u2019\u00e0 7 jours avant l\u2019A\u00efd pour un remboursement int\u00e9gral. Apr\u00e8s cette date, contactez-nous pour trouver une solution.",
+    q: "Et si je change d'avis ?",
+    a: "Pas de souci. Vous pouvez modifier ou annuler votre commande jusqu'à 7 jours avant l'Aïd pour un remboursement intégral. Après cette date, contactez-nous pour trouver une solution.",
   },
   {
-    q: "Comment \u00eatre s\u00fbr que mon sacrifice est bien fait ?",
-    a: "Le sacrifice est effectu\u00e9 par un imam dipl\u00f4m\u00e9 en sciences islamiques, selon les r\u00e8gles strictes de la Sunnah. Vous recevez une vid\u00e9o nominative montrant l\u2019int\u00e9gralit\u00e9 du processus.",
+    q: "Comment être sûr que mon sacrifice est bien fait ?",
+    a: "Le sacrifice est effectué par un imam diplômé en sciences islamiques, selon les règles strictes de la Sunnah. Vous recevez une vidéo nominative montrant l'intégralité du processus.",
   },
   {
-    q: "Quand vais-je recevoir ma vid\u00e9o ?",
-    a: "Votre vid\u00e9o nominative est envoy\u00e9e par WhatsApp dans les 24h suivant le sacrifice. G\u00e9n\u00e9ralement, vous la recevez le jour m\u00eame.",
+    q: "Quand vais-je recevoir ma vidéo ?",
+    a: "Votre vidéo nominative est envoyée par WhatsApp dans les 24h suivant le sacrifice. Généralement, vous la recevez le jour même.",
   },
   {
     q: "Puis-je commander pour plusieurs personnes ?",
-    a: "Oui ! Vous pouvez passer plusieurs commandes avec des noms diff\u00e9rents pour chaque sacrifice. Chaque sacrifice est film\u00e9 individuellement.",
+    a: "Oui ! Vous pouvez passer plusieurs commandes avec des noms différents pour chaque sacrifice. Chaque sacrifice est filmé individuellement.",
   },
 ];
 
@@ -119,7 +119,7 @@ export default function FAQ() {
           <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
             <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347Z" />
           </svg>
-          Une autre question ? Écris-nous sur WhatsApp →
+          Une autre question ? Écrivez-nous sur WhatsApp →
         </a>
       </motion.div>
     </SectionWrapper>

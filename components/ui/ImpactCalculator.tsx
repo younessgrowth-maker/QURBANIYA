@@ -6,9 +6,9 @@ import Link from "next/link";
 import Button from "@/components/ui/Button";
 import SectionTitle from "@/components/ui/SectionTitle";
 
+import { MEALS_PER_SHEEP, FAMILIES_PER_SHEEP } from "@/lib/constants";
+
 const PRICE_PER_SHEEP = 140;
-const MEALS_PER_SHEEP = 15;
-const FAMILIES_PER_SHEEP = 3;
 const FRANCE_PRICE = 380;
 
 const quantities = [1, 2, 3, 5, 10];

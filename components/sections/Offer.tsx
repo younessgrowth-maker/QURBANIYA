@@ -7,6 +7,7 @@ import PricingTiers from "@/components/ui/PricingTiers";
 import Link from "next/link";
 import Button from "@/components/ui/Button";
 import SectionTitle from "@/components/ui/SectionTitle";
+import { STOCK } from "@/lib/constants";
 
 const inclusions = [
   "Mouton sélectionné conforme aux critères islamiques",
@@ -45,7 +46,7 @@ export default function Offer() {
             {/* Top label */}
             <div className="bg-gold/10 border-b border-gold/20 px-6 py-3 text-center">
               <span className="text-gold text-sm font-bold uppercase tracking-wider">
-                Offre Aïd el-Kébir 2025
+                Offre Aïd el-Kébir 2026
               </span>
             </div>
 
@@ -100,7 +101,7 @@ export default function Offer() {
                 <span>&middot;</span>
                 <span className="flex items-center gap-1 text-gold font-semibold">
                   <Zap size={11} className="fill-current" />
-                  53 moutons restants
+                  {STOCK.remaining} moutons restants
                 </span>
               </div>
             </div>

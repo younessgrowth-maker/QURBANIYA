@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getStripe } from "@/lib/stripe";
 import { headers } from "next/headers";
+import { createServiceRoleClient } from "@/lib/supabase/server";
+import { sendOrderConfirmation } from "@/lib/resend";
+import { CURRENT_YEAR } from "@/lib/constants";
+import type { Order } from "@/types";
 
 export async function POST(req: NextRequest) {
   const body = await req.text();
@@ -19,31 +23,51 @@ export async function POST(req: NextRequest) {
       process.env.STRIPE_WEBHOOK_SECRET!
     );
 
+    const supabase = createServiceRoleClient();
+
     switch (event.type) {
       case "checkout.session.completed": {
         const session = event.data.object;
-        const metadata = session.metadata || {};
 
-        // TODO: Update order status to 'paid' in Supabase
-        // await supabase.from('orders').update({ payment_status: 'paid' })
-        //   .eq('stripe_session_id', session.id);
+        const { data: order, error: updateError } = await supabase
+          .from("orders")
+          .update({ payment_status: "paid", updated_at: new Date().toISOString() })
+          .eq("stripe_session_id", session.id)
+          .select()
+          .single();
 
-        // TODO: Decrement inventory
-        // await supabase.rpc('decrement_slots', { year: 2025 });
+        if (updateError || !order) {
+          console.error("Order update failed on completed:", session.id, updateError);
+          // Return 200 : Stripe ne doit pas retry si la ligne n'existe pas (commande hors-DB)
+          return NextResponse.json({ received: true });
+        }
 
-        // TODO: Send confirmation email via Resend
-        // await sendOrderConfirmation(session.customer_email, metadata.prenom, metadata.niyyah);
+        const { error: rpcError } = await supabase.rpc("decrement_slots", {
+          target_year: CURRENT_YEAR,
+        });
+        if (rpcError) {
+          console.error("Inventory decrement failed:", rpcError);
+        }
 
-        console.log("Payment completed:", session.id, metadata);
+        try {
+          await sendOrderConfirmation(order as Order);
+        } catch (emailError) {
+          console.error("Confirmation email failed:", emailError);
+        }
+
         break;
       }
 
       case "checkout.session.expired": {
         const session = event.data.object;
-        // TODO: Mark order as failed
-        // await supabase.from('orders').update({ payment_status: 'failed' })
-        //   .eq('stripe_session_id', session.id);
-        console.log("Session expired:", session.id);
+        const { error: updateError } = await supabase
+          .from("orders")
+          .update({ payment_status: "failed", updated_at: new Date().toISOString() })
+          .eq("stripe_session_id", session.id);
+
+        if (updateError) {
+          console.error("Order update failed on expired:", session.id, updateError);
+        }
         break;
       }
     }

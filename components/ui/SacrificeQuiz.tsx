@@ -40,7 +40,7 @@ const questions: Question[] = [
 function getRecommendation(answers: string[]) {
   const qty = answers[2] === "large" ? 2 : 1;
   const price = qty * 129;
-  const meals = qty * 15;
+  const meals = qty * 30;
   const type = answers[1] === "aid" ? "Aïd al-Adha" : answers[1] === "aqiqa" ? "Aqiqa" : "Sadaqa";
   const forWhom = answers[0] === "offrir" ? "en cadeau" : "pour toi";
 

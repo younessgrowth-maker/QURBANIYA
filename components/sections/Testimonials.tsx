@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { Star, ExternalLink } from "lucide-react";
 import SectionTitle from "@/components/ui/SectionTitle";
 import { cn } from "@/lib/utils";
+import InlineCTA from "@/components/ui/InlineCTA";
 
 interface Testimonial {
   nom: string;
@@ -85,7 +86,7 @@ export default function Testimonials() {
         <SectionTitle
           title="ILS NOUS ONT FAIT CONFIANCE"
           accent="CONFIANCE"
-          subtitle="+800 familles satisfaites · Note moyenne : 4.8/5"
+          subtitle="+300 familles satisfaites · Note moyenne : 4.8/5"
         />
 
         {/* Desktop: 3x2 grid */}
@@ -128,7 +129,7 @@ export default function Testimonials() {
               ))}
             </div>
             <span className="text-text-primary text-sm font-semibold">4.8 sur 5</span>
-            <span className="text-text-muted text-sm">· Basé sur 800+ avis</span>
+            <span className="text-text-muted text-sm">· Basé sur 300+ avis</span>
           </div>
 
           {/* Link to reviews */}
@@ -140,6 +141,12 @@ export default function Testimonials() {
             <ExternalLink size={14} />
           </a>
         </motion.div>
+
+        <InlineCTA
+          variant="primary"
+          text="Rejoindre les 300+ familles satisfaites"
+          subtitle="Votre sacrifice entre de bonnes mains."
+        />
       </div>
     </section>
   );

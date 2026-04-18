@@ -10,7 +10,7 @@ interface Stat {
 }
 
 const stats: Stat[] = [
-  { value: 800, suffix: "+", label: "familles servies" },
+  { value: 300, suffix: "+", label: "familles servies" },
   { value: 4.8, suffix: "★", label: "note moyenne" },
   { value: 5, suffix: " ans", label: "d'expérience" },
   { value: 100, suffix: "%", label: "taux satisfaction" },

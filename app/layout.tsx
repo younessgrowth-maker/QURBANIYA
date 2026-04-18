@@ -23,7 +23,7 @@ export const metadata: Metadata = {
     template: "%s | Qurbaniya",
   },
   description:
-    "Déléguez votre sacrifice de l'Aïd al-Adha 2026 en Afrique. Mouton sacrifié en votre nom, conforme à la Sounnah, avec preuve vidéo nominative. À partir de 140€. +500 contributeurs satisfaits.",
+    "Déléguez votre sacrifice de l'Aïd al-Adha 2026 à Madagascar. Mouton sacrifié en votre nom, conforme à la Sunnah, avec preuve vidéo nominative. 140€ tout compris. +300 familles satisfaites.",
   keywords: [
     "sacrifice aid 2026",
     "mouton aid en ligne",

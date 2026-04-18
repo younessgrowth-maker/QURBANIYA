@@ -46,7 +46,7 @@ export default function CTAFinal() {
           }}
           className="text-white/70 text-lg mb-10 max-w-xl mx-auto font-light"
         >
-          {`Les places partent vite. R\u00e9servez maintenant pour \u00eatre s\u00fbr d\u2019avoir votre mouton le jour J.`}
+          Les places partent vite. Réservez maintenant pour être sûr d&apos;avoir votre mouton le jour J.
         </motion.p>
         <motion.div
           variants={{
@@ -56,7 +56,7 @@ export default function CTAFinal() {
         >
           <Link href="/commander">
             <Button size="lg" variant="secondary" className="text-lg px-10 py-5 uppercase glow-pulse">
-              {`R\u00e9server mon sacrifice \u2014 140\u20ac`}
+              Réserver mon sacrifice — 140€
             </Button>
           </Link>
         </motion.div>

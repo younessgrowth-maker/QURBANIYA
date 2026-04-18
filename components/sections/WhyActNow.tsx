@@ -13,12 +13,11 @@ interface Reason {
 }
 
 const reasons: Reason[] = [
-  { icon: Clock, title: "L'Aïd est dans 61 jours", text: "Les moutons partent chaque jour", color: "#C0392B" },
-  { icon: TrendingDown, title: "Stock limité", text: "Nous ne pouvons sacrifier qu'un nombre limité de bêtes", color: "#B8860B" },
-  { icon: DollarSign, title: "Le prix augmente bientôt", text: "Réserve au tarif Early Bird", color: "#2D6A4F" },
-  { icon: Video, title: "Vidéo nominative garantie", text: "Mais seulement si tu réserves à temps", color: "#1B4332" },
-  { icon: Heart, title: "Chaque mouton = 15 repas", text: "Pour des familles dans le besoin", color: "#2D6A4F" },
-  { icon: XCircle, title: "L'an dernier, des gens ont raté", text: "Parce qu'ils ont attendu trop longtemps", color: "#C0392B" },
+  { icon: Clock, title: "L'Aïd approche à grands pas", text: "Chaque jour qui passe, c'est un mouton de moins disponible", color: "#C0392B" },
+  { icon: TrendingDown, title: "Stock limité à 200 moutons", text: "Nous ne pouvons sacrifier qu'un nombre limité de bêtes cette année", color: "#B8860B" },
+  { icon: Video, title: "Vidéo nominative garantie", text: "Mais uniquement si vous réservez à temps", color: "#1B4332" },
+  { icon: Heart, title: "Chaque mouton = 30 repas", text: "Jusqu'à 5 familles nourries grâce à votre sacrifice", color: "#2D6A4F" },
+  { icon: XCircle, title: "L'an dernier, des familles ont raté leur sacrifice", text: "Parce qu'elles ont attendu trop longtemps", color: "#C0392B" },
 ];
 
 export default function WhyActNow() {
@@ -28,7 +27,7 @@ export default function WhyActNow() {
         <SectionTitle
           title="POURQUOI AGIR MAINTENANT"
           accent="MAINTENANT"
-          subtitle="Ne remets pas à demain ce que tu peux accomplir aujourd'hui."
+          subtitle="Ne remettez pas à demain ce que vous pouvez accomplir aujourd'hui."
         />
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

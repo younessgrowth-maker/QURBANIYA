@@ -1,12 +1,19 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import Button from "@/components/ui/Button";
 import { X, Clock } from "lucide-react";
+import { STOCK } from "@/lib/constants";
 
 export default function ExitIntentPopup() {
   const [show, setShow] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     let triggered = false;
@@ -30,9 +37,9 @@ export default function ExitIntentPopup() {
     sessionStorage.setItem("exit-popup-dismissed", "true");
   }, []);
 
-  if (!show) return null;
+  if (!show || !mounted) return null;
 
-  return (
+  return createPortal(
     <>
       {/* Backdrop */}
       <div
@@ -50,29 +57,48 @@ export default function ExitIntentPopup() {
         }}
       />
 
-      {/* Popup card */}
+      {/* Popup card — centered with flexbox, rendered via portal */}
       <div
         style={{
           position: "fixed",
-          top: "50%",
-          left: "50%",
-          transform: "translate(-50%, -50%)",
+          top: 0,
+          left: 0,
+          width: "100vw",
+          height: "100vh",
           zIndex: 9999,
-          width: "90vw",
-          maxWidth: "28rem",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          pointerEvents: "none",
         }}
       >
         <div
           style={{
+            position: "relative",
+            width: "90vw",
+            maxWidth: "28rem",
             backgroundColor: "white",
             borderRadius: "1rem",
             overflow: "hidden",
             boxShadow: "0 25px 50px -12px rgba(0,0,0,0.25)",
+            pointerEvents: "auto",
           }}
         >
           <button
             onClick={dismiss}
-            className="absolute top-3 right-3 text-white/70 hover:text-white transition-colors z-10"
+            style={{
+              position: "absolute",
+              top: "0.75rem",
+              right: "0.75rem",
+              zIndex: 10,
+              background: "none",
+              border: "none",
+              cursor: "pointer",
+              color: "rgba(255,255,255,0.7)",
+              transition: "color 0.2s",
+            }}
+            onMouseEnter={(e) => (e.currentTarget.style.color = "white")}
+            onMouseLeave={(e) => (e.currentTarget.style.color = "rgba(255,255,255,0.7)")}
             aria-label="Fermer"
           >
             <X size={20} />
@@ -82,14 +108,14 @@ export default function ExitIntentPopup() {
           <div className="bg-gradient-to-r from-primary to-primary-light px-6 py-5 text-center">
             <Clock size={28} className="text-gold-light mx-auto mb-2" />
             <h3 className="text-white font-playfair font-bold text-xl md:text-2xl">
-              Attends ! Tu allais oublier ton sacrifice
+              Ne partez pas sans votre sacrifice
             </h3>
           </div>
 
           {/* Body */}
           <div className="p-6 text-center">
             <p className="text-text-muted mb-6 font-inter">
-              Il ne reste que <strong className="text-urgency">53 moutons</strong> disponibles.
+              Il ne reste que <strong className="text-urgency">{STOCK.remaining} moutons</strong> disponibles.
               <br />
               Le prix augmente bientôt.
             </p>
@@ -101,11 +127,12 @@ export default function ExitIntentPopup() {
             </Link>
 
             <p className="text-text-muted-light text-xs mt-4 font-inter">
-              Rejoins les +800 contributeurs satisfaits
+              Rejoignez les +300 contributeurs satisfaits
             </p>
           </div>
         </div>
       </div>
-    </>
+    </>,
+    document.body
   );
 }

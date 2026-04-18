@@ -3,6 +3,7 @@
 import { useRef, useEffect, useState } from "react";
 import { motion, useInView } from "framer-motion";
 import SectionTitle from "@/components/ui/SectionTitle";
+import InlineCTA from "@/components/ui/InlineCTA";
 
 interface CounterItem {
   emoji: string;
@@ -12,10 +13,9 @@ interface CounterItem {
 }
 
 const counters: CounterItem[] = [
-  { emoji: "🐑", value: 850, suffix: "+", label: "sacrifices réalisés" },
-  { emoji: "🍽️", value: 12750, suffix: "+", label: "repas distribués" },
-  { emoji: "👨‍👩‍👧‍👦", value: 3200, suffix: "+", label: "familles nourries" },
-  { emoji: "🌍", value: 4, suffix: "", label: "pays touchés" },
+  { emoji: "🐑", value: 300, suffix: "+", label: "sacrifices réalisés" },
+  { emoji: "🍽️", value: 9000, suffix: "+", label: "repas distribués" },
+  { emoji: "👨‍👩‍👧‍👦", value: 1500, suffix: "+", label: "familles nourries" },
   { emoji: "⭐", value: 4.8, suffix: "/5", label: "satisfaction" },
 ];
 
@@ -81,6 +81,11 @@ export default function ImpactCounters() {
             <CounterCard key={item.label} item={item} started={isInView} index={i} />
           ))}
         </div>
+
+        <InlineCTA
+          text="Ajouter votre impact — 140€"
+          subtitle="Chaque sacrifice compte."
+        />
       </div>
     </section>
   );

@@ -3,6 +3,7 @@
 import { motion, useInView } from "framer-motion";
 import { useRef } from "react";
 import { cn } from "@/lib/utils";
+import { STOCK } from "@/lib/constants";
 
 interface StockGaugeProps {
   total?: number;
@@ -12,8 +13,8 @@ interface StockGaugeProps {
 }
 
 export default function StockGauge({
-  total = 200,
-  reserved = 147,
+  total = STOCK.total,
+  reserved = STOCK.reserved,
   className,
   variant = "default",
 }: StockGaugeProps) {

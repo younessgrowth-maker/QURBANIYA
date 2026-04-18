@@ -120,7 +120,7 @@ function ConfirmationContent() {
             <div className="pt-4 space-y-2 text-sm">
               <div className="flex justify-between">
                 <span className="text-text-muted">Année</span>
-                <span className="text-text-primary">Aïd el-Kébir 2025</span>
+                <span className="text-text-primary">Aïd el-Kébir 2026</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-text-muted">Paiement</span>

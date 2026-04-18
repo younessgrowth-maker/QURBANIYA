@@ -154,7 +154,7 @@ export default function ArticlePrixMouton() {
                     { label: "Conformité", france: "Variable", nous: "Cheikh diplômé" },
                     { label: "Preuve", france: "Aucune", nous: "Vidéo nominative" },
                     { label: "Viande gaspillée", france: "Souvent", nous: "100% distribuée" },
-                    { label: "Impact social", france: "Limité", nous: "+15 repas/mouton" },
+                    { label: "Impact social", france: "Limité", nous: "+30 repas/mouton" },
                     { label: "Stress", france: "Élevé", nous: "Zéro" },
                   ].map((row, i) => (
                     <tr key={i} className="border-b border-gray-100">
@@ -201,7 +201,7 @@ export default function ArticlePrixMouton() {
             </p>
             <ul className="space-y-3">
               {[
-                { title: "Un impact social direct", desc: "Chaque mouton nourrit environ 15 personnes dans le besoin. La viande est intégralement distribuée, rien n'est gaspillé." },
+                { title: "Un impact social direct", desc: "Chaque mouton nourrit jusqu'à 30 personnes dans le besoin, soit environ 5 familles. La viande est intégralement distribuée, rien n'est gaspillé." },
                 { title: "Zéro logistique", desc: "Pas de marché aux bestiaux, pas de transport, pas d'abattoir à trouver. Vous commandez en 2 minutes depuis votre canapé." },
                 { title: "Une conformité garantie", desc: "Le sacrifice est effectué par un cheikh diplômé, selon les règles strictes de la Sunnah. Pas d'approximation." },
                 { title: "Une preuve concrète", desc: "La vidéo nominative vous assure que votre sacrifice a bien été effectué en votre nom. Transparence totale." },

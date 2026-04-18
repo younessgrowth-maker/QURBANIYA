@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { Zap, CheckCircle, Video } from "lucide-react";
 import SectionTitle from "@/components/ui/SectionTitle";
 import Card from "@/components/ui/Card";
+import InlineCTA from "@/components/ui/InlineCTA";
 import type { LucideIcon } from "lucide-react";
 
 const easeOutExpo = [0.16, 1, 0.3, 1] as const;
@@ -42,8 +43,9 @@ export default function ProblemSolution() {
     <section className="bg-bg-primary section-padding dot-pattern" id="probleme">
       <div className="max-w-5xl mx-auto">
         <SectionTitle
-          title="CHER FRÈRE, CHÈRE SŒUR"
-          subtitle="Nous comprenons votre situation."
+          title="ACCOMPLISSEZ VOTRE SACRIFICE, NOURRISSEZ DES FAMILLES"
+          accent="NOURRISSEZ"
+          subtitle="Même à distance, votre obligation est accomplie et votre récompense est double."
         />
 
         <motion.div
@@ -53,15 +55,16 @@ export default function ProblemSolution() {
           variants={{ visible: { transition: { staggerChildren: 0.15 } } }}
           className="space-y-6 mb-16"
         >
-          {/* Problème */}
+          {/* Constat */}
           <motion.div
             variants={fadeUp}
-            className="border-l-4 border-urgency bg-urgency/5 rounded-r-lg p-6 md:p-8"
+            className="border-l-4 border-gold bg-gold/5 rounded-r-lg p-6 md:p-8"
           >
-            <h3 className="text-urgency font-bold uppercase text-sm tracking-wider mb-3">Le problème</h3>
+            <h3 className="text-gold font-bold uppercase text-sm tracking-wider mb-3">Vous souhaitez accomplir votre sacrifice</h3>
             <p className="text-text-primary leading-relaxed text-base md:text-lg">
-              Les moutons en France atteignent des prix prohibitifs : 350€, 380€, parfois 400€.
-              Accomplir votre obligation islamique ne devrait pas être un luxe.
+              Mais en France, c&apos;est devenu très difficile : pas d&apos;abattoir accessible,
+              pas de cheikh qualifié à proximité, une législation contraignante.
+              Beaucoup de musulmans finissent par ne pas accomplir leur sacrifice, faute de solution.
             </p>
           </motion.div>
 
@@ -70,10 +73,12 @@ export default function ProblemSolution() {
             variants={fadeUp}
             className="border-l-4 border-emerald bg-emerald/5 rounded-r-lg p-6 md:p-8"
           >
-            <h3 className="text-emerald font-bold uppercase text-sm tracking-wider mb-3">La solution</h3>
+            <h3 className="text-emerald font-bold uppercase text-sm tracking-wider mb-3">Avec Qurbaniya, vous ne renoncez plus</h3>
             <p className="text-text-primary leading-relaxed text-base md:text-lg">
-              Depuis 5 ans, nous vous permettons d&apos;accomplir votre sacrifice en toute conformité
-              avec la Sunnah, pour seulement <span className="text-gold font-bold">140€</span>, avec preuve vidéo.
+              Nous réalisons votre sacrifice à Madagascar, supervisé par un cheikh diplômé,
+              dans le respect strict de la Sunnah. Vous recevez la <strong>vidéo nominative</strong> comme
+              preuve. Et la viande est <strong>intégralement distribuée à des familles dans le besoin</strong> —
+              jusqu&apos;à 30 personnes nourries par mouton.
             </p>
           </motion.div>
         </motion.div>
@@ -99,6 +104,12 @@ export default function ProblemSolution() {
             </Card>
           ))}
         </div>
+
+        <InlineCTA
+          variant="primary"
+          text="Accomplir mon sacrifice — 140€"
+          subtitle="Simple, conforme et traçable."
+        />
       </div>
     </section>
   );

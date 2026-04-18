@@ -3,6 +3,7 @@
 import { motion } from "framer-motion";
 import { ShoppingCart, Calendar, Video, Mail } from "lucide-react";
 import SectionTitle from "@/components/ui/SectionTitle";
+import InlineCTA from "@/components/ui/InlineCTA";
 import type { LucideIcon } from "lucide-react";
 
 interface Step {
@@ -16,25 +17,25 @@ const steps: Step[] = [
   {
     num: "01",
     icon: ShoppingCart,
-    title: "TU COMMANDES",
-    details: ["Choisis ton sacrifice", "Entre le nom pour la niyyah", "Paiement 100% sécurisé"],
+    title: "VOUS COMMANDEZ",
+    details: ["Choisissez votre sacrifice", "Indiquez le nom pour la niyyah", "Paiement 100% sécurisé"],
   },
   {
     num: "02",
     icon: Calendar,
     title: "ON PRÉPARE",
-    details: ["Ton mouton est réservé", "Élevé en plein air", "Sélectionné avec soin"],
+    details: ["Votre mouton est réservé", "Élevé en plein air", "Sélectionné avec soin"],
   },
   {
     num: "03",
     icon: Video,
     title: "LE JOUR J",
-    details: ["Sacrifice conforme à la Sunnah", "Par notre cheikh diplômé", "Filmé en ton nom"],
+    details: ["Sacrifice conforme à la Sunnah", "Par notre cheikh diplômé", "Filmé en votre nom"],
   },
   {
     num: "04",
     icon: Mail,
-    title: "TU REÇOIS",
+    title: "VOUS RECEVEZ",
     details: ["Vidéo nominative", "Certificat de sacrifice", "Envoyés par WhatsApp"],
   },
 ];
@@ -130,6 +131,11 @@ export default function HowItWorks() {
             ))}
           </div>
         </div>
+
+        <InlineCTA
+          text="Commencer maintenant — 140€"
+          subtitle="Moins de 2 minutes pour réserver votre sacrifice."
+        />
       </div>
     </section>
   );

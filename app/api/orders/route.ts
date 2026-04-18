@@ -2,14 +2,16 @@ import { NextRequest, NextResponse } from "next/server";
 import { orderSchema } from "@/lib/validations";
 import { getStripe, PRICE_MOUTON } from "@/lib/stripe";
 import { getBaseUrl } from "@/lib/utils";
+import { createServiceRoleClient } from "@/lib/supabase/server";
+import { sendPaymentReminder } from "@/lib/resend";
+import { PRICE_AMOUNT } from "@/lib/constants";
+import type { Order } from "@/types";
 
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
     const data = orderSchema.parse(body);
-
-    // TODO: Save order in Supabase with status 'pending'
-    // const { data: order } = await supabase.from('orders').insert({...}).select().single();
+    const supabase = createServiceRoleClient();
 
     if (data.payment_method === "stripe") {
       const stripe = getStripe();
@@ -21,7 +23,7 @@ export async function POST(req: NextRequest) {
               currency: "eur",
               product_data: {
                 name: "Sacrifice Mouton — Qurbaniya",
-                description: `Sacrifice au nom de ${data.niyyah} · Aïd el-Kébir 2025`,
+                description: `Sacrifice au nom de ${data.niyyah} · Aïd el-Kébir 2026`,
               },
               unit_amount: PRICE_MOUTON,
             },
@@ -41,19 +43,65 @@ export async function POST(req: NextRequest) {
         },
       });
 
+      const { error: insertError } = await supabase.from("orders").insert({
+        prenom: data.prenom,
+        nom: data.nom,
+        email: data.email,
+        telephone: data.telephone || "",
+        intention: data.intention,
+        niyyah: data.niyyah,
+        payment_status: "pending",
+        payment_method: "stripe",
+        stripe_session_id: session.id,
+        amount: PRICE_AMOUNT,
+      });
+
+      if (insertError) {
+        console.error("Order insert failed (stripe path):", insertError);
+      }
+
       return NextResponse.json({ checkout_url: session.url });
     }
 
-    if (data.payment_method === "paypal") {
-      // TODO: Create PayPal order via API
+    if (data.payment_method === "virement") {
+      const { data: inserted, error: insertError } = await supabase
+        .from("orders")
+        .insert({
+          prenom: data.prenom,
+          nom: data.nom,
+          email: data.email,
+          telephone: data.telephone || "",
+          intention: data.intention,
+          niyyah: data.niyyah,
+          payment_status: "pending",
+          payment_method: "virement",
+          amount: PRICE_AMOUNT,
+        })
+        .select()
+        .single();
+
+      if (insertError || !inserted) {
+        console.error("Order insert failed (virement path):", insertError);
+        return NextResponse.json(
+          { error: "Erreur lors de la création de la commande." },
+          { status: 500 }
+        );
+      }
+
+      try {
+        await sendPaymentReminder(inserted as Order);
+      } catch (emailError) {
+        console.error("Payment reminder email failed:", emailError);
+      }
+
       return NextResponse.json({
-        checkout_url: `/confirmation?method=paypal`,
+        checkout_url: `/confirmation?method=virement&ref=${inserted.id}`,
       });
     }
 
-    // Virement — show bank details on confirmation page
+    // PayPal : stub inchangé — TODO sprint ultérieur (implémenter SDK PayPal + insert DB)
     return NextResponse.json({
-      checkout_url: `/confirmation?method=virement`,
+      checkout_url: `/confirmation?method=paypal`,
     });
   } catch (error) {
     console.error("Order error:", error);

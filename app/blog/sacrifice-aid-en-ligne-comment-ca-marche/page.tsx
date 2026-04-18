@@ -108,7 +108,7 @@ export default function ArticleSacrificeEnLigne() {
               {[
                 { step: "1", title: "Vous commandez en ligne", desc: "Choisissez votre type de sacrifice (Aid, Aqiqa, Sadaqa), indiquez le nom pour lequel le sacrifice sera effectue, et payez en toute securite." },
                 { step: "2", title: "Votre mouton est reserve", desc: "Un mouton repondant aux criteres islamiques (age, sante, absence de defauts) est selectionne et reserve en votre nom." },
-                { step: "3", title: "Le sacrifice est effectue le jour J", desc: "Le jour de l\u2019Aid, un cheikh diplome effectue le sacrifice selon les regles de la Sunnah : orientation vers la Qibla, mention du nom d\u2019Allah et de votre nom, methode conforme." },
+                { step: "3", title: "Le sacrifice est effectue le jour J", desc: "Le jour de l'Aïd, un cheikh diplômé effectue le sacrifice selon les règles de la Sunnah : orientation vers la Qibla, mention du nom d'Allah et de votre nom, méthode conforme." },
                 { step: "4", title: "Vous recevez votre video", desc: "Une video nominative du sacrifice est envoyee par WhatsApp dans les 24h. La viande est integralement distribuee aux familles dans le besoin." },
               ].map((item) => (
                 <div key={item.step} className="flex gap-4 bg-bg-secondary rounded-xl p-5 border border-gold/10">
@@ -131,13 +131,13 @@ export default function ArticleSacrificeEnLigne() {
             </p>
             <ul className="space-y-2">
               {[
-                "L\u2019animal doit avoir l\u2019age requis (minimum 1 an pour un mouton)",
-                "L\u2019animal doit etre exempt de defauts apparents",
-                "Le sacrifice doit etre effectue pendant la periode valide (du 10 au 13 Dhoul Hijja)",
-                "Le sacrificateur doit mentionner le nom d\u2019Allah (Bismillah, Allahu Akbar)",
-                "Le nom de la personne pour laquelle le sacrifice est fait doit etre prononce",
-                "L\u2019animal doit etre oriente vers la Qibla",
-                "La methode doit etre rapide et respectueuse de l\u2019animal",
+                "L'animal doit avoir l'âge requis (minimum 1 an pour un mouton)",
+                "L'animal doit être exempt de défauts apparents",
+                "Le sacrifice doit être effectué pendant la période valide (du 10 au 13 Dhoul Hijja)",
+                "Le sacrificateur doit mentionner le nom d'Allah (Bismillah, Allahu Akbar)",
+                "Le nom de la personne pour laquelle le sacrifice est fait doit être prononcé",
+                "L'animal doit être orienté vers la Qibla",
+                "La méthode doit être rapide et respectueuse de l'animal",
               ].map((condition, i) => (
                 <li key={i} className="flex items-start gap-2 text-text-muted text-sm font-inter">
                   <Check size={16} className="text-emerald flex-shrink-0 mt-0.5" />
@@ -153,7 +153,7 @@ export default function ArticleSacrificeEnLigne() {
               Un sacrifice conforme, simple et transparent
             </h3>
             <p className="text-white/70 text-sm mb-4 font-inter">
-              Cheikh diplome &middot; Video nominative &middot; Viande distribuee &middot; 140&euro;
+              Cheikh diplômé · Vidéo nominative · Viande distribuée · 140€
             </p>
             <Link
               href="/commander"
@@ -166,7 +166,7 @@ export default function ArticleSacrificeEnLigne() {
           <section>
             <h2 className="text-2xl font-bold text-text-primary mb-4">Pourquoi choisir de deleguer plutot que de faire soi-meme ?</h2>
             <p className="text-text-muted leading-relaxed mb-4">
-              En France, organiser son propre sacrifice devient de plus en plus complexe : normes sanitaires strictes, abattoirs surcharges pendant l&apos;Aid, couts eleves (350-400&euro; en moyenne), et logistique de transport et de stockage de la viande.
+              En France, organiser son propre sacrifice devient de plus en plus complexe : normes sanitaires strictes, abattoirs surcharges pendant l&apos;Aid, couts eleves (350-400€ en moyenne), et logistique de transport et de stockage de la viande.
             </p>
             <p className="text-text-muted leading-relaxed">
               Deleguer son sacrifice permet d&apos;accomplir cette obligation religieuse de maniere conforme, a moindre cout, tout en ayant un impact social direct : la viande est distribuee a des familles dans le besoin.
@@ -189,9 +189,9 @@ export default function ArticleSacrificeEnLigne() {
             <h2 className="text-2xl font-bold text-text-primary mb-4">Questions frequentes</h2>
             <div className="space-y-4">
               {[
-                { q: "Puis-je commander pour quelqu\u2019un d\u2019autre ?", a: "Oui, vous pouvez indiquer le nom de n\u2019importe quelle personne lors de la commande. Le sacrifice sera effectue en son nom." },
-                { q: "Quand dois-je commander ?", a: "Le plus tot possible. Les places sont limitees et les prix augmentent a l\u2019approche de l\u2019Aid. Nous recommandons de reserver au moins 2 semaines avant." },
-                { q: "Et si je veux annuler ?", a: "Vous pouvez annuler jusqu\u2019a 7 jours avant l\u2019Aid pour un remboursement complet. Contactez-nous par email ou WhatsApp." },
+                { q: "Puis-je commander pour quelqu'un d'autre ?", a: "Oui, vous pouvez indiquer le nom de n'importe quelle personne lors de la commande. Le sacrifice sera effectué en son nom." },
+                { q: "Quand dois-je commander ?", a: "Le plus tôt possible. Les places sont limitées et les prix augmentent à l'approche de l'Aïd. Nous recommandons de réserver au moins 2 semaines avant." },
+                { q: "Et si je veux annuler ?", a: "Vous pouvez annuler jusqu'à 7 jours avant l'Aïd pour un remboursement complet. Contactez-nous par email ou WhatsApp." },
               ].map((faq, i) => (
                 <div key={i} className="bg-bg-secondary rounded-xl p-5 border border-gray-100">
                   <h3 className="text-text-primary font-bold mb-2 text-sm">{faq.q}</h3>

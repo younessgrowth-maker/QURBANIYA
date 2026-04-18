@@ -69,7 +69,7 @@ function StatusTimeline({ status }: { status: string }) {
 /* ── Order Card ── */
 function OrderCard({ order }: { order: Order }) {
   const status = STATUS_MAP[order.payment_status] || STATUS_MAP.pending;
-  const orderNum = `QRB-2025-${String(order.id).slice(0, 4).toUpperCase()}`;
+  const orderNum = `QRB-2026-${String(order.id).slice(0, 4).toUpperCase()}`;
 
   return (
     <motion.div
@@ -80,7 +80,7 @@ function OrderCard({ order }: { order: Order }) {
       <div className="flex items-start justify-between mb-4">
         <div>
           <h3 className="text-text-primary font-bold flex items-center gap-2">
-            Sacrifice Mouton · Aïd 2025
+            Sacrifice Mouton · Aïd 2026
           </h3>
           <p className="text-text-muted-light text-sm mt-0.5">Commande #{orderNum}</p>
         </div>

@@ -3,10 +3,10 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
+import { STOCK } from "@/lib/constants";
 
 export default function FloatingCTA() {
   const [visible, setVisible] = useState(false);
-  const remaining = 53; // TODO: fetch from Supabase
 
   useEffect(() => {
     const onScroll = () => {
@@ -31,7 +31,7 @@ export default function FloatingCTA() {
               <button className="w-full bg-primary hover:bg-primary-light text-white font-inter font-bold text-sm py-3.5 rounded-button shadow-glow-primary transition-all duration-300 flex items-center justify-center gap-2">
                 <span>&#x1F411;</span>
                 <span>Réserver mon sacrifice</span>
-                <span className="text-white/60 text-xs">&middot; {remaining} restants</span>
+                <span className="text-white/60 text-xs">&middot; {STOCK.remaining} restants</span>
               </button>
             </Link>
           </div>

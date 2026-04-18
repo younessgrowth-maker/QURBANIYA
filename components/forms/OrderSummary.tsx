@@ -18,7 +18,7 @@ export default function OrderSummary() {
         <div className="flex items-start justify-between">
           <div>
             <p className="text-text-primary font-medium text-[15px]">Mouton</p>
-            <p className="text-text-muted-light text-xs">Aïd el-Kébir 2025</p>
+            <p className="text-text-muted-light text-xs">Aïd el-Kébir 2026</p>
           </div>
           <span className="text-text-primary font-semibold">140,00€</span>
         </div>

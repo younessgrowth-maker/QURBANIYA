@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X } from "lucide-react";
+import { STOCK } from "@/lib/constants";
 
 const notifications = [
   { emoji: "🎉", text: "Youssef de Marseille vient de réserver", time: "il y a 4 min" },
@@ -11,7 +12,7 @@ const notifications = [
   { emoji: "📦", text: "18 moutons réservés aujourd'hui", time: "" },
   { emoji: "⭐", text: "\"Vidéo reçue le jour même, top !\" — Amina, Paris", time: "" },
   { emoji: "🎉", text: "Mohamed de Toulouse vient de réserver", time: "il y a 3 min" },
-  { emoji: "🔥", text: "Plus que 53 moutons disponibles", time: "" },
+  { emoji: "🔥", text: `Plus que ${STOCK.remaining} moutons disponibles`, time: "" },
   { emoji: "⭐", text: "\"4ème année, toujours aussi bien\" — Karim, Lyon", time: "" },
   { emoji: "🎉", text: "Samira de Strasbourg vient de réserver", time: "il y a 9 min" },
   { emoji: "📦", text: "23 moutons réservés cette semaine", time: "" },

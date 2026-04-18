@@ -6,18 +6,16 @@ import Image from "next/image";
 import { motion, AnimatePresence, useScroll, useSpring } from "framer-motion";
 import { Menu, X, Zap } from "lucide-react";
 import Button from "@/components/ui/Button";
+import { STOCK } from "@/lib/constants";
 
 const NAV_LINKS = [
-  { label: "Comment \u00e7a marche", href: "#comment-ca-marche" },
-  { label: "T\u00e9moignages", href: "#temoignages" },
+  { label: "Comment ça marche", href: "#comment-ca-marche" },
+  { label: "Témoignages", href: "#temoignages" },
   { label: "Blog", href: "/blog" },
   { label: "FAQ", href: "#faq" },
 ];
 
 const SECTION_IDS = ["comment-ca-marche", "temoignages", "faq"];
-
-// TODO: Replace with Supabase fetch
-const REMAINING_SLOTS = 47;
 
 function ScrollProgress() {
   const { scrollYProgress } = useScroll();
@@ -96,7 +94,7 @@ export default function Header() {
       >
         <div className="max-w-7xl mx-auto flex items-center justify-between px-4 h-full">
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-2 flex-shrink-0" aria-label="Qurbaniya \u2014 Accueil">
+          <Link href="/" className="flex items-center gap-2 flex-shrink-0" aria-label="Qurbaniya - Accueil">
             <Image
               src="/logos/qurbaniya-symbol.svg"
               alt=""
@@ -141,16 +139,16 @@ export default function Header() {
 
           {/* Right side */}
           <div className="flex items-center gap-3 md:gap-4">
-            {/* Urgency badge \u2014 desktop */}
+            {/* Urgency badge — desktop */}
             <div className="hidden md:flex items-center gap-1.5 text-urgency text-xs font-semibold">
               <Zap size={12} className="fill-current" />
-              <span>{REMAINING_SLOTS} places restantes</span>
+              <span>{STOCK.remaining} places restantes</span>
             </div>
 
             {/* CTA */}
             <Link href="/commander" className="hidden sm:block">
               <Button size="sm" variant="primary">
-                {`COMMANDER \u2014 140\u20ac`}
+                COMMANDER — 140€
               </Button>
             </Link>
 
@@ -216,7 +214,7 @@ export default function Header() {
                 className="flex items-center gap-1.5 text-urgency text-sm font-semibold mt-4"
               >
                 <Zap size={14} className="fill-current" />
-                <span>{REMAINING_SLOTS} places restantes</span>
+                <span>{STOCK.remaining} places restantes</span>
               </motion.div>
 
               <motion.div
@@ -226,7 +224,7 @@ export default function Header() {
               >
                 <Link href="/commander" onClick={() => setOpen(false)}>
                   <Button size="lg" variant="primary">
-                    COMMANDER MON SACRIFICE \u2014 140\u20ac
+                    COMMANDER MON SACRIFICE — 140€
                   </Button>
                 </Link>
               </motion.div>

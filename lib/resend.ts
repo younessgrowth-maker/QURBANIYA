@@ -79,7 +79,7 @@ function stepItem(num: string, text: string): string {
 
 /* ── Helper: order ref ── */
 function orderRef(order: Order): string {
-  return `QRB-2025-${order.id.slice(0, 4).toUpperCase()}`;
+  return `QRB-2026-${order.id.slice(0, 4).toUpperCase()}`;
 }
 
 /* ═══════════════════════════════════════════
@@ -147,7 +147,7 @@ export async function sendOrderConfirmation(order: Order) {
   const result = await getResend().emails.send({
     from: FROM,
     to: order.email,
-    subject: `✅ Votre sacrifice Aïd 2025 est confirmé — Qurbaniya`,
+    subject: `✅ Votre sacrifice Aïd 2026 est confirmé — Qurbaniya`,
     html,
   });
 

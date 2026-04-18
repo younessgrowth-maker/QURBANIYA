@@ -4,6 +4,7 @@ import { motion, useScroll, useTransform } from "framer-motion";
 import { useRef } from "react";
 import { Check, Quote } from "lucide-react";
 import Badge from "@/components/ui/Badge";
+import InlineCTA from "@/components/ui/InlineCTA";
 
 export default function Sheikh() {
   const sectionRef = useRef<HTMLElement>(null);
@@ -95,6 +96,10 @@ export default function Sheikh() {
             </div>
           </motion.div>
         </div>
+
+        <InlineCTA
+          text="Confier mon sacrifice au cheikh — 140€"
+        />
       </div>
     </section>
   );

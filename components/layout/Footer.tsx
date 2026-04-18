@@ -49,7 +49,7 @@ export default function Footer() {
         <div className="hidden md:grid md:grid-cols-3 gap-12">
           {/* Col 1: Logo + tagline + socials */}
           <div>
-            <Link href="/" className="flex items-center gap-2 mb-4" aria-label="Qurbaniya — Accueil">
+            <Link href="/" className="flex items-center gap-2 mb-4" aria-label="Qurbaniya - Accueil">
               <Image
                 src="/logos/qurbaniya-symbol.svg"
                 alt=""
@@ -132,7 +132,7 @@ export default function Footer() {
 
         {/* Mobile accordion layout */}
         <div className="md:hidden">
-          <Link href="/" className="flex items-center gap-2 mb-6" aria-label="Qurbaniya — Accueil">
+          <Link href="/" className="flex items-center gap-2 mb-6" aria-label="Qurbaniya - Accueil">
             <Image
               src="/logos/qurbaniya-symbol.svg"
               alt=""
