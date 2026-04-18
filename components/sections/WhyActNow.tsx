@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Clock, TrendingDown, DollarSign, Video, Heart, XCircle } from "lucide-react";
+import { Clock, TrendingDown, Video, Heart, XCircle } from "lucide-react";
 import SectionTitle from "@/components/ui/SectionTitle";
 import type { LucideIcon } from "lucide-react";
 
