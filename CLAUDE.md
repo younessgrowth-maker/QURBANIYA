@@ -40,6 +40,10 @@ Voir `QA_REPORT.md` + section "Ce qui reste a faire" ci-dessous. Priorité absol
 - **Migration à exécuter** : `supabase/migrations/0002_analytics.sql` dans SQL Editor Supabase → crée la table `analytics_events` (sinon tracking insère en erreur silencieuse)
 - **Vercel env var optionnelle** : `ADMIN_EMAILS=email1,email2` pour whitelister plus d'admins (fallback : `younessgrowth@gmail.com`)
 
+### 📘 Pour comprendre la DB
+- `supabase/schema.sql` — snapshot complet commenté du schéma (tables, colonnes, RLS, RPC, auth flow, admin whitelist). **À lire en premier** pour toute intervention sur la DB.
+- `supabase/migrations/*.sql` — historique chronologique des changements (ne pas exécuter pour recréer, utiliser les vraies migrations Supabase CLI)
+
 ### 🧭 Accès admin
 - URL : `https://qurbaniya.fr/admin`
 - Email autorisé par défaut : `younessgrowth@gmail.com` (hardcoded dans `lib/admin.ts` comme fallback)
@@ -94,9 +98,11 @@ lib/
     client.ts           # Browser client
     server.ts           # Server client + service role
 
-supabase/migrations/
-  0001_init.sql         # orders + inventory + RPC decrement_slots + RLS
-  0002_analytics.sql    # [NEW 2026-04-21] analytics_events + index + RLS (service role only)
+supabase/
+  schema.sql            # ⭐ [NEW 2026-04-21] Source of truth — schéma complet commenté (tables, RLS, RPC, auth, admin)
+  migrations/
+    0001_init.sql       # orders + inventory + RPC decrement_slots + RLS
+    0002_analytics.sql  # [NEW 2026-04-21] analytics_events + index + RLS (service role only)
 
 scripts/
   qa-check.js           # Script QA automatise (unicode, images, console, env, links)
