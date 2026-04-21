@@ -47,6 +47,7 @@ export const metadata: Metadata = {
     address: false,
     telephone: false,
   },
+  manifest: "/manifest.json",
   openGraph: {
     title: "Sacrifice Aïd al-Adha 2026 — Mouton + Vidéo nominative | Qurbaniya",
     description:
@@ -55,21 +56,12 @@ export const metadata: Metadata = {
     siteName: "Qurbaniya",
     locale: "fr_FR",
     type: "website",
-    images: [
-      {
-        url: "/og-sacrifice-aid-2026.png",
-        width: 1200,
-        height: 630,
-        alt: "Qurbaniya — Sacrifice Aïd al-Adha 2026 avec vidéo nominative",
-      },
-    ],
   },
   twitter: {
     card: "summary_large_image",
     title: "Sacrifice Aïd al-Adha 2026 — Mouton + Vidéo nominative",
     description:
       "Déléguez votre sacrifice en toute confiance. Vidéo nominative, conforme à la Sounnah, à partir de 140€.",
-    images: ["/og-sacrifice-aid-2026.png"],
   },
   alternates: {
     canonical: "https://qurbaniya.fr",
@@ -114,9 +106,6 @@ export default function RootLayout({
           href="https://images.unsplash.com/photo-1484557985045-edf25e08da73?w=1600&q=80"
           fetchPriority="high"
         />
-        <link rel="icon" href="/favicon.ico" sizes="any" />
-        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-        <link rel="manifest" href="/manifest.json" />
         <meta name="theme-color" content="#1B4332" />
       </head>
       <body className="antialiased">
