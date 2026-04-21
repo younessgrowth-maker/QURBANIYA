@@ -13,11 +13,11 @@ interface Reason {
 }
 
 const reasons: Reason[] = [
-  { icon: Clock, title: "L'Aïd approche à grands pas", text: "Chaque jour qui passe, c'est un mouton de moins disponible", color: "#C0392B" },
-  { icon: TrendingDown, title: "Stock limité à 200 moutons", text: "Nous ne pouvons sacrifier qu'un nombre limité de bêtes cette année", color: "#B8860B" },
-  { icon: Video, title: "Vidéo nominative garantie", text: "Mais uniquement si vous réservez à temps", color: "#1B4332" },
+  { icon: Clock, title: "L'Aïd approche à grands pas", text: "Anticiper votre sacrifice vous garantit la sérénité le jour J", color: "#C0392B" },
+  { icon: TrendingDown, title: "Capacité limitée chaque année", text: "Notre cheikh ne peut accompagner qu'un nombre limité de sacrifices pour garantir la qualité", color: "#B8860B" },
+  { icon: Video, title: "Vidéo nominative garantie", text: "Vous recevez la preuve par WhatsApp le jour du sacrifice", color: "#1B4332" },
   { icon: Heart, title: "Chaque mouton = 30 repas", text: "Jusqu'à 5 familles nourries grâce à votre sacrifice", color: "#2D6A4F" },
-  { icon: XCircle, title: "L'an dernier, des familles ont raté leur sacrifice", text: "Parce qu'elles ont attendu trop longtemps", color: "#C0392B" },
+  { icon: XCircle, title: "Les réservations de dernière minute sont risquées", text: "Anticipez pour éviter toute difficulté avant l'Aïd", color: "#C0392B" },
 ];
 
 export default function WhyActNow() {
