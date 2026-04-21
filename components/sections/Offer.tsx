@@ -108,7 +108,7 @@ export default function Offer() {
           </div>
         </motion.div>
 
-        {/* Early Bird Pricing Tiers */}
+        {/* Price progression timeline */}
         <PricingTiers className="mt-10" />
 
         {/* Payment icons */}

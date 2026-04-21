@@ -33,15 +33,24 @@ export default function Hero({ remainingSlots = STOCK.remaining, aidDate = "Mai 
     <>
       {/* Fullscreen Hero */}
       <section className="relative min-h-[92vh] flex items-center overflow-hidden">
-        <Image src={HERO_IMAGE} alt="Mouton pour le sacrifice de l'Aïd al-Adha 2026 — Qurbaniya" fill className="object-cover" priority sizes="100vw" />
-        <div className="absolute inset-0 bg-gradient-to-r from-[#1B4332]/92 via-[#1B4332]/78 to-[#1B4332]/50" />
-        <div className="absolute inset-0 bg-gradient-to-t from-[#1B4332]/50 to-transparent" />
+        <Image
+          src={HERO_IMAGE}
+          alt="Mouton pour le sacrifice de l'Aïd al-Adha 2026 — Qurbaniya"
+          fill
+          className="object-cover"
+          priority
+          sizes="100vw"
+          style={{ filter: "brightness(0.92) saturate(1.08) contrast(1.05)" }}
+        />
 
         <div className="relative z-10 max-w-7xl mx-auto px-5 py-32 md:py-40 w-full">
           <motion.div variants={stagger} initial="hidden" animate="visible" className="max-w-2xl">
 
             <motion.div variants={fadeUp}>
-              <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 text-white/90 text-[11px] font-inter font-semibold uppercase tracking-widest mb-8 border border-white/15 backdrop-blur-sm">
+              <span
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/15 text-white text-[11px] font-inter font-semibold uppercase tracking-widest mb-8 border border-white/25 backdrop-blur-md"
+                style={{ textShadow: "0 1px 3px rgba(0,0,0,0.3)" }}
+              >
                 {`Aïd el-Kébir ${aidDate}`}
               </span>
             </motion.div>
@@ -49,24 +58,43 @@ export default function Hero({ remainingSlots = STOCK.remaining, aidDate = "Mai 
             <motion.h1
               variants={fadeUp}
               className="font-playfair font-bold text-white mb-6"
-              style={{ fontSize: "clamp(2.5rem, 6vw, 4.2rem)", lineHeight: 1.05, letterSpacing: "-0.02em" }}
+              style={{
+                fontSize: "clamp(2.5rem, 6vw, 4.2rem)",
+                lineHeight: 1.05,
+                letterSpacing: "-0.02em",
+                textShadow: "0 2px 24px rgba(0,0,0,0.6), 0 1px 4px rgba(0,0,0,0.45)",
+              }}
             >
               Déléguez votre
               <br />
               <span className="text-gold-light">sacrifice</span>
               <br />
-              <span className="font-light text-white/70" style={{ fontSize: "clamp(1.5rem, 3.5vw, 2.2rem)" }}>
+              <span
+                className="font-light text-white"
+                style={{
+                  fontSize: "clamp(1.5rem, 3.5vw, 2.2rem)",
+                  textShadow: "0 2px 20px rgba(0,0,0,0.7), 0 1px 3px rgba(0,0,0,0.5)",
+                }}
+              >
                 en toute confiance
               </span>
             </motion.h1>
 
-            <motion.p variants={fadeUp} className="text-white/65 text-lg md:text-xl font-light leading-relaxed max-w-lg mb-8">
+            <motion.p
+              variants={fadeUp}
+              className="text-white text-lg md:text-xl font-light leading-relaxed max-w-lg mb-8"
+              style={{ textShadow: "0 2px 18px rgba(0,0,0,0.65), 0 1px 3px rgba(0,0,0,0.45)" }}
+            >
               Confiez votre qurban à notre cheikh diplômé. Sacrifice conforme à la Sunnah, filmé et envoyé en preuve vidéo par WhatsApp.
             </motion.p>
 
             <motion.div variants={fadeUp} className="flex flex-wrap gap-3 mb-8">
               {["Conforme à la Sunnah", "Preuve vidéo WhatsApp", "Cheikh diplômé"].map((t) => (
-                <span key={t} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/8 text-white/85 text-[11px] font-inter font-medium border border-white/12 backdrop-blur-sm">
+                <span
+                  key={t}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-black/25 text-white text-[11px] font-inter font-medium border border-white/25 backdrop-blur-md"
+                  style={{ textShadow: "0 1px 3px rgba(0,0,0,0.4)" }}
+                >
                   {`✓ ${t}`}
                 </span>
               ))}
@@ -90,12 +118,16 @@ export default function Hero({ remainingSlots = STOCK.remaining, aidDate = "Mai 
               </Link>
             </motion.div>
 
-            <motion.div variants={fadeUp} className="flex flex-wrap items-center gap-4 text-sm">
-              <span className="flex items-center gap-1.5 text-white/50">
+            <motion.div
+              variants={fadeUp}
+              className="flex flex-wrap items-center gap-4 text-sm"
+              style={{ textShadow: "0 1px 8px rgba(0,0,0,0.6), 0 1px 2px rgba(0,0,0,0.4)" }}
+            >
+              <span className="flex items-center gap-1.5 text-white/85">
                 <Shield size={13} />
                 Paiement sécurisé
               </span>
-              <span className="flex items-center gap-1.5 text-white/50">
+              <span className="flex items-center gap-1.5 text-white/85">
                 <Lock size={13} />
                 Vidéo garantie
               </span>
