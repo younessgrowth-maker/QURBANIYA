@@ -7,9 +7,10 @@ import { Lock, Zap, ArrowDown, Shield } from "lucide-react";
 import Button from "@/components/ui/Button";
 import CountdownTimer from "@/components/ui/CountdownTimer";
 import VideoPlaceholder from "@/components/ui/VideoPlaceholder";
-import { STOCK } from "@/lib/constants";
+import { getUrgencyMessage } from "@/lib/constants";
 
 interface HeroProps {
+  /** @deprecated — le message d'urgence est maintenant généré automatiquement depuis la date de l'Aïd (getUrgencyMessage) */
   remainingSlots?: number;
   aidDate?: string;
 }
@@ -28,7 +29,8 @@ const fadeUp = {
 
 const HERO_IMAGE = "https://images.unsplash.com/photo-1484557985045-edf25e08da73?w=1600&q=80";
 
-export default function Hero({ remainingSlots = STOCK.remaining, aidDate = "Mai 2026" }: HeroProps) {
+export default function Hero({ aidDate = "Mai 2026" }: HeroProps) {
+  const urgency = getUrgencyMessage();
   return (
     <>
       {/* Fullscreen Hero */}
@@ -133,7 +135,7 @@ export default function Hero({ remainingSlots = STOCK.remaining, aidDate = "Mai 
               </span>
               <span className="flex items-center gap-2 text-gold-light font-semibold font-inter">
                 <Zap size={13} className="fill-current" />
-                {`${remainingSlots} places restantes`}
+                {urgency.short}
               </span>
             </motion.div>
           </motion.div>

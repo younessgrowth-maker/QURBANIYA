@@ -38,7 +38,7 @@ export default async function HomePage() {
         { name: "Sacrifice Aïd 2026", url: "https://qurbaniya.fr/commander" },
       ]} />
       {/* 1. ACCROCHE — Emotion + CTA principal */}
-      <Hero remainingSlots={inventory.remaining} />
+      <Hero />
       <div className="bg-bg-primary section-padding !py-6 md:!py-8">
         <StockGauge />
       </div>

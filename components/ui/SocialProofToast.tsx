@@ -3,26 +3,23 @@
 import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X } from "lucide-react";
-import { STOCK } from "@/lib/constants";
+import { getUrgencyMessage } from "@/lib/constants";
 
-const notifications = [
-  { emoji: "🎉", text: "Youssef de Marseille vient de réserver", time: "il y a 4 min" },
-  { emoji: "🎉", text: "Fatima de Paris vient de réserver", time: "il y a 7 min" },
-  { emoji: "🎉", text: "Ahmed de Lyon vient de réserver", time: "il y a 12 min" },
-  { emoji: "📦", text: "18 moutons réservés aujourd'hui", time: "" },
-  { emoji: "⭐", text: "\"Vidéo reçue le jour même, top !\" — Amina, Paris", time: "" },
-  { emoji: "🎉", text: "Mohamed de Toulouse vient de réserver", time: "il y a 3 min" },
-  { emoji: "🔥", text: `Plus que ${STOCK.remaining} moutons disponibles`, time: "" },
-  { emoji: "⭐", text: "\"4ème année, toujours aussi bien\" — Karim, Lyon", time: "" },
-  { emoji: "🎉", text: "Samira de Strasbourg vient de réserver", time: "il y a 9 min" },
-  { emoji: "📦", text: "23 moutons réservés cette semaine", time: "" },
-  { emoji: "🎉", text: "Omar de Bordeaux vient de réserver", time: "il y a 6 min" },
-  { emoji: "⭐", text: "\"Service exemplaire, merci\" — Nadia, Lille", time: "" },
-];
+function buildNotifications() {
+  const urgency = getUrgencyMessage();
+  return [
+    { emoji: "🔥", text: urgency.short, time: "" },
+    { emoji: "📅", text: `Aïd al-Adha le 27 mai 2026 — pensez à réserver à l'avance`, time: "" },
+    { emoji: "📹", text: "Chaque sacrifice est filmé et envoyé par WhatsApp le jour J", time: "" },
+    { emoji: "✅", text: "Sacrifice conforme à la Sunnah, effectué par un cheikh diplômé", time: "" },
+    { emoji: "🤲", text: "Confiez votre sacrifice, concentrez-vous sur la spiritualité", time: "" },
+  ];
+}
 
 export default function SocialProofToast() {
   const [current, setCurrent] = useState<number | null>(null);
   const [visible, setVisible] = useState(false);
+  const notifications = buildNotifications();
 
   const showNext = useCallback(() => {
     const idx = Math.floor(Math.random() * notifications.length);
@@ -30,7 +27,7 @@ export default function SocialProofToast() {
     setVisible(true);
 
     setTimeout(() => setVisible(false), 5000);
-  }, []);
+  }, [notifications.length]);
 
   useEffect(() => {
     const firstDelay = setTimeout(showNext, 8000);

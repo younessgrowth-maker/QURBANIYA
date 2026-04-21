@@ -52,13 +52,25 @@ function CounterCard({ item, started, index }: { item: CounterItem; started: boo
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
       transition={{ delay: index * 0.1, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-      className="flex flex-col items-center text-center px-4 py-6"
+      className="group relative flex flex-col items-center text-center px-6 py-8"
     >
-      <span className="text-3xl mb-3">{item.emoji}</span>
-      <span className="text-3xl md:text-4xl font-black text-primary leading-none tabular-nums font-inter">
-        {item.value >= 1000 ? count.toLocaleString("fr-FR") : count}{item.suffix}
+      {/* Gold halo behind emoji */}
+      <div className="relative mb-4">
+        <div
+          aria-hidden="true"
+          className="absolute inset-0 rounded-full bg-gold/15 blur-md scale-125 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+        />
+        <span className="relative text-4xl md:text-5xl leading-none">{item.emoji}</span>
+      </div>
+
+      <span className="text-4xl md:text-5xl font-black text-primary leading-none tabular-nums font-inter">
+        {item.value >= 1000 ? count.toLocaleString("fr-FR") : count}
+        <span className="text-gold">{item.suffix}</span>
       </span>
-      <span className="text-text-muted text-sm mt-2">{item.label}</span>
+
+      <span className="text-text-muted text-sm mt-3 font-medium uppercase tracking-wider">
+        {item.label}
+      </span>
     </motion.div>
   );
 }
@@ -76,7 +88,8 @@ export default function ImpactCounters() {
           subtitle="Chaque sacrifice compte. Voici ce que nous avons accompli ensemble."
         />
 
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-4 md:gap-0 md:divide-x md:divide-primary/10">
+        {/* Grille 4 colonnes centrées, avec séparateurs verticaux sur desktop */}
+        <div className="mt-8 grid grid-cols-2 md:grid-cols-4 gap-y-4 md:gap-0 md:divide-x md:divide-primary/10 place-items-stretch max-w-5xl mx-auto">
           {counters.map((item, i) => (
             <CounterCard key={item.label} item={item} started={isInView} index={i} />
           ))}

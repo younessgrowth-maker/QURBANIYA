@@ -7,7 +7,7 @@ import PricingTiers from "@/components/ui/PricingTiers";
 import Link from "next/link";
 import Button from "@/components/ui/Button";
 import SectionTitle from "@/components/ui/SectionTitle";
-import { STOCK } from "@/lib/constants";
+import { getUrgencyMessage } from "@/lib/constants";
 
 const inclusions = [
   "Mouton sélectionné conforme aux critères islamiques",
@@ -18,6 +18,7 @@ const inclusions = [
 ];
 
 export default function Offer() {
+  const urgency = getUrgencyMessage();
   return (
     <section className="bg-bg-secondary section-padding" id="offre">
       <div className="max-w-5xl mx-auto">
@@ -101,7 +102,7 @@ export default function Offer() {
                 <span>&middot;</span>
                 <span className="flex items-center gap-1 text-gold font-semibold">
                   <Zap size={11} className="fill-current" />
-                  {STOCK.remaining} moutons restants
+                  {urgency.short}
                 </span>
               </div>
             </div>

@@ -6,7 +6,7 @@ import Image from "next/image";
 import { motion, AnimatePresence, useScroll, useSpring } from "framer-motion";
 import { Menu, X, Zap } from "lucide-react";
 import Button from "@/components/ui/Button";
-import { STOCK } from "@/lib/constants";
+import { getUrgencyMessage } from "@/lib/constants";
 
 const NAV_LINKS = [
   { label: "Comment ça marche", href: "#comment-ca-marche" },
@@ -33,6 +33,7 @@ export default function Header() {
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [activeSection, setActiveSection] = useState<string | null>(null);
+  const urgency = getUrgencyMessage();
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 50);
@@ -142,7 +143,7 @@ export default function Header() {
             {/* Urgency badge — desktop */}
             <div className="hidden md:flex items-center gap-1.5 text-urgency text-xs font-semibold">
               <Zap size={12} className="fill-current" />
-              <span>{STOCK.remaining} places restantes</span>
+              <span>{urgency.short}</span>
             </div>
 
             {/* CTA */}
@@ -214,7 +215,7 @@ export default function Header() {
                 className="flex items-center gap-1.5 text-urgency text-sm font-semibold mt-4"
               >
                 <Zap size={14} className="fill-current" />
-                <span>{STOCK.remaining} places restantes</span>
+                <span>{urgency.short}</span>
               </motion.div>
 
               <motion.div

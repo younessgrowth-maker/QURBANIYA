@@ -4,12 +4,13 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { Zap, X } from "lucide-react";
-import { STOCK, AID_DATE } from "@/lib/constants";
+import { AID_DATE, getUrgencyMessage } from "@/lib/constants";
 
 export default function StickyTopBar() {
   const [visible, setVisible] = useState(false);
   const [dismissed, setDismissed] = useState(false);
   const [daysLeft, setDaysLeft] = useState(0);
+  const urgency = getUrgencyMessage();
 
   useEffect(() => {
     const diff = AID_DATE.getTime() - Date.now();
@@ -38,12 +39,12 @@ export default function StickyTopBar() {
             <div className="flex items-center gap-2 font-medium">
               <Zap size={14} className="fill-current flex-shrink-0" />
               <span className="hidden sm:inline">
-                Plus que <strong>{STOCK.remaining}</strong> moutons disponibles
+                {urgency.short}
                 <span className="mx-1.5 opacity-50">&middot;</span>
                 L&apos;Aïd est dans <strong>{daysLeft} jours</strong>
               </span>
               <span className="sm:hidden">
-                <strong>{STOCK.remaining}</strong> moutons restants &middot; <strong>{daysLeft}j</strong>
+                {urgency.short} &middot; <strong>{daysLeft}j</strong>
               </span>
             </div>
 

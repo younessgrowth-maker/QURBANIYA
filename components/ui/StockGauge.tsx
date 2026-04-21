@@ -3,25 +3,40 @@
 import { motion, useInView } from "framer-motion";
 import { useRef } from "react";
 import { cn } from "@/lib/utils";
-import { STOCK } from "@/lib/constants";
+import { AID_DATE, getUrgencyMessage } from "@/lib/constants";
 
 interface StockGaugeProps {
-  total?: number;
-  reserved?: number;
   className?: string;
   variant?: "default" | "compact";
 }
 
+// Période de réservation : du 1er avril 2026 jusqu'au jour de l'Aïd.
+// La barre remplit progressivement en fonction de la date réelle — zéro
+// chiffre inventé, la pression temporelle vient uniquement du calendrier.
+const WINDOW_START = new Date("2026-04-01T00:00:00Z");
+
+function computeWindowProgress(): { percent: number; daysLeft: number } {
+  const now = Date.now();
+  const start = WINDOW_START.getTime();
+  const end = AID_DATE.getTime();
+  const totalMs = end - start;
+  const elapsedMs = Math.max(0, now - start);
+  const percent = Math.min(100, Math.round((elapsedMs / totalMs) * 100));
+  const daysLeft = Math.max(
+    0,
+    Math.ceil((end - now) / 86_400_000)
+  );
+  return { percent, daysLeft };
+}
+
 export default function StockGauge({
-  total = STOCK.total,
-  reserved = STOCK.reserved,
   className,
   variant = "default",
 }: StockGaugeProps) {
   const ref = useRef<HTMLDivElement>(null);
   const isInView = useInView(ref, { once: true, margin: "-40px" });
-  const remaining = total - reserved;
-  const percent = Math.round((reserved / total) * 100);
+  const { percent, daysLeft } = computeWindowProgress();
+  const urgency = getUrgencyMessage();
 
   const barColor =
     percent >= 75
@@ -43,9 +58,7 @@ export default function StockGauge({
             className={cn("h-full rounded-full", barColor, isUrgent && "animate-pulse")}
           />
         </div>
-        <p className="text-xs text-text-muted mt-1 font-inter">
-          <span className="font-semibold text-text-primary">{remaining}</span> moutons restants
-        </p>
+        <p className="text-xs text-text-muted mt-1 font-inter">{urgency.short}</p>
       </div>
     );
   }
@@ -55,7 +68,7 @@ export default function StockGauge({
       <div className="flex items-center justify-between mb-2">
         <span className="text-sm font-inter font-medium text-text-primary">
           <span className="text-lg">&#x1F411;</span>{" "}
-          <span className="font-bold">{reserved}</span> réservés sur {total}
+          <span className="font-bold">Aïd dans {daysLeft} {daysLeft > 1 ? "jours" : "jour"}</span>
         </span>
         <span
           className={cn(
@@ -65,7 +78,7 @@ export default function StockGauge({
               : "bg-emerald/10 text-emerald"
           )}
         >
-          {remaining} restants
+          27 mai 2026
         </span>
       </div>
 
@@ -83,7 +96,7 @@ export default function StockGauge({
       </div>
 
       <p className="text-xs text-text-muted mt-2 font-inter text-center">
-        {percent}% des moutons sont déjà réservés pour l&apos;Aïd 2026
+        {urgency.long}
       </p>
     </div>
   );

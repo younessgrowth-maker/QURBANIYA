@@ -5,12 +5,13 @@ import { createPortal } from "react-dom";
 import Link from "next/link";
 import Button from "@/components/ui/Button";
 import { X, Clock } from "lucide-react";
-import { STOCK } from "@/lib/constants";
+import { getUrgencyMessage } from "@/lib/constants";
 import { track } from "@/lib/track";
 
 export default function ExitIntentPopup() {
   const [show, setShow] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const urgency = getUrgencyMessage();
 
   useEffect(() => {
     setMounted(true);
@@ -117,9 +118,7 @@ export default function ExitIntentPopup() {
           {/* Body */}
           <div className="p-6 text-center">
             <p className="text-text-muted mb-6 font-inter">
-              Il ne reste que <strong className="text-urgency">{STOCK.remaining} moutons</strong> disponibles.
-              <br />
-              Le prix augmente bientôt.
+              {urgency.long}
             </p>
 
             <Link
