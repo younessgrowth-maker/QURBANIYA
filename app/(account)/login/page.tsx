@@ -21,9 +21,12 @@ function LoginContent() {
   const [email, setEmail] = useState("");
   const [sent, setSent] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
   const searchParams = useSearchParams();
   const redirect = searchParams.get("redirect") || "/mes-commandes";
+  const callbackError = searchParams.get("error") === "auth";
+  const [error, setError] = useState(
+    callbackError ? "Le lien de connexion a expiré ou est invalide. Veuillez en demander un nouveau." : ""
+  );
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
@@ -35,7 +38,7 @@ function LoginContent() {
       const { error: authError } = await supabase.auth.signInWithOtp({
         email,
         options: {
-          emailRedirectTo: `${window.location.origin}${redirect}`,
+          emailRedirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(redirect)}`,
         },
       });
 
