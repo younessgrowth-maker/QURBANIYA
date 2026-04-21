@@ -1,13 +1,49 @@
 # CLAUDE.md — Qurbaniya
 
-> Derniere mise a jour : 2026-03-27
+> Derniere mise a jour : 2026-04-21 (session deploiement + admin dashboard + analytics)
 
 ## Projet
 
 **Qurbaniya** — Plateforme e-commerce de sacrifice en ligne pour l'Aid al-Adha.
 - **Stack :** Next.js 14.2.35 (App Router) · React 18 · TypeScript (strict) · Tailwind CSS 3.4
-- **Domaine :** `https://qurbaniya.fr`
+- **Domaine :** `https://qurbaniya.fr` (deploye sur Vercel, DNS IONOS)
 - **Langue :** Francais uniquement (vouvoiement obligatoire)
+- **Propriétaire :** Youness (younessgrowth@gmail.com)
+
+---
+
+## ÉTAT ACTUEL (2026-04-21) — à lire en premier
+
+### ✅ Ce qui est live en prod (`qurbaniya.fr`)
+- Landing page complète + blog + FAQ + tunnel de commande
+- Paiement Stripe live (checkout redirect OK)
+- Formulaire commande (React Hook Form + Zod)
+- Auth Supabase magic link via `/login` + route `/auth/callback` (PKCE)
+- Middleware intercepte tout `?code=` sur n'importe quelle route et l'envoie à `/auth/callback`
+- Photo Cheikh Chamsouddin intégrée dans section ambassadeur (`components/sections/Sheikh.tsx`, `/public/cheikhChamsouddin.jpg`)
+- WhatsApp réel `+33 7 44 79 88 83` branché sur Floating button + FAQ CTA (centralisé `lib/constants.ts` → `WHATSAPP_NUMBER`, helper `whatsappUrl()`)
+- **Dashboard admin `/admin`** : KPIs ventes (CA, panier moyen, conversion, stock, répartition méthode/intention) + table commandes filtrable + export CSV
+- **Tracking analytics custom** : table `analytics_events` Supabase + `/api/track` endpoint + `<Tracker />` auto page_view + instrumentation CTAs (WhatsApp click, order_submitted, payment_started, exit_popup_shown/converted)
+
+### 🔴 Blockers identifiés (audit 2026-04-21) NON RÉSOLUS
+Voir `QA_REPORT.md` + section "Ce qui reste a faire" ci-dessous. Priorité absolue avant annonce publique :
+
+1. **OG image manquante** `/public/og-sacrifice-aid-2026.png` (1200×630) — sharing WhatsApp/Meta cassé. Référencée dans `app/layout.tsx:60,72`.
+2. **Footer WhatsApp placeholder** toujours `+33 6 XX XX XX XX` en dur ([Footer.tsx:127,194](components/layout/Footer.tsx)) — utiliser `WHATSAPP_NUMBER` de `lib/constants.ts`.
+3. **Pages légales absentes** : Mentions légales, CGV, Politique confidentialité (`href="#"` dans Footer lignes 17-18). Obligation légale e-commerce France.
+4. **Mode cadeau incomplet** : champs `gift_recipient_name`, `gift_message`, `gift_send_video` affichés dans OrderForm mais non validés Zod ni insérés en DB ([OrderForm.tsx:215-224](components/forms/OrderForm.tsx)). → Soit brancher, soit désactiver.
+5. **PayPal stub** : `/api/paypal/route.ts` retourne "coming soon". Désactiver l'option PayPal dans le formulaire jusqu'à implémentation.
+6. **Webhook Stripe** : ne sauvegarde PAS encore les commandes en DB ni n'envoie les emails Resend. Tant que pas fait → `/admin` aura 0 commandes même après paiements réels.
+
+### ⚠️ Configuration externe à faire (Supabase / Vercel)
+- **Supabase** : Site URL = `https://qurbaniya.fr` ; Redirect URLs = `https://qurbaniya.fr/**` (déjà configuré par l'utilisateur le 2026-04-21)
+- **Migration à exécuter** : `supabase/migrations/0002_analytics.sql` dans SQL Editor Supabase → crée la table `analytics_events` (sinon tracking insère en erreur silencieuse)
+- **Vercel env var optionnelle** : `ADMIN_EMAILS=email1,email2` pour whitelister plus d'admins (fallback : `younessgrowth@gmail.com`)
+
+### 🧭 Accès admin
+- URL : `https://qurbaniya.fr/admin`
+- Email autorisé par défaut : `younessgrowth@gmail.com` (hardcoded dans `lib/admin.ts` comme fallback)
+- Auth via magic link Supabase (`/login` → email → lien → session établie via `/auth/callback`)
 
 ---
 
@@ -15,44 +51,63 @@
 
 ```
 app/
-  (marketing)/          # Landing page (page.tsx)
+  (marketing)/          # Landing page (page.tsx) — inclut section Sheikh (Cheikh Chamsouddin)
   (account)/            # Auth : login/, mes-commandes/
   (shop)/               # Tunnel : commander/, confirmation/
+  admin/                # [NEW 2026-04-21] Dashboard admin (layout + page) — protégé middleware + email whitelist
+  auth/
+    callback/           # [NEW 2026-04-21] Route GET : exchange PKCE code → session
   blog/                 # Blog listing + [slug] (3 articles)
   faq/                  # FAQ
   api/
     orders/             # POST — creation commande
     stripe/checkout/    # POST — session Stripe
-    stripe/webhook/     # POST — webhook Stripe
+    stripe/webhook/     # POST — webhook Stripe (TODO : save DB + emails)
     paypal/             # POST — stub (non implemente)
-  layout.tsx            # Root layout (fonts, metadata SEO)
+    track/              # [NEW 2026-04-21] POST — ingère événements analytics
+    auth/signout/       # [NEW 2026-04-21] POST — déconnecte et redirige vers /
+  layout.tsx            # Root layout (fonts, metadata SEO, <Tracker /> global)
   globals.css
   error.tsx, not-found.tsx
   robots.ts, sitemap.ts
 
 components/
-  forms/                # OrderForm, OrderSummary
-  layout/               # Header, Footer, StickyTopBar
-  sections/             # 12 sections landing (Hero, HowItWorks, Offer, FAQ, etc.)
-  ui/                   # ~21 composants reutilisables (Button, Badge, Card, CountdownTimer, FloatingCTA, ExitIntentPopup, VideoPlaceholder, etc.)
+  forms/                # OrderForm (track order_submitted + payment_started), OrderSummary
+  layout/               # Header, Footer (⚠️ WhatsApp encore placeholder ligne 127,194), StickyTopBar
+  sections/             # 12 sections landing (Hero, HowItWorks, Offer, FAQ, Sheikh = Cheikh Chamsouddin, etc.)
+  ui/                   # ~21 composants reutilisables (Button, Badge, Card, CountdownTimer, FloatingCTA, ExitIntentPopup, VideoPlaceholder, WhatsAppButton (track), etc.)
   seo/                  # JsonLd (Organization, Product, FAQ, Event, Breadcrumb, WebSite)
+  admin/                # [NEW 2026-04-21] KpiCard, OrdersTable (filtres + CSV export), AnalyticsSection (Sparkline, top pages/referrers, events)
+  analytics/            # [NEW 2026-04-21] Tracker (auto page_view client component)
 
 lib/
-  constants.ts          # Source unique : STOCK (total/reserved/remaining), PRICE_DISPLAY, AID_DATE, MEALS_PER_SHEEP (30), FAMILIES_PER_SHEEP (5)
+  constants.ts          # Source unique : STOCK, PRICE, AID_DATE, MEALS_PER_SHEEP (30), FAMILIES_PER_SHEEP (5), WHATSAPP_NUMBER, whatsappUrl()
   utils.ts              # cn(), formatPrice(), getBaseUrl()
   validations.ts        # Zod schema (orderSchema)
   stripe.ts             # Stripe singleton, PRICE_MOUTON = 14000 (140 EUR)
   resend.ts             # 3 templates email (confirmation, rappel virement, jour du sacrifice)
   animations.ts         # Framer Motion variants & config
+  admin.ts              # [NEW 2026-04-21] getAdminEmails() + isAdminEmail() — whitelist ADMIN_EMAILS env var
+  track.ts              # [NEW 2026-04-21] track(event_name, metadata?) → POST /api/track via sendBeacon, session via localStorage
+  analytics-queries.ts  # [NEW 2026-04-21] fetchAnalyticsSummary() : agrège 30j d'events pour le dashboard admin
   supabase/
     client.ts           # Browser client
     server.ts           # Server client + service role
 
+supabase/migrations/
+  0001_init.sql         # orders + inventory + RPC decrement_slots + RLS
+  0002_analytics.sql    # [NEW 2026-04-21] analytics_events + index + RLS (service role only)
+
 scripts/
   qa-check.js           # Script QA automatise (unicode, images, console, env, links)
 
+public/
+  cheikhChamsouddin.jpg # [NEW 2026-04-21] Photo ambassadeur
+  logos/                # Logos SVG
+  ⚠️ og-sacrifice-aid-2026.png MANQUANT → sharing cassé
+
 types/index.ts          # Order, Inventory, PaymentStatus, PaymentMethod, Intention
-middleware.ts           # Auth guard sur /mes-commandes (redirect /login)
+middleware.ts           # Auth guard /mes-commandes + /admin + intercepte ?code= partout → /auth/callback
 ```
 
 ---
@@ -117,15 +172,19 @@ NEXT_PUBLIC_BASE_URL
 ### Priorite moyenne
 - [ ] Dashboard mes-commandes : telechargement video sacrifice
 - [ ] Dashboard mes-commandes : telechargement recu/certificat
-- [ ] Admin dashboard (gestion commandes, inventaire)
-- [ ] Gestion inventaire dynamique via Supabase (remplacer constantes dans `lib/constants.ts`)
-- [ ] Pages Mentions legales et CGV (liens placeholder dans le Footer)
+- [x] ~~Admin dashboard (gestion commandes, inventaire)~~ → **FAIT Sprint 7** (`/admin` avec KPIs + table + analytics)
+- [ ] Gestion inventaire dynamique via Supabase (remplacer constantes dans `lib/constants.ts`) — en partie : landing page charge live via SSR, mais FloatingCTA/ExitIntentPopup utilisent encore le fallback
+- [ ] Pages Mentions legales et CGV (liens placeholder dans le Footer) — **BLOQUANT avant lancement public (légal France)**
+- [ ] OG image `/public/og-sacrifice-aid-2026.png` — **BLOQUANT (sharing cassé)**
+- [ ] Footer : remplacer placeholder WhatsApp `+33 6 XX XX XX XX` par `WHATSAPP_NUMBER` ([Footer.tsx:127,194](components/layout/Footer.tsx))
+- [ ] Désactiver PayPal dans OrderForm (stub non implémenté)
 
 ### Priorite basse
-- [ ] Google Analytics / tracking
+- [x] ~~Google Analytics / tracking~~ → **FAIT Sprint 7** (tracking custom Supabase + dashboard admin)
 - [ ] Google Search Console verification
 - [ ] Support multi-langue
 - [ ] PWA complete (manifest.json existe deja)
+- [ ] VideoPlaceholder : brancher la lead capture (fait juste `setSubmitted(true)` actuellement)
 
 ---
 
@@ -229,3 +288,17 @@ Resultats `npm run qa` : **0 erreurs, 13 warnings** (tous attendus : console.err
 4. **Sprint 4** — Advanced SEO (redirects, breadcrumbs, noindex, SSR structured data)
 5. **Sprint 5** — QA visuels, unification stock, VideoPlaceholder, script QA automatise
 6. **Sprint 6** — Audit QA complet, refonte sections, CTAs, centralisation stats, corrections 2025→2026
+7. **Sprint 7 (2026-04-21)** — Deploiement prod qurbaniya.fr + ambassadeur Cheikh Chamsouddin + WhatsApp réel + **dashboard admin** + **analytics custom (tracking events + sparklines)** + fix auth PKCE magic link
+
+---
+
+## Commits récents (Sprint 7, 2026-04-21)
+
+Ordre chronologique pour comprendre l'évolution de la session :
+
+- `e6e6924` — feat: add Cheikh Chamsouddin photo & ambassadeur section
+- `eb628a3` — feat: wire real WhatsApp number +33 7 44 79 88 83
+- `459e41d` — feat: admin dashboard with sales KPIs, orders table & CSV export
+- `d7a3a82` — fix: add /auth/callback route for PKCE magic link exchange
+- `ea06929` — fix: intercept magic-link code at any route via middleware
+- **(en cours)** feat: analytics tracker + admin analytics section

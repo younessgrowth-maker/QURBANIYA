@@ -6,6 +6,7 @@ import Link from "next/link";
 import Button from "@/components/ui/Button";
 import { X, Clock } from "lucide-react";
 import { STOCK } from "@/lib/constants";
+import { track } from "@/lib/track";
 
 export default function ExitIntentPopup() {
   const [show, setShow] = useState(false);
@@ -24,6 +25,7 @@ export default function ExitIntentPopup() {
         if (!dismissed) {
           triggered = true;
           setShow(true);
+          track("exit_popup_shown");
         }
       }
     };
@@ -120,7 +122,13 @@ export default function ExitIntentPopup() {
               Le prix augmente bientôt.
             </p>
 
-            <Link href="/commander" onClick={dismiss}>
+            <Link
+              href="/commander"
+              onClick={() => {
+                track("exit_popup_conversion");
+                dismiss();
+              }}
+            >
               <Button size="lg" variant="secondary" className="w-full uppercase glow-pulse">
                 Réserver maintenant →
               </Button>

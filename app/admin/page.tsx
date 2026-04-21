@@ -2,6 +2,8 @@ import { createServiceRoleClient } from "@/lib/supabase/server";
 import { ShoppingBag, CheckCircle2, Euro, TrendingUp, Package, Clock, CreditCard, Heart } from "lucide-react";
 import { KpiCard } from "@/components/admin/KpiCard";
 import OrdersTable from "@/components/admin/OrdersTable";
+import AnalyticsSection from "@/components/admin/AnalyticsSection";
+import { fetchAnalyticsSummary, EMPTY_ANALYTICS } from "@/lib/analytics-queries";
 import { STATS, CURRENT_YEAR, PRICE_AMOUNT } from "@/lib/constants";
 import type { Order, Inventory } from "@/types";
 
@@ -22,7 +24,10 @@ async function fetchData(): Promise<{ orders: OrderRow[]; inventory: Inventory |
 }
 
 export default async function AdminDashboardPage() {
-  const { orders, inventory } = await fetchData();
+  const [{ orders, inventory }, analytics] = await Promise.all([
+    fetchData(),
+    fetchAnalyticsSummary().catch(() => EMPTY_ANALYTICS),
+  ]);
 
   const paid = orders.filter((o) => o.payment_status === "paid");
   const pending = orders.filter((o) => o.payment_status === "pending");
@@ -140,6 +145,8 @@ export default async function AdminDashboardPage() {
       </div>
 
       <OrdersTable orders={orders} />
+
+      <AnalyticsSection data={analytics} />
     </div>
   );
 }

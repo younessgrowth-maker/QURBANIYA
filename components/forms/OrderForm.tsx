@@ -8,6 +8,7 @@ import { User, Users, Heart, CreditCard, Landmark, Check } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import Button from "@/components/ui/Button";
 import { cn } from "@/lib/utils";
+import { track } from "@/lib/track";
 import type { LucideIcon } from "lucide-react";
 
 /* ── Field wrapper ── */
@@ -112,6 +113,7 @@ export default function OrderForm() {
   const paymentMethod = watch("payment_method");
 
   async function onSubmit(data: OrderFormValues) {
+    track("order_submitted", { payment_method: data.payment_method, intention: data.intention });
     const res = await fetch("/api/orders", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -119,6 +121,7 @@ export default function OrderForm() {
     });
     const result = await res.json();
     if (result.checkout_url) {
+      track("payment_started", { payment_method: data.payment_method });
       setSubmitSuccess(true);
       // Brief success animation before redirect
       setTimeout(() => {

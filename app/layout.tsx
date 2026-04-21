@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { Inter, Playfair_Display } from "next/font/google";
 import "./globals.css";
 import { OrganizationJsonLd, WebSiteJsonLd } from "@/components/seo/JsonLd";
+import Tracker from "@/components/analytics/Tracker";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -122,6 +124,9 @@ export default function RootLayout({
       <body className="antialiased">
         <OrganizationJsonLd />
         <WebSiteJsonLd />
+        <Suspense fallback={null}>
+          <Tracker />
+        </Suspense>
         {children}
       </body>
     </html>

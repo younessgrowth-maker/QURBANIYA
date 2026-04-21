@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { whatsappUrl as buildWhatsappUrl } from "@/lib/constants";
+import { track } from "@/lib/track";
 
 export default function WhatsAppButton() {
   const [visible, setVisible] = useState(false);
@@ -27,6 +28,7 @@ export default function WhatsAppButton() {
             href={whatsappUrl}
             target="_blank"
             rel="noopener noreferrer"
+            onClick={() => track("whatsapp_click", { source: "floating_button" })}
             className="group relative flex items-center justify-center w-14 h-14 bg-[#25D366] rounded-full shadow-lg hover:shadow-xl hover:scale-110 transition-all duration-300"
             aria-label="Contacter sur WhatsApp"
           >
