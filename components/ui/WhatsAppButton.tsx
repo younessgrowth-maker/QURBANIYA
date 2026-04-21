@@ -2,9 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-
-const WHATSAPP_NUMBER = "33600000000"; // TODO: Replace with real number
-const WHATSAPP_MESSAGE = "Salam, j'ai une question concernant le sacrifice de l'Aïd 2026";
+import { whatsappUrl as buildWhatsappUrl } from "@/lib/constants";
 
 export default function WhatsAppButton() {
   const [visible, setVisible] = useState(false);
@@ -14,7 +12,7 @@ export default function WhatsAppButton() {
     return () => clearTimeout(timer);
   }, []);
 
-  const whatsappUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(WHATSAPP_MESSAGE)}`;
+  const whatsappUrl = buildWhatsappUrl();
 
   return (
     <AnimatePresence>

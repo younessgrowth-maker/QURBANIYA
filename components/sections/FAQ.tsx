@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import SectionWrapper from "@/components/ui/SectionWrapper";
 import SectionTitle from "@/components/ui/SectionTitle";
 import { cn } from "@/lib/utils";
+import { whatsappUrl } from "@/lib/constants";
 
 const faqs = [
   {
@@ -111,7 +112,7 @@ export default function FAQ() {
         className="max-w-3xl mx-auto mt-8 text-center"
       >
         <a
-          href="https://wa.me/33600000000?text=Salam%2C%20j%27ai%20une%20question%20concernant%20le%20sacrifice%20de%20l%27A%C3%AFd%202026"
+          href={whatsappUrl()}
           target="_blank"
           rel="noopener noreferrer"
           className="inline-flex items-center gap-2 text-sm font-semibold text-emerald hover:text-emerald-light transition-colors"

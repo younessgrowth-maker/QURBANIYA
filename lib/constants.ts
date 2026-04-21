@@ -36,3 +36,10 @@ export const STATS = {
 export const AID_DATE = new Date("2026-05-27T06:00:00+01:00");
 export const AID_YEAR = "2026";
 export const CURRENT_YEAR = 2026;
+
+// ─── Contact ───
+export const WHATSAPP_NUMBER = "33744798883";
+export const WHATSAPP_DEFAULT_MESSAGE =
+  "Salam, j'ai une question concernant le sacrifice de l'Aïd 2026";
+export const whatsappUrl = (message: string = WHATSAPP_DEFAULT_MESSAGE) =>
+  `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
