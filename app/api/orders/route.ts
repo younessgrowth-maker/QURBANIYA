@@ -3,8 +3,9 @@ import { orderSchema } from "@/lib/validations";
 import { getStripe, PRICE_MOUTON } from "@/lib/stripe";
 import { getBaseUrl } from "@/lib/utils";
 import { createServiceRoleClient } from "@/lib/supabase/server";
+import { getInventory } from "@/lib/supabase/queries";
 import { sendPaymentReminder } from "@/lib/resend";
-import { PRICE_AMOUNT } from "@/lib/constants";
+import { PRICE_AMOUNT, CURRENT_YEAR } from "@/lib/constants";
 import type { Order } from "@/types";
 
 export async function POST(req: NextRequest) {
@@ -12,6 +13,21 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const data = orderSchema.parse(body);
     const supabase = createServiceRoleClient();
+
+    // Garde-fou : refuser la commande si les réservations sont closes ou complètes.
+    // Fail-open si Supabase injoignable (inventory null) — on préfère accepter une
+    // commande qu'on pourra gérer manuellement plutôt que bloquer tout le tunnel
+    // sur un glitch Supabase.
+    const inventory = await getInventory(CURRENT_YEAR);
+    if (inventory && (!inventory.isOpen || inventory.remaining <= 0)) {
+      return NextResponse.json(
+        {
+          error: "Les réservations pour l'Aïd 2026 sont complètes. Contactez-nous pour être inscrit sur liste d'attente.",
+          code: "inventory_full",
+        },
+        { status: 403 }
+      );
+    }
 
     if (data.payment_method === "stripe") {
       const stripe = getStripe();
