@@ -14,8 +14,9 @@ const LINK_GROUPS = [
       { label: "FAQ", href: "/faq" },
       { label: "Blog", href: "/blog" },
       { label: "Contact", href: "mailto:contact@qurbaniya.fr" },
-      { label: "Mentions légales", href: "#" },
-      { label: "CGV", href: "#" },
+      { label: "Mentions légales", href: "/mentions-legales" },
+      { label: "CGV", href: "/cgv" },
+      { label: "Confidentialité", href: "/confidentialite" },
     ],
   },
 ];
