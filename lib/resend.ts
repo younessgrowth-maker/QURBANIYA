@@ -284,3 +284,56 @@ export async function sendSacrificeDay(order: Order) {
   console.log("Email sacrifice day sent:", result);
   return result;
 }
+
+/* ═══════════════════════════════════════════
+   EMAIL 4 — LIVRAISON DE LA VIDÉO
+   ═══════════════════════════════════════════ */
+export async function sendVideoDelivery(order: Order, videoUrl: string) {
+  const html = emailLayout(`
+    <div style="text-align:center;margin:0 0 28px;">
+      <span style="font-size:40px;">&#128249;</span>
+    </div>
+
+    <h1 style="color:#C9A84C;font-size:24px;margin:0 0 8px;font-weight:bold;text-align:center;">
+      Votre vidéo est prête, ${order.prenom}
+    </h1>
+
+    <p style="text-align:center;margin:0 0 28px;color:#B8B0A0;font-size:15px;">
+      Taqabbal Allahou minna wa minkoum
+    </p>
+
+    <p style="margin:0 0 20px;">
+      Votre sacrifice au nom de <strong style="color:#C9A84C;">${order.niyyah}</strong>
+      a été accompli dans le respect total de la Sunnah. Voici la preuve vidéo
+      nominative que nous vous avions promise.
+    </p>
+
+    ${goldButton("VOIR MA VIDÉO", videoUrl)}
+
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:rgba(201,168,76,0.08);border-left:3px solid #C9A84C;border-radius:0 6px 6px 0;margin:0 0 24px;">
+      <tr><td style="padding:12px 16px;">
+        <p style="margin:0;color:#C9A84C;font-size:14px;font-weight:bold;">
+          &#9888; Ce lien reste valable 90 jours.
+        </p>
+        <p style="margin:4px 0 0;color:#B8B0A0;font-size:13px;">
+          Pensez à télécharger la vidéo sur votre téléphone ou ordinateur
+          pour la conserver durablement.
+        </p>
+      </td></tr>
+    </table>
+
+    <p style="margin:0;color:#7A7268;font-size:14px;text-align:center;">
+      Qu'Allah accepte votre sacrifice. Aïd Moubarak de toute l'équipe Qurbaniya.
+    </p>
+  `);
+
+  const result = await getResend().emails.send({
+    from: FROM,
+    to: order.email,
+    subject: `📹 Votre vidéo de sacrifice est prête — Qurbaniya`,
+    html,
+  });
+
+  console.log("Email video delivery sent:", result);
+  return result;
+}
