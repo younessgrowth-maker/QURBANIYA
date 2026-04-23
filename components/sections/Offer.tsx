@@ -3,7 +3,6 @@
 import { motion } from "framer-motion";
 import { Check, Lock, CreditCard, Zap } from "lucide-react";
 import StockGauge from "@/components/ui/StockGauge";
-import PricingTiers from "@/components/ui/PricingTiers";
 import Link from "next/link";
 import Button from "@/components/ui/Button";
 import SectionTitle from "@/components/ui/SectionTitle";
@@ -108,9 +107,6 @@ export default function Offer() {
             </div>
           </div>
         </motion.div>
-
-        {/* Price progression timeline */}
-        <PricingTiers className="mt-10" />
 
         {/* Payment icons */}
         <div className="flex items-center justify-center gap-6 mt-8 text-text-muted-light/50">

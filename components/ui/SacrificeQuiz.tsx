@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import Button from "@/components/ui/Button";
 import SectionTitle from "@/components/ui/SectionTitle";
+import { PRICE_AMOUNT } from "@/lib/constants";
 
 interface Question {
   question: string;
@@ -39,7 +40,7 @@ const questions: Question[] = [
 
 function getRecommendation(answers: string[]) {
   const qty = answers[2] === "large" ? 2 : 1;
-  const price = qty * 129;
+  const price = qty * PRICE_AMOUNT;
   const meals = qty * 30;
   const type = answers[1] === "aid" ? "Aïd al-Adha" : answers[1] === "aqiqa" ? "Aqiqa" : "Sadaqa";
   const forWhom = answers[0] === "offrir" ? "en cadeau" : "pour toi";
