@@ -16,6 +16,7 @@ export interface Order {
   stripe_session_id: string | null;
   amount: number;
   video_sent: boolean;
+  video_url: string | null;
   created_at: string;
   updated_at: string;
 }
