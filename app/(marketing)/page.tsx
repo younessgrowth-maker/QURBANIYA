@@ -2,8 +2,6 @@ import { ProductJsonLd, FAQPageJsonLd, EventJsonLd, BreadcrumbJsonLd } from "@/c
 import Hero from "@/components/sections/Hero";
 import StockGauge from "@/components/ui/StockGauge";
 import TrustBar from "@/components/ui/TrustBar";
-import { getInventory } from "@/lib/supabase/queries";
-import { CURRENT_YEAR, STOCK } from "@/lib/constants";
 // import SocialProofBar from "@/components/sections/SocialProofBar";
 import ProblemSolution from "@/components/sections/ProblemSolution";
 import HowItWorks from "@/components/sections/HowItWorks";
@@ -25,9 +23,7 @@ function Divider() {
 
 export const revalidate = 60;
 
-export default async function HomePage() {
-  const inventory = (await getInventory(CURRENT_YEAR)) ?? STOCK;
-
+export default function HomePage() {
   return (
     <>
       <ProductJsonLd />

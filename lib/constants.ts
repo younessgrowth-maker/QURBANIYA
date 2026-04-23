@@ -1,18 +1,3 @@
-// ─── Stock & Inventory ───
-// Fallback utilisé si Supabase est injoignable.
-// Source de vérité prod : table `inventory` Supabase (cf. lib/supabase/queries.ts getInventory).
-// La landing page charge le stock live en SSR et le passe en props. Les widgets
-// client autonomes (FloatingCTA, ExitIntentPopup, …) utilisent encore ce fallback —
-// prochain sprint : endpoint public /api/inventory + adaptation.
-const TOTAL = 200;
-const RESERVED = 147;
-
-export const STOCK = {
-  total: TOTAL,
-  reserved: RESERVED,
-  remaining: TOTAL - RESERVED,
-} as const;
-
 // ─── Impact per sheep (source : Cheikh Omar, mars 2026) ───
 export const MEALS_PER_SHEEP = 30;
 export const FAMILIES_PER_SHEEP = 5;
