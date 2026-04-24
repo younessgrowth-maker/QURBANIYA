@@ -48,12 +48,9 @@ export function ProductJsonLd() {
       validThrough: "2026-05-27",
       priceValidUntil: "2026-05-27",
     },
-    aggregateRating: {
-      "@type": "AggregateRating",
-      ratingValue: "4.8",
-      reviewCount: "523",
-      bestRating: "5",
-    },
+    // aggregateRating retiré — les avis clients seront collectés via Google
+    // Business Profile. Afficher des avis non vérifiés expose à l'art. L.121-4
+    // du Code de la consommation (pratique commerciale trompeuse).
   };
 
   return (
