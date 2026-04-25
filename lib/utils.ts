@@ -15,3 +15,7 @@ export function formatPrice(cents: number): string {
 export function getBaseUrl(): string {
   return process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
 }
+
+export function orderRef(orderId: string): string {
+  return `QRB-2026-${orderId.slice(0, 4).toUpperCase()}`;
+}
