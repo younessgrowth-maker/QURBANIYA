@@ -1,5 +1,5 @@
 import { createServiceRoleClient } from "@/lib/supabase/server";
-import { ShoppingBag, CheckCircle2, Euro, TrendingUp, Package, Clock, CreditCard, Heart } from "lucide-react";
+import { ShoppingBag, CheckCircle2, Euro, TrendingUp, Package, Clock, CreditCard, Heart, Printer } from "lucide-react";
 import { KpiCard } from "@/components/admin/KpiCard";
 import OrdersTable from "@/components/admin/OrdersTable";
 import AnalyticsSection from "@/components/admin/AnalyticsSection";
@@ -141,7 +141,13 @@ export default async function AdminDashboardPage() {
           <ShoppingBag size={18} className="text-gold" />
           Toutes les commandes
         </h2>
-        <span className="text-text-muted-light text-xs">Rafraîchi à l&apos;ouverture de la page</span>
+        <a
+          href="/api/admin/labels"
+          className="inline-flex items-center gap-2 rounded-lg bg-primary text-white text-sm font-semibold px-3 py-2 hover:bg-primary/90 transition-colors"
+        >
+          <Printer size={16} />
+          Télécharger les étiquettes PDF ({paid.length})
+        </a>
       </div>
 
       <OrdersTable orders={orders} />
