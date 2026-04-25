@@ -21,11 +21,11 @@ const playfair = Playfair_Display({
 export const metadata: Metadata = {
   metadataBase: new URL("https://qurbaniya.fr"),
   title: {
-    default: "Sacrifice Aïd al-Adha 2026 en ligne | Mouton avec vidéo nominative | Qurbaniya",
+    default: "Sacrifice mouton Aïd al-Adha 2026 — Vidéo nominative | Qurbaniya",
     template: "%s | Qurbaniya",
   },
   description:
-    "Déléguez votre sacrifice de l'Aïd al-Adha 2026 à Madagascar. Mouton sacrifié en votre nom, conforme à la Sunnah, avec preuve vidéo nominative. 140€ tout compris. +300 familles satisfaites.",
+    "Déléguez votre sacrifice de l'Aïd al-Adha 2026. Mouton sacrifié en votre nom à Madagascar, conforme à la Sunnah, preuve vidéo nominative. 140€ tout compris.",
   keywords: [
     "sacrifice aid 2026",
     "mouton aid en ligne",
