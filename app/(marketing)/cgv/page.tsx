@@ -71,10 +71,9 @@ export default function CGVPage() {
         et l&apos;ensemble de la logistique associée.
       </p>
       <p>
-        Le paiement est effectué en ligne au moment de la commande, via les
-        moyens de paiement proposés (Stripe, PayPal ou tout autre moyen
-        autorisé). La commande n&apos;est confirmée qu&apos;après réception du
-        paiement intégral.
+        Le paiement est effectué en ligne au moment de la commande, par carte
+        bancaire (Visa, Mastercard) via Stripe. La commande n&apos;est
+        confirmée qu&apos;après réception du paiement intégral.
       </p>
       <p>
         Aucun frais additionnel n&apos;est facturé après le paiement, sauf

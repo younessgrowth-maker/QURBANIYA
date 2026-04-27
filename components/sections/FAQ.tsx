@@ -23,7 +23,7 @@ const faqs = [
   },
   {
     q: "Quels sont les moyens de paiement acceptés ?",
-    a: "Nous acceptons la carte bancaire (via Stripe), PayPal, et le virement bancaire. Le paiement est 100% sécurisé.",
+    a: "Nous acceptons la carte bancaire (Visa, Mastercard) via Stripe. Le paiement est 100% sécurisé.",
   },
   {
     q: "Que devient la viande après le sacrifice ?",

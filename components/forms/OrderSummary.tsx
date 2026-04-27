@@ -50,7 +50,6 @@ export default function OrderSummary() {
           <span className="text-[10px] font-semibold uppercase tracking-wider">Visa</span>
           <span className="text-[10px] font-semibold uppercase tracking-wider">Mastercard</span>
           <span className="text-text-muted-light/30">|</span>
-          <span className="text-[10px] font-semibold uppercase tracking-wider">PayPal</span>
           <span className="text-[10px] font-semibold uppercase tracking-wider">Stripe</span>
         </div>
       </div>

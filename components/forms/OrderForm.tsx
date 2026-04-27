@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { orderSchema, type OrderFormValues } from "@/lib/validations";
-import { User, Users, Heart, CreditCard, Landmark, Check } from "lucide-react";
+import { User, Users, Heart, CreditCard, Check } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import Button from "@/components/ui/Button";
 import { cn } from "@/lib/utils";
@@ -82,15 +82,6 @@ function RadioCard({ label, icon: Icon, description, selected, onSelect }: {
   );
 }
 
-/* ── PayPal icon placeholder ── */
-function PayPalIcon({ size = 18 }: { size?: number }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-      <path d="M7.076 21.337H2.47a.641.641 0 0 1-.633-.74L4.944 3.72a.77.77 0 0 1 .76-.654h6.1c2.09 0 3.6.52 4.48 1.55.83.96 1.12 2.29.86 3.95l-.03.19v.54l.42.24c.36.19.64.4.86.65.37.42.6.96.7 1.6.09.67.05 1.45-.13 2.33-.22 1.01-.57 1.89-1.06 2.62-.45.67-1.01 1.21-1.67 1.62-.63.38-1.37.66-2.2.82-.8.16-1.7.24-2.68.24h-.64a1.15 1.15 0 0 0-1.14.97l-.04.24-.68 4.33-.03.18c-.02.11-.06.19-.11.24a.28.28 0 0 1-.2.08z" />
-    </svg>
-  );
-}
-
 export default function OrderForm() {
   const [submitSuccess, setSubmitSuccess] = useState(false);
   const [isGift, setIsGift] = useState(false);
@@ -110,7 +101,6 @@ export default function OrderForm() {
   });
 
   const intention = watch("intention");
-  const paymentMethod = watch("payment_method");
 
   async function onSubmit(data: OrderFormValues) {
     track("order_submitted", { payment_method: data.payment_method, intention: data.intention });
@@ -245,30 +235,18 @@ export default function OrderForm() {
       {/* ── Paiement ── */}
       <div>
         <h3 className="text-lg font-bold text-text-primary uppercase tracking-wide mb-5">
-          Moyen de paiement
+          Paiement
         </h3>
-        {errors.payment_method && <p className="text-urgency text-sm mb-3">{errors.payment_method.message}</p>}
-        <div className="space-y-3">
-          <RadioCard
-            label="Carte bancaire"
-            icon={CreditCard}
-            description="Visa, Mastercard — via Stripe"
-            selected={paymentMethod === "stripe"}
-            onSelect={() => setValue("payment_method", "stripe")}
-          />
-          <RadioCard
-            label="PayPal"
-            icon={PayPalIcon as unknown as LucideIcon}
-            selected={paymentMethod === "paypal"}
-            onSelect={() => setValue("payment_method", "paypal")}
-          />
-          <RadioCard
-            label="Virement bancaire"
-            icon={Landmark}
-            description="Coordonnées envoyées par email"
-            selected={paymentMethod === "virement"}
-            onSelect={() => setValue("payment_method", "virement")}
-          />
+        <div className="flex items-center gap-3 p-4 rounded-lg border-2 border-gold bg-gold/5">
+          <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 bg-gold/20 text-gold">
+            <CreditCard size={18} />
+          </div>
+          <div>
+            <span className="font-semibold text-sm block text-gold">Carte bancaire</span>
+            <span className="text-text-muted-light text-xs">
+              Visa, Mastercard — paiement sécurisé via Stripe
+            </span>
+          </div>
         </div>
       </div>
 

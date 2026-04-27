@@ -40,7 +40,7 @@ function emailLayout(content: string): string {
     <p style="margin:0 0 8px;">Qurbaniya.fr — Votre sacrifice conforme à la Sunnah</p>
     <p style="margin:0 0 8px;">
       <a href="mailto:contact@qurbaniya.fr" style="color:#C9A84C;text-decoration:none;">contact@qurbaniya.fr</a>
-      &nbsp;·&nbsp;WhatsApp : +33 6 XX XX XX XX
+      &nbsp;·&nbsp;<a href="https://wa.me/33744798883" style="color:#C9A84C;text-decoration:none;">WhatsApp : +33 7 44 79 88 83</a>
     </p>
     <p style="margin:0;">
       <a href="https://qurbaniya.fr" style="color:#7A7268;text-decoration:underline;font-size:12px;">Se désabonner</a>
