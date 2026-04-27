@@ -113,7 +113,6 @@ export default function Offer() {
           <span className="text-xs font-semibold uppercase tracking-wider">Visa</span>
           <span className="text-xs font-semibold uppercase tracking-wider">Mastercard</span>
           <CreditCard size={18} className="opacity-50" />
-          <span className="text-xs font-semibold uppercase tracking-wider">PayPal</span>
           <span className="text-xs font-semibold uppercase tracking-wider">Stripe</span>
         </div>
       </div>
