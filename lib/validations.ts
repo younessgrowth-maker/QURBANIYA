@@ -9,7 +9,7 @@ export const orderSchema = z.object({
     message: "Veuillez choisir une intention",
   }),
   niyyah: z.string().min(2, "Veuillez indiquer le nom pour le sacrifice"),
-  payment_method: z.enum(["stripe"]).default("stripe"),
+  payment_method: z.enum(["stripe"]),
 });
 
 export type OrderFormValues = z.infer<typeof orderSchema>;
