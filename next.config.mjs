@@ -31,6 +31,16 @@ const nextConfig = {
         destination: "/commander",
         permanent: true,
       },
+      {
+        source: "/products/:slug*",
+        destination: "/commander",
+        permanent: true,
+      },
+      {
+        source: "/collections/:slug*",
+        destination: "/commander",
+        permanent: true,
+      },
     ];
   },
   async headers() {
