@@ -77,18 +77,6 @@ function goldButton(text: string, href: string): string {
 </table>`;
 }
 
-/* ── Helper: bouton vert secondaire ── */
-function greenButton(text: string, href: string): string {
-  return `
-<table role="presentation" cellpadding="0" cellspacing="0" style="margin:32px auto;">
-<tr><td align="center" style="background:#1B4332;border-radius:10px;">
-  <a href="${href}" target="_blank" style="display:inline-block;padding:16px 36px;font-family:Helvetica,Arial,sans-serif;font-size:15px;font-weight:bold;color:#FEFCF8;text-decoration:none;text-transform:uppercase;letter-spacing:1px;">
-    ${text}
-  </a>
-</td></tr>
-</table>`;
-}
-
 /* ── Helper: étape numérotée ── */
 function stepItem(num: string, title: string, text: string): string {
   return `
