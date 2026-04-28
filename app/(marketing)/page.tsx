@@ -1,4 +1,4 @@
-import { ProductJsonLd, FAQPageJsonLd, EventJsonLd, BreadcrumbJsonLd } from "@/components/seo/JsonLd";
+import { ProductJsonLd, EventJsonLd, BreadcrumbJsonLd } from "@/components/seo/JsonLd";
 import Hero from "@/components/sections/Hero";
 import StockGauge from "@/components/ui/StockGauge";
 import TrustBar from "@/components/ui/TrustBar";
@@ -27,7 +27,6 @@ export default function HomePage() {
   return (
     <>
       <ProductJsonLd />
-      <FAQPageJsonLd />
       <EventJsonLd />
       <BreadcrumbJsonLd items={[
         { name: "Accueil", url: "https://qurbaniya.fr" },
