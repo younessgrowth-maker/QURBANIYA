@@ -194,6 +194,8 @@ export async function sendOrderConfirmation(order: Order) {
       </td></tr>
     </table>
 
+    ${order.stripe_session_id ? goldButton("VOIR MA CONFIRMATION", `https://qurbaniya.fr/confirmation?session_id=${order.stripe_session_id}`) : ""}
+
     <p style="margin:0;color:#5C5347;font-size:14px;text-align:center;line-height:1.7;">
       Une question ? Écrivez à <a href="mailto:${SUPPORT_EMAIL}" style="color:#1B4332;text-decoration:none;font-weight:bold;">${SUPPORT_EMAIL}</a><br>
       ou contactez-nous sur <a href="${WHATSAPP_LINK}" style="color:#1B4332;text-decoration:none;font-weight:bold;">WhatsApp</a>.
