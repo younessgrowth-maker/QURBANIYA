@@ -12,10 +12,11 @@ import { track } from "@/lib/track";
 import type { LucideIcon } from "lucide-react";
 
 /* ── Field wrapper ── */
-function Field({ label, error, optional, children }: {
+function Field({ label, error, optional, hint, children }: {
   label: string;
   error?: string;
   optional?: boolean;
+  hint?: string;
   children: React.ReactNode;
 }) {
   return (
@@ -24,6 +25,7 @@ function Field({ label, error, optional, children }: {
         {label}
         {optional && <span className="text-text-muted-light ml-1 font-normal">(optionnel)</span>}
       </label>
+      {hint && <p className="text-text-muted-light text-xs mb-1.5">{hint}</p>}
       {children}
       {error && <p className="text-urgency text-sm mt-1.5">{error}</p>}
     </div>
@@ -140,7 +142,7 @@ export default function OrderForm() {
           <Field label="Email" error={errors.email?.message}>
             <input {...register("email")} type="email" className={inputClass} placeholder="votre@email.com" />
           </Field>
-          <Field label="Téléphone" error={errors.telephone?.message} optional>
+          <Field label="Téléphone" error={errors.telephone?.message} hint="WhatsApp — pour recevoir la vidéo de votre sacrifice">
             <input {...register("telephone")} type="tel" className={inputClass} placeholder="+33 6 12 34 56 78" />
           </Field>
         </div>
