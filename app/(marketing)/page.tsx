@@ -2,11 +2,9 @@ import { ProductJsonLd, EventJsonLd, BreadcrumbJsonLd } from "@/components/seo/J
 import Hero from "@/components/sections/Hero";
 import StockGauge from "@/components/ui/StockGauge";
 import TrustBar from "@/components/ui/TrustBar";
-// import SocialProofBar from "@/components/sections/SocialProofBar";
 import ProblemSolution from "@/components/sections/ProblemSolution";
 import HowItWorks from "@/components/sections/HowItWorks";
 import Sheikh from "@/components/sections/Sheikh";
-import ImpactCounters from "@/components/sections/ImpactCounters";
 import Testimonials from "@/components/sections/Testimonials";
 import ComparisonTable from "@/components/sections/ComparisonTable";
 import Offer from "@/components/sections/Offer";
@@ -66,10 +64,6 @@ export default function HomePage() {
       {/* 8. OBJECTIONS — Pourquoi déléguer plutôt que renoncer */}
       <Divider />
       <ComparisonTable />
-
-      {/* 9. IMPACT GLOBAL — Chiffres concrets */}
-      <Divider />
-      <ImpactCounters />
 
       {/* 10. CERTIFICAT — Preuve de sérieux */}
       <Divider />
