@@ -38,3 +38,18 @@ export interface OrderFormData {
   niyyah: string;
   payment_method: PaymentMethod;
 }
+
+export type ReviewStatus = "pending" | "approved" | "rejected";
+
+export interface Review {
+  id: string;
+  prenom: string;
+  ville: string | null;
+  rating: number;
+  text: string;
+  email: string | null;
+  year: number | null;
+  status: ReviewStatus;
+  created_at: string;
+  approved_at: string | null;
+}
