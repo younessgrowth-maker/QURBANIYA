@@ -134,7 +134,7 @@ export default function ExitIntentPopup() {
             </Link>
 
             <p className="text-text-muted-light text-xs mt-4 font-inter">
-              Rejoignez les +300 contributeurs satisfaits
+              Service en activité depuis 2022 · Vidéo nominative garantie
             </p>
           </div>
         </div>

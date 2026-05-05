@@ -1,152 +1,123 @@
 "use client";
 
+import Image from "next/image";
 import { motion } from "framer-motion";
-import { Star, ExternalLink } from "lucide-react";
+import { Video, Shield, MessageCircle, Heart, ArrowRight } from "lucide-react";
 import SectionTitle from "@/components/ui/SectionTitle";
-import { cn } from "@/lib/utils";
-import InlineCTA from "@/components/ui/InlineCTA";
 
-interface Testimonial {
-  nom: string;
-  ville: string;
-  etoiles: 1 | 2 | 3 | 4 | 5;
-  texte: string;
-  date: string;
+interface Guarantee {
+  icon: typeof Video;
+  title: string;
+  text: string;
 }
 
-const testimonials: Testimonial[] = [
-  { nom: "Karim B.", ville: "Lyon", etoiles: 5, texte: "Impeccable, j'ai reçu la vidéo le jour même. Je recommande à tous mes proches.", date: "Aïd 2024" },
-  { nom: "Fatima L.", ville: "Paris", etoiles: 5, texte: "Très sérieux, la vidéo arrive bien. Le prix est imbattable comparé à la France.", date: "Aïd 2024" },
-  { nom: "Mohamed R.", ville: "Marseille", etoiles: 5, texte: "4ème année consécutive, toujours aussi bien. Vraiment de confiance.", date: "Aïd 2024" },
-  { nom: "Aïcha M.", ville: "Toulouse", etoiles: 5, texte: "Parfait. La démarche est simple et la preuve rassure vraiment. Barakallah fikoum.", date: "Aïd 2024" },
-  { nom: "Youssef T.", ville: "Bordeaux", etoiles: 4, texte: "Très bon service. Juste quelques heures d'attente pour la vidéo mais elle est arrivée.", date: "Aïd 2024" },
-  { nom: "Samira K.", ville: "Strasbourg", etoiles: 5, texte: "Je ne passe plus par ailleurs. Service exemplaire et équipe réactive.", date: "Aïd 2024" },
+const guarantees: Guarantee[] = [
+  {
+    icon: Video,
+    title: "Vidéo nominative",
+    text: "Une preuve vidéo individuelle envoyée par WhatsApp dans les 24h suivant le sacrifice.",
+  },
+  {
+    icon: Shield,
+    title: "Supervision Sunnah",
+    text: "Sacrifice effectué par notre cheikh dans le respect total des règles religieuses.",
+  },
+  {
+    icon: Heart,
+    title: "Viande distribuée",
+    text: "La viande est répartie entre votre intention et les familles dans le besoin.",
+  },
+  {
+    icon: MessageCircle,
+    title: "Support WhatsApp",
+    text: "Une question, un doute ? Notre équipe vous répond directement par message.",
+  },
 ];
-
-function TestimonialCard({ t, index }: { t: Testimonial; index: number }) {
-  const initials = t.nom
-    .split(" ")
-    .map((n) => n[0])
-    .join("")
-    .toUpperCase();
-
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: "-40px" }}
-      transition={{ delay: index * 0.1, duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-      whileHover={{ y: -4, transition: { duration: 0.25, ease: [0.16, 1, 0.3, 1] } }}
-      className="bg-white rounded-xl border border-gray-200 p-6 flex flex-col min-w-[280px] snap-center transition-shadow duration-300 hover:shadow-elevated hover:border-gold/15 cursor-default"
-    >
-      {/* Stars */}
-      <div className="flex items-center gap-0.5 mb-4" aria-label={`${t.etoiles} étoiles sur 5`}>
-        {Array.from({ length: 5 }).map((_, i) => (
-          <Star
-            key={i}
-            size={14}
-            className={cn(
-              i < t.etoiles ? "text-gold fill-gold" : "text-text-muted-light"
-            )}
-          />
-        ))}
-      </div>
-
-      {/* Text */}
-      <p className="text-text-primary text-sm leading-relaxed italic flex-1 mb-5">
-        &ldquo;{t.texte}&rdquo;
-      </p>
-
-      {/* Author */}
-      <div className="flex items-center gap-3">
-        <div className="w-10 h-10 rounded-full bg-emerald/15 border border-emerald/30 flex items-center justify-center flex-shrink-0">
-          <span className="text-emerald text-xs font-bold">{initials}</span>
-        </div>
-        <div className="flex-1 min-w-0">
-          <p className="text-text-primary text-sm font-semibold">{t.nom}</p>
-          <p className="text-text-muted-light text-xs">{t.ville}</p>
-        </div>
-        <span className="text-text-muted-light text-[11px] bg-bg-tertiary px-2 py-1 rounded-full whitespace-nowrap">
-          {t.date}
-        </span>
-      </div>
-      {/* Verified badge */}
-      <div className="flex items-center gap-1.5 mt-3 pt-3 border-t border-gray-100">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#2D6A4F" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="flex-shrink-0"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-        <span className="text-emerald text-[10px] font-semibold">Contributeur vérifié · {t.date}</span>
-      </div>
-    </motion.div>
-  );
-}
 
 export default function Testimonials() {
   return (
     <section className="bg-bg-primary section-padding" id="temoignages">
       <div className="max-w-6xl mx-auto">
         <SectionTitle
-          title="ILS NOUS ONT FAIT CONFIANCE"
-          accent="CONFIANCE"
-          subtitle="+300 familles satisfaites · Note moyenne : 4.8/5"
+          title="NOTRE ENGAGEMENT ENVERS VOUS"
+          accent="ENGAGEMENT"
+          subtitle="Un service pensé pour la sérénité des familles musulmanes"
         />
 
-        {/* Desktop: 3x2 grid */}
-        <div className="hidden md:grid md:grid-cols-3 gap-5">
-          {testimonials.map((t, i) => (
-            <TestimonialCard key={t.nom} t={t} index={i} />
+        {/* Cheikh card */}
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-40px" }}
+          transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+          className="bg-white rounded-2xl border border-gray-200 p-6 md:p-8 mb-8 flex flex-col md:flex-row items-center gap-6 md:gap-8 shadow-soft"
+        >
+          <div className="relative w-32 h-32 md:w-40 md:h-40 flex-shrink-0">
+            <Image
+              src="/cheikhChamsouddin.jpg"
+              alt="Cheikh Chamsouddin"
+              fill
+              sizes="(max-width: 768px) 128px, 160px"
+              className="rounded-full object-cover border-4 border-gold/30"
+            />
+          </div>
+          <div className="text-center md:text-left flex-1">
+            <p className="text-text-muted-light text-xs uppercase tracking-[1.5px] font-semibold mb-2">
+              Votre sacrifice supervisé par
+            </p>
+            <h3 className="text-text-primary text-2xl md:text-3xl font-bold font-playfair mb-2">
+              Cheikh Chamsouddin
+            </h3>
+            <p className="text-text-muted text-base leading-relaxed">
+              Garant de la conformité religieuse de chaque sacrifice : choix de l&apos;animal,
+              récitation, gestes, distribution. Aucun raccourci, aucune approximation.
+            </p>
+          </div>
+        </motion.div>
+
+        {/* Guarantees grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-5">
+          {guarantees.map((g, i) => (
+            <motion.div
+              key={g.title}
+              initial={{ opacity: 0, y: 16 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: "-40px" }}
+              transition={{ delay: i * 0.08, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+              className="bg-white rounded-xl border border-gray-200 p-6 hover:border-gold/30 hover:shadow-soft transition-all"
+            >
+              <div className="w-11 h-11 rounded-full bg-emerald/10 flex items-center justify-center mb-4">
+                <g.icon size={20} className="text-emerald" />
+              </div>
+              <h4 className="text-text-primary text-base font-bold mb-2">{g.title}</h4>
+              <p className="text-text-muted text-sm leading-relaxed">{g.text}</p>
+            </motion.div>
           ))}
         </div>
 
-        {/* Mobile: horizontal scroll with snap */}
-        <div className="md:hidden -mx-4 px-4">
-          <div className="flex gap-4 overflow-x-auto snap-x snap-mandatory pb-4 scrollbar-hide"
-            style={{ WebkitOverflowScrolling: "touch" }}
-          >
-            {testimonials.map((t, i) => (
-              <TestimonialCard key={t.nom} t={t} index={i} />
-            ))}
-          </div>
-          {/* Scroll hint */}
-          <p className="text-text-muted-light text-xs text-center mt-2">
-            ← Faites glisser pour voir plus →
-          </p>
-        </div>
-
-        {/* Rating summary + link */}
+        {/* Reviews invitation */}
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ delay: 0.3, duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-          className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4"
+          className="mt-10 bg-bg-secondary rounded-xl border border-gold/20 p-6 md:p-8 text-center"
         >
-          {/* Rating bar */}
-          <div className="flex items-center gap-2">
-            <div className="flex items-center gap-0.5">
-              {Array.from({ length: 5 }).map((_, i) => (
-                <Star key={i} size={16} className={cn(
-                  i < 5 ? "text-gold fill-gold" : "text-text-muted-light"
-                )} />
-              ))}
-            </div>
-            <span className="text-text-primary text-sm font-semibold">4.8 sur 5</span>
-            <span className="text-text-muted text-sm">· Basé sur 300+ avis</span>
-          </div>
-
-          {/* Link to reviews */}
+          <h4 className="text-text-primary text-lg md:text-xl font-bold mb-2">
+            Vous avez confié votre sacrifice à Qurbaniya ?
+          </h4>
+          <p className="text-text-muted text-sm md:text-base mb-5 max-w-xl mx-auto">
+            Votre retour aide d&apos;autres familles à choisir en confiance. Partagez votre
+            témoignage en quelques mots.
+          </p>
           <a
-            href="#"
-            className="inline-flex items-center gap-1.5 text-gold text-sm font-semibold hover:text-gold-light transition-colors"
+            href="/avis"
+            className="inline-flex items-center gap-2 bg-gold hover:bg-gold-light text-white font-bold px-6 py-3 rounded-button transition-colors"
           >
-            Voir tous les avis
-            <ExternalLink size={14} />
+            Laisser un avis
+            <ArrowRight size={16} />
           </a>
         </motion.div>
-
-        <InlineCTA
-          variant="primary"
-          text="Rejoindre les 300+ familles satisfaites"
-          subtitle="Votre sacrifice entre de bonnes mains."
-        />
       </div>
     </section>
   );
