@@ -66,7 +66,7 @@ function toCsv(orders: Order[]): string {
     o.niyyah,
     STATUS_LABEL[o.payment_status] || o.payment_status,
     METHOD_LABEL[o.payment_method] || o.payment_method,
-    (o.amount / 100).toFixed(2),
+    o.amount.toFixed(2),
     o.stripe_session_id || "",
     o.video_sent ? "Oui" : "Non",
     o.id,
@@ -218,7 +218,7 @@ export default function OrdersTable({ orders }: { orders: Order[] }) {
                     {METHOD_LABEL[o.payment_method] || o.payment_method}
                   </td>
                   <td className="px-4 py-3 text-right font-bold text-text-primary whitespace-nowrap">
-                    {(o.amount / 100).toFixed(2)} €
+                    {o.amount.toFixed(2)} €
                   </td>
                 </tr>
               ))
