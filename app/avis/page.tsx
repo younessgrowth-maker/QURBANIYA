@@ -143,6 +143,35 @@ export default function AvisPage() {
             pour aider d&apos;autres familles musulmanes à choisir en confiance.
           </p>
 
+          <div className="bg-bg-tertiary border border-gray-200 rounded-lg p-5 mb-8">
+            <div className="flex items-start gap-3">
+              <div className="flex-shrink-0 mt-0.5">
+                <Star size={20} className="text-gold fill-gold" />
+              </div>
+              <div className="flex-1">
+                <h2 className="text-text-primary font-semibold text-base mb-1">
+                  Préférez-vous laisser un avis sur Google ?
+                </h2>
+                <p className="text-text-muted text-sm mb-3 leading-relaxed">
+                  Un avis Google aide d&apos;autres familles à nous trouver. Cela prend 30 secondes.
+                </p>
+                <a
+                  href="https://g.page/r/CQT3MFQZ9CcfEBM/review"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 bg-emerald hover:bg-emerald/90 text-white font-semibold text-sm px-4 py-2.5 rounded-button transition-colors"
+                >
+                  <Star size={16} className="fill-white" />
+                  Laisser un avis Google
+                </a>
+              </div>
+            </div>
+          </div>
+
+          <div className="text-center text-text-muted-light text-xs uppercase tracking-wider mb-6">
+            — Ou utilisez le formulaire ci-dessous —
+          </div>
+
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
             {/* Honeypot — caché aux humains, visible aux bots */}
             <div style={{ position: "absolute", left: "-9999px", opacity: 0 }} aria-hidden="true">
