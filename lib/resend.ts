@@ -347,6 +347,74 @@ export async function sendSacrificeDay(order: Order) {
 }
 
 /* ═══════════════════════════════════════════
+   EMAIL 5 — RELANCE PANIER ABANDONNÉ
+   ═══════════════════════════════════════════ */
+export async function sendAbandonedCartReminder(order: Order, resumeUrl: string) {
+  const intentionLabel =
+    order.intention === "pour_moi" ? "pour vous-même" :
+    order.intention === "famille" ? "pour votre famille" : "en sadaqa";
+
+  const html = emailLayout(`
+    <h1 style="color:#1A1A18;font-size:25px;margin:0 0 12px;font-weight:bold;font-family:Georgia,serif;">
+      Vous y étiez presque, ${order.prenom}
+    </h1>
+
+    <p style="margin:0 0 24px;color:#5C5347;font-size:15px;line-height:1.7;">
+      Votre commande pour un sacrifice ${intentionLabel} au nom de
+      <strong style="color:#1A1A18;font-family:Georgia,serif;font-style:italic;">${order.niyyah}</strong>
+      est en attente de paiement. Aïd 2026 approche (le 27 mai) et les places se remplissent vite.
+    </p>
+
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#F7F3ED;border:1px solid #EFE9DF;border-radius:12px;margin:0 0 28px;">
+      <tr><td style="padding:20px 24px;">
+        <p style="margin:0 0 12px;color:#8C8279;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;font-weight:bold;">Récap de votre commande</p>
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+          <tr>
+            <td style="color:#5C5347;font-size:14px;padding:5px 0;">Sacrifice mouton — Aïd 2026</td>
+            <td style="color:#1A1A18;font-size:14px;padding:5px 0;text-align:right;font-weight:bold;">140,00 €</td>
+          </tr>
+          <tr>
+            <td style="color:#5C5347;font-size:14px;padding:5px 0;">Niyyah</td>
+            <td style="color:#B8860B;font-size:14px;padding:5px 0;text-align:right;font-weight:bold;font-family:Georgia,serif;font-style:italic;">${order.niyyah}</td>
+          </tr>
+        </table>
+      </td></tr>
+    </table>
+
+    ${goldButton("FINALISER MA COMMANDE", resumeUrl)}
+
+    <p style="margin:0 0 24px;color:#5C5347;font-size:13px;text-align:center;line-height:1.6;">
+      Ce lien reste valable 24 h après la création de votre commande.<br>
+      Au-delà, il vous faudra recommencer le tunnel de réservation.
+    </p>
+
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#FDF6E3;border-left:4px solid #D4A843;border-radius:0 8px 8px 0;margin:0 0 24px;">
+      <tr><td style="padding:14px 18px;">
+        <p style="margin:0;color:#8B6508;font-size:13px;line-height:1.6;">
+          <strong>Une question, un doute ?</strong> Répondez à cet email ou écrivez-nous sur
+          <a href="${WHATSAPP_LINK}" style="color:#1B4332;text-decoration:none;font-weight:bold;">WhatsApp</a>.
+          On vous répond dans la journée.
+        </p>
+      </td></tr>
+    </table>
+
+    <p style="margin:0;color:#5C5347;font-size:13px;text-align:center;line-height:1.7;font-style:italic;font-family:Georgia,serif;">
+      Qu'Allah vous facilite — toute l'équipe Qurbaniya.
+    </p>
+  `);
+
+  const result = await getResend().emails.send({
+    from: FROM,
+    to: order.email,
+    subject: `${order.prenom}, votre sacrifice Aïd 2026 vous attend`,
+    html,
+  });
+
+  console.log("Email abandoned cart reminder sent:", result);
+  return result;
+}
+
+/* ═══════════════════════════════════════════
    EMAIL 4 — LIVRAISON DE LA VIDÉO
    ═══════════════════════════════════════════ */
 export async function sendVideoDelivery(order: Order, videoUrl: string) {

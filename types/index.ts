@@ -17,6 +17,7 @@ export interface Order {
   amount: number;
   video_sent: boolean;
   video_url: string | null;
+  reminder_sent_at: string | null;
   created_at: string;
   updated_at: string;
 }
