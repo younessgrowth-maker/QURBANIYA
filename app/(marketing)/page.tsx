@@ -6,6 +6,7 @@ import ProblemSolution from "@/components/sections/ProblemSolution";
 import HowItWorks from "@/components/sections/HowItWorks";
 import Sheikh from "@/components/sections/Sheikh";
 import Testimonials from "@/components/sections/Testimonials";
+import RealTestimonials from "@/components/sections/RealTestimonials";
 import ComparisonTable from "@/components/sections/ComparisonTable";
 import Offer from "@/components/sections/Offer";
 import ImpactCalculator from "@/components/ui/ImpactCalculator";
@@ -52,6 +53,9 @@ export default function HomePage() {
       {/* 5. PREUVE SOCIALE — Témoignages clients */}
       <Divider />
       <Testimonials />
+
+      {/* 5bis. AVIS RÉELS — Hidden until 3+ approved reviews */}
+      <RealTestimonials />
 
       {/* 6. ENGAGEMENT — Calculez votre impact (interactif) */}
       <Divider />
