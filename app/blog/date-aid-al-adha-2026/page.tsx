@@ -4,26 +4,31 @@ import { ArrowLeft, Calendar, Clock, ArrowRight } from "lucide-react";
 import { BreadcrumbJsonLd } from "@/components/seo/JsonLd";
 
 export const metadata: Metadata = {
-  title: "Date de l'Aïd al-Adha 2026 : tout ce qu'il faut savoir",
+  title: "Aïd al-Adha 2026 : c'est le mercredi 27 mai en France",
   description:
-    "L'Aïd al-Adha 2026 est prévu le 27 mai. Dates exactes, jours de tachriq (28-30 mai), préparations, et comment réserver votre sacrifice à temps.",
+    "L'Aïd al-Adha 2026 (Aïd el-Kébir, Tabaski) tombe le mercredi 27 mai 2026 en France. Jour d'Arafat le 26 mai, jours de tachriq du 28 au 30 mai. Calendrier complet.",
   keywords: [
     "date aid al adha 2026",
     "aid el kebir 2026",
-    "quand est l'aid 2026",
-    "fête du mouton 2026",
-    "date sacrifice 2026",
+    "aid 2026 mai",
+    "27 mai 2026 aid",
+    "le grand aid 2026",
+    "tabaski 2026",
+    "aid mouton 2026 date",
     "jours tachriq 2026",
+    "jour arafat 2026",
   ],
   alternates: {
     canonical: "https://qurbaniya.fr/blog/date-aid-al-adha-2026",
   },
   openGraph: {
-    title: "Date de l'Aïd al-Adha 2026 : tout ce qu'il faut savoir",
-    description: "L'Aïd al-Adha 2026 est prévu le 27 mai. Dates, tachriq, préparations.",
+    title: "Aïd al-Adha 2026 : mercredi 27 mai 2026 en France",
+    description:
+      "Date confirmée de l'Aïd al-Adha (Aïd el-Kébir / Tabaski) 2026 : mercredi 27 mai. Jour d'Arafat le 26 mai, tachriq du 28 au 30 mai.",
     url: "https://qurbaniya.fr/blog/date-aid-al-adha-2026",
     type: "article",
     publishedTime: "2026-03-15T00:00:00Z",
+    modifiedTime: "2026-05-07T00:00:00Z",
   },
 };
 
@@ -31,10 +36,10 @@ function ArticleJsonLd() {
   const schema = {
     "@context": "https://schema.org",
     "@type": "Article",
-    headline: "Date de l'Aïd al-Adha 2026 : tout ce qu'il faut savoir",
+    headline: "Aïd al-Adha 2026 : c'est le mercredi 27 mai en France",
     author: { "@type": "Organization", name: "Qurbaniya" },
     datePublished: "2026-03-15",
-    dateModified: "2026-03-15",
+    dateModified: "2026-05-07",
     publisher: {
       "@type": "Organization",
       name: "Qurbaniya",
@@ -51,10 +56,67 @@ function ArticleJsonLd() {
   );
 }
 
+function ArticleFaqJsonLd() {
+  const schema = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: [
+      {
+        "@type": "Question",
+        name: "Quelle est la date de l'Aïd al-Adha 2026 en France ?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: "L'Aïd al-Adha 2026 (aussi appelé Aïd el-Kébir ou Tabaski) tombe le mercredi 27 mai 2026 en France, correspondant au 10 Dhoul Hijja 1447 du calendrier hégirien.",
+        },
+      },
+      {
+        "@type": "Question",
+        name: "Quels sont les jours de tachriq en 2026 ?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: "Les jours de tachriq en 2026 sont les 28, 29 et 30 mai. Le sacrifice est valide du 27 au 30 mai 2026 inclus.",
+        },
+      },
+      {
+        "@type": "Question",
+        name: "Quand est le jour d'Arafat en 2026 ?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: "Le jour d'Arafat 2026 tombe le mardi 26 mai 2026, veille de l'Aïd al-Adha. Le jeûne de ce jour est fortement recommandé pour les non-pèlerins.",
+        },
+      },
+      {
+        "@type": "Question",
+        name: "Peut-on déléguer son sacrifice de l'Aïd al-Adha ?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: "Oui, la délégation du sacrifice (tawkil) est valide selon les quatre écoles juridiques sunnites. Cette pratique remonte aux compagnons du Prophète (paix sur lui).",
+        },
+      },
+      {
+        "@type": "Question",
+        name: "Pourquoi l'Aïd al-Adha s'appelle aussi Tabaski ?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: "Tabaski est le nom donné à l'Aïd al-Adha en Afrique de l'Ouest (Sénégal, Mali, Côte d'Ivoire, Guinée). Il s'agit de la même fête religieuse, célébrée à la même date : le 27 mai 2026.",
+        },
+      },
+    ],
+  };
+
+  return (
+    <script
+      type="application/ld+json"
+      dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
+    />
+  );
+}
+
 export default function ArticleDateAid() {
   return (
     <>
       <ArticleJsonLd />
+      <ArticleFaqJsonLd />
       <BreadcrumbJsonLd items={[
         { name: "Accueil", url: "https://qurbaniya.fr" },
         { name: "Blog", url: "https://qurbaniya.fr/blog" },
@@ -74,7 +136,7 @@ export default function ArticleDateAid() {
         <div className="flex items-center gap-4 mb-4">
           <span className="text-xs font-semibold text-gold bg-gold/10 px-2.5 py-1 rounded-full font-inter">Guide</span>
           <span className="flex items-center gap-1 text-xs text-text-muted-light font-inter">
-            <Calendar size={12} /> 15 mars 2026
+            <Calendar size={12} /> Mis à jour le 7 mai 2026
           </span>
           <span className="flex items-center gap-1 text-xs text-text-muted-light font-inter">
             <Clock size={12} /> 5 min de lecture
@@ -83,11 +145,11 @@ export default function ArticleDateAid() {
 
         {/* Title */}
         <h1 className="text-3xl md:text-4xl lg:text-[2.75rem] font-black leading-tight mb-6">
-          Date de l&apos;Aïd al-Adha 2026 : <span className="text-gold">tout ce qu&apos;il faut savoir</span>
+          Aïd al-Adha 2026 : c&apos;est le <span className="text-gold">mercredi 27 mai 2026</span> en France
         </h1>
 
         <p className="text-lg text-text-muted leading-relaxed mb-8 border-l-4 border-gold pl-4">
-          L&apos;Aïd al-Adha (ou Aïd el-Kébir) est le moment le plus important du calendrier musulman pour le sacrifice rituel. Voici toutes les informations pour bien vous préparer cette année.
+          L&apos;Aïd al-Adha 2026 — aussi appelé <strong className="text-text-primary">Aïd el-Kébir</strong> ou <strong className="text-text-primary">Tabaski</strong> — tombe le <strong className="text-text-primary">mercredi 27 mai 2026</strong> en France. Voici le calendrier complet (jour d&apos;Arafat, tachriq) et tout ce qu&apos;il faut savoir pour préparer votre sacrifice.
         </p>
 
         {/* Content */}
@@ -99,6 +161,22 @@ export default function ArticleDateAid() {
             </p>
             <p className="text-text-muted leading-relaxed">
               Comme chaque année, la date définitive sera confirmée par l&apos;observation du croissant lunaire. Elle pourrait varier d&apos;un jour selon les pays.
+            </p>
+          </section>
+
+          <section>
+            <h2 className="text-2xl font-bold text-text-primary mb-4">Aïd el-Kébir, Tabaski, Aïd al-Adha : c&apos;est la même fête</h2>
+            <p className="text-text-muted leading-relaxed mb-4">
+              Plusieurs noms désignent la même célébration religieuse selon les régions du monde musulman :
+            </p>
+            <ul className="space-y-2 text-text-muted font-inter text-sm pl-1">
+              <li><strong className="text-text-primary">Aïd al-Adha</strong> (عيد الأضحى) — nom arabe officiel, littéralement « fête du sacrifice ».</li>
+              <li><strong className="text-text-primary">Aïd el-Kébir</strong> (« la grande fête ») — nom courant au Maghreb et en France.</li>
+              <li><strong className="text-text-primary">Tabaski</strong> — nom utilisé en Afrique de l&apos;Ouest (Sénégal, Mali, Côte d&apos;Ivoire, Guinée).</li>
+              <li><strong className="text-text-primary">Le grand Aïd</strong> ou <strong className="text-text-primary">le 2ᵉ Aïd</strong> — par opposition à l&apos;Aïd al-Fitr qui marque la fin du Ramadan.</li>
+            </ul>
+            <p className="text-text-muted leading-relaxed mt-4">
+              Quel que soit le nom utilisé, la date est la même partout : <strong className="text-text-primary">mercredi 27 mai 2026</strong>.
             </p>
           </section>
 
@@ -133,7 +211,7 @@ export default function ArticleDateAid() {
             <ol className="space-y-3 text-text-muted font-inter">
               <li className="flex gap-3">
                 <span className="flex-shrink-0 w-7 h-7 rounded-full bg-gold/15 text-gold text-sm font-bold flex items-center justify-center">1</span>
-                <span><strong className="text-text-primary">Réservez tôt</strong> — Les prix augmentent et les places se raréfient à l&apos;approche de l&apos;Aïd.</span>
+                <span><strong className="text-text-primary">Réservez tôt</strong> — Les prix augmentent et les places se raréfient à l&apos;approche de l&apos;Aïd. Voir notre <Link href="/blog/prix-mouton-france-2026" className="text-gold hover:underline">guide des prix du mouton en France 2026</Link>.</span>
               </li>
               <li className="flex gap-3">
                 <span className="flex-shrink-0 w-7 h-7 rounded-full bg-gold/15 text-gold text-sm font-bold flex items-center justify-center">2</span>
