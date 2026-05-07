@@ -7,6 +7,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     "date-aid-al-adha-2026",
     "sacrifice-aid-en-ligne-comment-ca-marche",
     "prix-mouton-france-2026",
+    "combien-coute-mouton-aid-2026-france",
   ];
 
   const blogEntries = blogSlugs.map((slug) => ({

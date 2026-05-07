@@ -19,6 +19,15 @@ export const metadata: Metadata = {
 
 const articles = [
   {
+    slug: "combien-coute-mouton-aid-2026-france",
+    title: "Combien coûte un mouton de l'Aïd al-Adha 2026 en France ?",
+    excerpt:
+      "De 140€ (en ligne) à 450€+ (vivant + abattoir agréé) : comparatif complet des 3 façons d'avoir un mouton pour l'Aïd 2026, avec ce qui est inclus et comment choisir.",
+    date: "7 mai 2026",
+    readTime: "7 min",
+    category: "Comparatif prix",
+  },
+  {
     slug: "date-aid-al-adha-2026",
     title: "Date de l'Aïd al-Adha 2026 : tout ce qu'il faut savoir",
     excerpt:
