@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { randomUUID } from "node:crypto";
 import { orderSchema } from "@/lib/validations";
 import { getStripe, PRICE_MOUTON } from "@/lib/stripe";
 import { getBaseUrl } from "@/lib/utils";
@@ -40,6 +41,12 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // Pré-génération du UUID de la commande. Permet de l'embarquer dans le
+    // success_url Stripe pour que /confirmation et /api/orders/by-session
+    // exigent à la fois session_id ET order_id (PII protégée par 122 bits
+    // d'entropie supplémentaires, contre lookup par session_id seul).
+    const orderId = randomUUID();
+
     const stripe = getStripe();
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ["card"],
@@ -58,10 +65,11 @@ export async function POST(req: NextRequest) {
         },
       ],
       mode: "payment",
-      success_url: `${getBaseUrl()}/confirmation?session_id={CHECKOUT_SESSION_ID}`,
+      success_url: `${getBaseUrl()}/confirmation?session_id={CHECKOUT_SESSION_ID}&order_id=${orderId}`,
       cancel_url: `${getBaseUrl()}/commander`,
       customer_email: data.email,
       metadata: {
+        order_id: orderId,
         prenom: data.prenom,
         nom: data.nom,
         telephone: data.telephone || "",
@@ -71,6 +79,7 @@ export async function POST(req: NextRequest) {
     });
 
     const { error: insertError } = await supabase.from("orders").insert({
+      id: orderId,
       prenom: data.prenom,
       nom: data.nom,
       email: data.email,
