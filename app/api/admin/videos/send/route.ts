@@ -70,9 +70,10 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Email send failed" }, { status: 500 });
   }
 
+  const sentAt = new Date().toISOString();
   await supabase
     .from("orders")
-    .update({ video_sent: true, updated_at: new Date().toISOString() })
+    .update({ video_sent: true, video_sent_at: sentAt, updated_at: sentAt })
     .eq("id", order.id);
 
   return NextResponse.json({ ok: true });

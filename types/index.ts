@@ -27,6 +27,9 @@ export interface Order {
   // Tracking email de confirmation (migration 0008)
   confirmation_email_sent_at: string | null;
   confirmation_email_error: string | null;
+  // Tracking vidéo + relance avis (migration 0010)
+  video_sent_at: string | null;
+  review_request_sent_at: string | null;
   // Refund (migration 0009)
   refunded_at: string | null;
   refund_reason: string | null;

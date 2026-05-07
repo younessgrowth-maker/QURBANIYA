@@ -469,3 +469,54 @@ export async function sendVideoDelivery(order: Order, videoUrl: string) {
   console.log("Email video delivery sent:", result.data?.id ?? "ok");
   return result;
 }
+
+/* ═══════════════════════════════════════════
+   EMAIL 6 — DEMANDE D'AVIS GOOGLE (J+3 post-vidéo)
+   ═══════════════════════════════════════════ */
+const GOOGLE_REVIEW_URL = "https://g.page/r/CQT3MFQZ9CcfEBM/review";
+
+export async function sendReviewRequest(order: Order) {
+  const html = emailLayout(`
+    <div style="text-align:center;margin:0 0 20px;">
+      <span style="font-size:48px;">⭐</span>
+    </div>
+
+    <h1 style="color:#1A1A18;font-size:24px;margin:0 0 12px;font-weight:bold;text-align:center;font-family:Georgia,serif;">
+      Comment s'est passée votre expérience, ${order.prenom} ?
+    </h1>
+
+    <p style="margin:0 0 24px;color:#5C5347;font-size:15px;line-height:1.7;text-align:center;">
+      Quelques jours après votre Aïd al-Adha, nous serions très reconnaissants si vous pouviez partager votre ressenti sur Google. Cela aide d'autres familles à trouver un service de confiance — et nous aide énormément à progresser.
+    </p>
+
+    ${goldButton("⭐ LAISSER UN AVIS GOOGLE", GOOGLE_REVIEW_URL)}
+
+    <p style="margin:0 0 24px;color:#5C5347;font-size:14px;text-align:center;line-height:1.6;">
+      <strong style="color:#1A1A18;">2 minutes suffisent.</strong> Que vous ayez quelque chose à dire de positif ou une critique constructive, votre avis compte.
+    </p>
+
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#F7F3ED;border-radius:8px;margin:0 0 24px;">
+      <tr><td style="padding:16px 20px;text-align:center;">
+        <p style="margin:0;color:#5C5347;font-size:13px;line-height:1.6;">
+          Pas le temps pour Google ? Répondez simplement à cet email avec quelques mots — ça nous touche aussi.
+        </p>
+      </td></tr>
+    </table>
+
+    <p style="margin:0;color:#5C5347;font-size:14px;text-align:center;line-height:1.7;">
+      Encore merci pour votre confiance.<br>
+      <em style="color:#B8860B;font-family:Georgia,serif;">L'équipe Qurbaniya.</em>
+    </p>
+  `);
+
+  const result = await getResend().emails.send({
+    from: FROM,
+    to: order.email,
+    subject: `⭐ Un retour rapide sur votre Aïd 2026 ? — Qurbaniya`,
+    html,
+    replyTo: SUPPORT_EMAIL,
+  });
+
+  console.log("Email review request sent:", result.data?.id ?? "ok");
+  return result;
+}
