@@ -1,4 +1,5 @@
 import type { MetadataRoute } from "next";
+import { CITY_SLUGS } from "@/lib/cities";
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const baseUrl = "https://qurbaniya.fr";
@@ -15,6 +16,13 @@ export default function sitemap(): MetadataRoute.Sitemap {
     lastModified: new Date(),
     changeFrequency: "monthly" as const,
     priority: 0.8,
+  }));
+
+  const cityEntries = CITY_SLUGS.map((slug) => ({
+    url: `${baseUrl}/mouton-aid-${slug}`,
+    lastModified: new Date(),
+    changeFrequency: "weekly" as const,
+    priority: 0.85,
   }));
 
   return [
@@ -37,6 +45,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 0.8,
     },
     ...blogEntries,
+    ...cityEntries,
     {
       url: `${baseUrl}/faq`,
       lastModified: new Date(),
