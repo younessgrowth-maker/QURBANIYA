@@ -22,6 +22,13 @@ export const AID_DATE = new Date("2026-05-27T06:00:00+01:00");
 export const AID_YEAR = "2026";
 export const CURRENT_YEAR = 2026;
 
+// Hard cutoff pour les commandes — on n'accepte plus aucun paiement à partir
+// du jour de l'Aïd 06:00 Paris. Avant ça, le sacrifice est sourcé et préparé.
+// Après ça, impossible de garantir l'exécution → on coupe l'API + l'UI.
+export function isOrderingOpen(now: Date = new Date()): boolean {
+  return now.getTime() < AID_DATE.getTime();
+}
+
 // ─── Contact ───
 export const WHATSAPP_NUMBER = "33744798883";
 export const WHATSAPP_DEFAULT_MESSAGE =

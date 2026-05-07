@@ -1,10 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { CalendarX, MessageCircle, Mail } from "lucide-react";
 import Header from "@/components/layout/Header";
 import OrderForm from "@/components/forms/OrderForm";
 import OrderSummary from "@/components/forms/OrderSummary";
 import { ProductJsonLd, BreadcrumbJsonLd } from "@/components/seo/JsonLd";
 import Breadcrumb from "@/components/ui/Breadcrumb";
+import { isOrderingOpen, whatsappUrl } from "@/lib/constants";
 
 export const metadata: Metadata = {
   title: "Réserver mon mouton pour l'Aïd al-Adha 2026 (27 mai) — 140€",
@@ -96,6 +98,8 @@ function CommanderFaqJsonLd() {
 }
 
 export default function CommanderPage() {
+  const open = isOrderingOpen();
+
   return (
     <>
       <ProductJsonLd />
@@ -113,30 +117,83 @@ export default function CommanderPage() {
           {/* Page header */}
           <div className="text-center mb-10">
             <h1 className="text-3xl md:text-4xl font-black uppercase mb-2">
-              COMMANDER MON MOUTON <span className="text-gold">POUR L&apos;AÏD 2026</span>
+              {open ? (
+                <>
+                  COMMANDER MON MOUTON <span className="text-gold">POUR L&apos;AÏD 2026</span>
+                </>
+              ) : (
+                <>
+                  RÉSERVATIONS <span className="text-gold">AÏD 2026 CLOSES</span>
+                </>
+              )}
             </h1>
             <p className="text-text-muted">
-              Sacrifice le <strong className="text-text-primary">mercredi 27 mai 2026</strong>. Vidéo nominative WhatsApp, viande aux nécessiteux. <strong className="text-text-primary">140€ tout inclus.</strong>
+              {open ? (
+                <>
+                  Sacrifice le <strong className="text-text-primary">mercredi 27 mai 2026</strong>. Vidéo nominative WhatsApp, viande aux nécessiteux. <strong className="text-text-primary">140€ tout inclus.</strong>
+                </>
+              ) : (
+                <>
+                  L&apos;Aïd al-Adha 2026 est passé. Les commandes pour l&apos;édition 2027 ouvriront en début d&apos;année prochaine.
+                </>
+              )}
             </p>
           </div>
 
-          {/* 2-col layout */}
-          <div className="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-8 lg:gap-12 items-start">
-            {/* Form */}
-            <div className="bg-white border border-gray-100/80 rounded-card p-6 md:p-8 shadow-soft">
-              <OrderForm />
-            </div>
+          {open ? (
+            /* 2-col layout */
+            <div className="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-8 lg:gap-12 items-start">
+              {/* Form */}
+              <div className="bg-white border border-gray-100/80 rounded-card p-6 md:p-8 shadow-soft">
+                <OrderForm />
+              </div>
 
-            {/* Sticky summary */}
-            <div className="hidden lg:block">
-              <OrderSummary />
-            </div>
+              {/* Sticky summary */}
+              <div className="hidden lg:block">
+                <OrderSummary />
+              </div>
 
-            {/* Mobile summary (above fold on mobile shows inline) */}
-            <div className="lg:hidden">
-              <OrderSummary />
+              {/* Mobile summary (above fold on mobile shows inline) */}
+              <div className="lg:hidden">
+                <OrderSummary />
+              </div>
             </div>
-          </div>
+          ) : (
+            /* État fermé : pas de formulaire, message + canaux contact */
+            <div className="max-w-2xl mx-auto bg-white border border-gray-100/80 rounded-card p-8 md:p-12 shadow-soft text-center">
+              <CalendarX className="text-gold mx-auto mb-5" size={48} />
+              <h2 className="text-xl md:text-2xl font-bold text-text-primary mb-4">
+                Les réservations sont fermées
+              </h2>
+              <p className="text-text-muted leading-relaxed mb-2">
+                Les commandes Qurbaniya pour l&apos;Aïd al-Adha 2026 sont closes depuis le jour de l&apos;Aïd. Le service ne peut plus accepter de paiement pour cette édition.
+              </p>
+              <p className="text-text-muted leading-relaxed mb-8">
+                Pour être informé(e) de l&apos;ouverture des réservations Aïd 2027 (prévue début 2027), contactez-nous :
+              </p>
+              <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                <a
+                  href={whatsappUrl("Salam, je souhaite être averti(e) de l'ouverture des réservations Aïd 2027")}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center justify-center gap-2 bg-gold hover:bg-gold-light text-white font-bold uppercase text-sm px-5 py-3 rounded-xl transition-colors font-inter"
+                >
+                  <MessageCircle size={16} /> Me prévenir sur WhatsApp
+                </a>
+                <a
+                  href="mailto:support@qurbaniya.fr?subject=Liste%20d'attente%20A%C3%AFd%202027"
+                  className="inline-flex items-center justify-center gap-2 border-2 border-gold text-gold hover:bg-gold/5 font-bold uppercase text-sm px-5 py-3 rounded-xl transition-colors font-inter"
+                >
+                  <Mail size={16} /> support@qurbaniya.fr
+                </a>
+              </div>
+              <div className="mt-8 pt-6 border-t border-gray-100">
+                <p className="text-sm text-text-muted-light">
+                  En attendant, vous pouvez consulter notre <Link href="/blog" className="text-gold hover:underline font-semibold">blog</Link> ou notre <Link href="/faq" className="text-gold hover:underline font-semibold">FAQ</Link>.
+                </p>
+              </div>
+            </div>
+          )}
 
           {/* SEO: contenu informatif + FAQ */}
           <section className="mt-16 max-w-3xl mx-auto" aria-labelledby="faq-commander">
