@@ -51,19 +51,26 @@ export default function ConfirmationPage() {
 function ConfirmationContent() {
   const searchParams = useSearchParams();
   const sessionId = searchParams.get("session_id");
+  const orderId = searchParams.get("order_id");
   const method = searchParams.get("method");
   const orderIdParam = searchParams.get("ref");
   const isVirement = method === "virement";
 
   if (isVirement) return <VirementView orderId={orderIdParam} />;
   if (!sessionId) return <MissingSessionView />;
-  return <StripeConfirmationView sessionId={sessionId} />;
+  return <StripeConfirmationView sessionId={sessionId} orderId={orderId} />;
 }
 
 /* ──────────────────────────────────────────────────────────
    Stripe path — dynamic with polling
    ────────────────────────────────────────────────────────── */
-function StripeConfirmationView({ sessionId }: { sessionId: string }) {
+function StripeConfirmationView({
+  sessionId,
+  orderId,
+}: {
+  sessionId: string;
+  orderId: string | null;
+}) {
   const [order, setOrder] = useState<OrderPublic | null>(null);
   const [fetchError, setFetchError] = useState<"not_found" | "network" | null>(null);
   const [attempts, setAttempts] = useState(0);
@@ -74,10 +81,15 @@ function StripeConfirmationView({ sessionId }: { sessionId: string }) {
 
   const fetchOrder = useCallback(async () => {
     try {
-      const res = await fetch(
-        `/api/orders/by-session?session_id=${encodeURIComponent(sessionId)}`,
-        { cache: "no-store" }
-      );
+      // On passe order_id en plus de session_id pour récupérer la PII
+      // (mode "full"). Sans order_id (URL legacy), l'API renvoie un mode
+      // minimal sans email/prenom — la page reste fonctionnelle mais
+      // dégradée.
+      const params = new URLSearchParams({ session_id: sessionId });
+      if (orderId) params.set("order_id", orderId);
+      const res = await fetch(`/api/orders/by-session?${params.toString()}`, {
+        cache: "no-store",
+      });
       if (res.status === 404) {
         setFetchError("not_found");
         return null;
@@ -94,7 +106,7 @@ function StripeConfirmationView({ sessionId }: { sessionId: string }) {
       setFetchError("network");
       return null;
     }
-  }, [sessionId]);
+  }, [sessionId, orderId]);
 
   useEffect(() => {
     let cancelled = false;
