@@ -1,6 +1,7 @@
 import { ProductJsonLd, EventJsonLd, BreadcrumbJsonLd } from "@/components/seo/JsonLd";
 import Hero from "@/components/sections/Hero";
 import StockGauge from "@/components/ui/StockGauge";
+import InventoryStatus from "@/components/sections/InventoryStatus";
 import TrustBar from "@/components/ui/TrustBar";
 import ProblemSolution from "@/components/sections/ProblemSolution";
 import HowItWorks from "@/components/sections/HowItWorks";
@@ -33,7 +34,8 @@ export default function HomePage() {
       ]} />
       {/* 1. ACCROCHE — Emotion + CTA principal */}
       <Hero />
-      <div className="bg-bg-primary section-padding !py-6 md:!py-8">
+      <div className="bg-bg-primary section-padding !py-6 md:!py-8 px-4">
+        <InventoryStatus className="mb-6" />
         <StockGauge />
       </div>
       <TrustBar />

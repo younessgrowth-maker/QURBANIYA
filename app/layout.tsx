@@ -6,6 +6,7 @@ import { SpeedInsights } from "@vercel/speed-insights/next";
 import "./globals.css";
 import { OrganizationJsonLd, WebSiteJsonLd } from "@/components/seo/JsonLd";
 import Tracker from "@/components/analytics/Tracker";
+import WhatsAppFloat from "@/components/ui/WhatsAppFloat";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -119,6 +120,7 @@ export default function RootLayout({
           <Tracker />
         </Suspense>
         {children}
+        <WhatsAppFloat />
         <Analytics />
         <SpeedInsights />
       </body>
