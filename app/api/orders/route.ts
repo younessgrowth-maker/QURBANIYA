@@ -4,10 +4,23 @@ import { getStripe, PRICE_MOUTON } from "@/lib/stripe";
 import { getBaseUrl } from "@/lib/utils";
 import { createServiceRoleClient } from "@/lib/supabase/server";
 import { getInventory } from "@/lib/supabase/queries";
-import { PRICE_AMOUNT, CURRENT_YEAR } from "@/lib/constants";
+import { PRICE_AMOUNT, CURRENT_YEAR, isOrderingOpen } from "@/lib/constants";
 
 export async function POST(req: NextRequest) {
   try {
+    // Hard cutoff : aucune commande après le jour de l'Aïd. Vérifié AVANT le parse
+    // pour court-circuiter Stripe et la DB si la fenêtre est fermée.
+    if (!isOrderingOpen()) {
+      return NextResponse.json(
+        {
+          error:
+            "Les réservations pour l'Aïd al-Adha 2026 sont closes. La prochaine édition ouvrira début 2027.",
+          code: "aid_closed",
+        },
+        { status: 403 }
+      );
+    }
+
     const body = await req.json();
     const data = orderSchema.parse(body);
     const supabase = createServiceRoleClient();
