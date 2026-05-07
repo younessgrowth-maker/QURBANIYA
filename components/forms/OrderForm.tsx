@@ -86,7 +86,6 @@ function RadioCard({ label, icon: Icon, description, selected, onSelect }: {
 
 export default function OrderForm() {
   const [submitSuccess, setSubmitSuccess] = useState(false);
-  const [isGift, setIsGift] = useState(false);
   const {
     register,
     handleSubmit,
@@ -98,14 +97,22 @@ export default function OrderForm() {
     defaultValues: {
       payment_method: "stripe",
       intention: "pour_moi",
+      is_gift: false,
+      notify_recipient: false,
     },
     mode: "onSubmit",
   });
 
   const intention = watch("intention");
+  const isGift = watch("is_gift");
+  const notifyRecipient = watch("notify_recipient");
 
   async function onSubmit(data: OrderFormValues) {
-    track("order_submitted", { payment_method: data.payment_method, intention: data.intention });
+    track("order_submitted", {
+      payment_method: data.payment_method,
+      intention: data.intention,
+      is_gift: data.is_gift,
+    });
     const res = await fetch("/api/orders", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -186,15 +193,17 @@ export default function OrderForm() {
         <div className="flex rounded-lg border-2 border-gray-200 overflow-hidden mb-4">
           <button
             type="button"
-            onClick={() => setIsGift(false)}
+            onClick={() => setValue("is_gift", false)}
             className={`flex-1 py-3 text-sm font-semibold font-inter transition-all ${!isGift ? "bg-primary text-white" : "bg-white text-text-muted hover:bg-gray-50"}`}
+            aria-pressed={!isGift}
           >
             Pour moi
           </button>
           <button
             type="button"
-            onClick={() => setIsGift(true)}
+            onClick={() => setValue("is_gift", true)}
             className={`flex-1 py-3 text-sm font-semibold font-inter transition-all ${isGift ? "bg-primary text-white" : "bg-white text-text-muted hover:bg-gray-50"}`}
+            aria-pressed={!!isGift}
           >
             🎁 Offrir à un proche
           </button>
@@ -207,16 +216,39 @@ export default function OrderForm() {
             exit={{ opacity: 0, height: 0 }}
             className="space-y-4 mb-4"
           >
-            <Field label="Nom du bénéficiaire">
-              <input className={inputClass} placeholder="Prénom et nom du bénéficiaire" />
+            <Field label="Nom du bénéficiaire" error={errors.recipient_name?.message}>
+              <input
+                {...register("recipient_name")}
+                className={inputClass}
+                placeholder="Prénom et nom du bénéficiaire"
+              />
             </Field>
-            <Field label="Message personnalisé" optional>
-              <textarea className={`${inputClass} resize-none`} rows={2} placeholder="Un petit message pour accompagner le cadeau..." />
+            <Field label="Message personnalisé" optional error={errors.recipient_message?.message} hint="Apparaîtra sur la confirmation envoyée au bénéficiaire (max. 500 caractères)">
+              <textarea
+                {...register("recipient_message")}
+                className={`${inputClass} resize-none`}
+                rows={2}
+                placeholder="Un petit message pour accompagner le cadeau..."
+              />
             </Field>
             <label className="flex items-center gap-2 text-sm text-text-muted cursor-pointer">
-              <input type="checkbox" className="rounded border-gray-300 text-primary focus:ring-primary" />
-              Envoyer la vidéo au bénéficiaire par email
+              <input
+                type="checkbox"
+                {...register("notify_recipient")}
+                className="rounded border-gray-300 text-primary focus:ring-primary"
+              />
+              Envoyer la confirmation et la vidéo au bénéficiaire par email
             </label>
+            {notifyRecipient && (
+              <Field label="Email du bénéficiaire" error={errors.recipient_email?.message}>
+                <input
+                  {...register("recipient_email")}
+                  type="email"
+                  className={inputClass}
+                  placeholder="email@du.beneficiaire"
+                />
+              </Field>
+            )}
           </motion.div>
         )}
       </div>

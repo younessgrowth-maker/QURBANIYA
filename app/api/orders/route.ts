@@ -47,6 +47,13 @@ export async function POST(req: NextRequest) {
     // d'entropie supplémentaires, contre lookup par session_id seul).
     const orderId = randomUUID();
 
+    // Mode cadeau : nettoyer/normaliser les champs avant persistance.
+    const isGift = !!data.is_gift && !!data.recipient_name?.trim();
+    const recipientName = isGift ? data.recipient_name?.trim() || null : null;
+    const recipientMessage = isGift ? data.recipient_message?.trim() || null : null;
+    const notifyRecipient = isGift && !!data.notify_recipient;
+    const recipientEmail = notifyRecipient ? data.recipient_email?.trim() || null : null;
+
     const stripe = getStripe();
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ["card"],
@@ -75,6 +82,10 @@ export async function POST(req: NextRequest) {
         telephone: data.telephone || "",
         intention: data.intention,
         niyyah: data.niyyah,
+        // Mode cadeau (visible dans le dashboard Stripe)
+        is_gift: isGift ? "1" : "0",
+        ...(recipientName ? { recipient_name: recipientName } : {}),
+        ...(recipientEmail ? { recipient_email: recipientEmail } : {}),
       },
     });
 
@@ -90,6 +101,11 @@ export async function POST(req: NextRequest) {
       payment_method: "stripe",
       stripe_session_id: session.id,
       amount: PRICE_AMOUNT,
+      is_gift: isGift,
+      recipient_name: recipientName,
+      recipient_message: recipientMessage,
+      notify_recipient: notifyRecipient,
+      recipient_email: recipientEmail,
     });
 
     if (insertError) {

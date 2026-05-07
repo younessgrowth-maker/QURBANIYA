@@ -18,6 +18,12 @@ export interface Order {
   video_sent: boolean;
   video_url: string | null;
   reminder_sent_at: string | null;
+  // Mode cadeau (migration 0006)
+  is_gift: boolean;
+  recipient_name: string | null;
+  recipient_message: string | null;
+  notify_recipient: boolean;
+  recipient_email: string | null;
   created_at: string;
   updated_at: string;
 }
