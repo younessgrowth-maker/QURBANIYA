@@ -2,6 +2,7 @@ import { createServiceRoleClient } from "@/lib/supabase/server";
 import { ShoppingBag, CheckCircle2, Euro, TrendingUp, Package, Clock, CreditCard, Heart, Printer } from "lucide-react";
 import { KpiCard } from "@/components/admin/KpiCard";
 import OrdersTable from "@/components/admin/OrdersTable";
+import EmailFailuresPanel from "@/components/admin/EmailFailuresPanel";
 import AnalyticsSection from "@/components/admin/AnalyticsSection";
 import { fetchAnalyticsSummary, EMPTY_ANALYTICS } from "@/lib/analytics-queries";
 import { STATS, CURRENT_YEAR, PRICE_AMOUNT } from "@/lib/constants";
@@ -136,6 +137,8 @@ export default async function AdminDashboardPage() {
           tone="neutral"
         />
       </div>
+
+      <EmailFailuresPanel orders={orders} />
 
       <div className="mb-4 flex items-baseline justify-between">
         <h2 className="text-lg font-bold text-text-primary flex items-center gap-2">

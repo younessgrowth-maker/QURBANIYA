@@ -24,6 +24,9 @@ export interface Order {
   recipient_message: string | null;
   notify_recipient: boolean;
   recipient_email: string | null;
+  // Tracking email de confirmation (migration 0008)
+  confirmation_email_sent_at: string | null;
+  confirmation_email_error: string | null;
   created_at: string;
   updated_at: string;
 }
