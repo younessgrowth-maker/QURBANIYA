@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { Inter, Playfair_Display } from "next/font/google";
+import { Analytics } from "@vercel/analytics/next";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 import "./globals.css";
 import { OrganizationJsonLd, WebSiteJsonLd } from "@/components/seo/JsonLd";
 import Tracker from "@/components/analytics/Tracker";
@@ -117,6 +119,8 @@ export default function RootLayout({
           <Tracker />
         </Suspense>
         {children}
+        <Analytics />
+        <SpeedInsights />
       </body>
     </html>
   );
