@@ -4,6 +4,7 @@ import { CalendarX, MessageCircle, Mail } from "lucide-react";
 import Header from "@/components/layout/Header";
 import OrderForm from "@/components/forms/OrderForm";
 import OrderSummary from "@/components/forms/OrderSummary";
+import InventoryStatus from "@/components/sections/InventoryStatus";
 import { ProductJsonLd, BreadcrumbJsonLd } from "@/components/seo/JsonLd";
 import Breadcrumb from "@/components/ui/Breadcrumb";
 import { isOrderingOpen, whatsappUrl } from "@/lib/constants";
@@ -114,6 +115,9 @@ export default function CommanderPage() {
           <Breadcrumb items={[
             { label: "Commander mon sacrifice", },
           ]} />
+          {/* Compteur de places dynamique (visible uniquement si stock < 75) */}
+          {open && <InventoryStatus className="mb-6" showCta={false} />}
+
           {/* Page header */}
           <div className="text-center mb-10">
             <h1 className="text-3xl md:text-4xl font-black uppercase mb-2">
