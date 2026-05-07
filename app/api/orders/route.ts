@@ -114,7 +114,14 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ checkout_url: session.url });
   } catch (error) {
-    console.error("Order error:", error);
+    // Ne JAMAIS logger l'objet error brut: Zod errors contiennent les valeurs
+    // soumises par l'utilisateur (email, téléphone, niyyah). Vercel logs sont
+    // exportables → fuite PII.
+    if (error instanceof Error) {
+      console.error("Order error:", error.name, error.message);
+    } else {
+      console.error("Order error: unknown");
+    }
     return NextResponse.json(
       { error: "Erreur lors de la création de la commande." },
       { status: 400 }

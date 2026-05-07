@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { orderSchema, type OrderFormValues } from "@/lib/validations";
@@ -86,6 +86,10 @@ function RadioCard({ label, icon: Icon, description, selected, onSelect }: {
 
 export default function OrderForm() {
   const [submitSuccess, setSubmitSuccess] = useState(false);
+  // Guard double-submit synchrone : react-hook-form's isSubmitting set le bouton
+  // disabled très vite, mais un useRef évite toute fenêtre de race entre clic
+  // et passage en isSubmitting (et survit aux re-renders sans bouger).
+  const inFlightRef = useRef(false);
   const {
     register,
     handleSubmit,
@@ -108,24 +112,34 @@ export default function OrderForm() {
   const notifyRecipient = watch("notify_recipient");
 
   async function onSubmit(data: OrderFormValues) {
-    track("order_submitted", {
-      payment_method: data.payment_method,
-      intention: data.intention,
-      is_gift: data.is_gift,
-    });
-    const res = await fetch("/api/orders", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data),
-    });
-    const result = await res.json();
-    if (result.checkout_url) {
-      track("payment_started", { payment_method: data.payment_method });
-      setSubmitSuccess(true);
-      // Brief success animation before redirect
-      setTimeout(() => {
-        window.location.href = result.checkout_url;
-      }, 800);
+    if (inFlightRef.current) return;
+    inFlightRef.current = true;
+    try {
+      track("order_submitted", {
+        payment_method: data.payment_method,
+        intention: data.intention,
+        is_gift: data.is_gift,
+      });
+      const res = await fetch("/api/orders", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      const result = await res.json();
+      if (result.checkout_url) {
+        track("payment_started", { payment_method: data.payment_method });
+        setSubmitSuccess(true);
+        // Brief success animation before redirect
+        setTimeout(() => {
+          window.location.href = result.checkout_url;
+        }, 800);
+      } else {
+        // L'API a refusé (inventaire plein, aid_closed, validation, etc.).
+        // On relâche le verrou pour permettre à l'utilisateur de retenter.
+        inFlightRef.current = false;
+      }
+    } catch {
+      inFlightRef.current = false;
     }
   }
 

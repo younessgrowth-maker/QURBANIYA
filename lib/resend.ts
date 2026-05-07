@@ -213,7 +213,7 @@ export async function sendOrderConfirmation(order: Order) {
     html,
   });
 
-  console.log("Email confirmation sent:", result);
+  console.log("Email confirmation sent:", result.data?.id ?? "ok");
   return result;
 }
 
@@ -286,7 +286,7 @@ export async function sendPaymentReminder(order: Order) {
     html,
   });
 
-  console.log("Email virement sent:", result);
+  console.log("Email virement sent:", result.data?.id ?? "ok");
   return result;
 }
 
@@ -346,7 +346,7 @@ export async function sendSacrificeDay(order: Order) {
     html,
   });
 
-  console.log("Email sacrifice day sent:", result);
+  console.log("Email sacrifice day sent:", result.data?.id ?? "ok");
   return result;
 }
 
@@ -414,7 +414,7 @@ export async function sendAbandonedCartReminder(order: Order, resumeUrl: string)
     html,
   });
 
-  console.log("Email abandoned cart reminder sent:", result);
+  console.log("Email abandoned cart reminder sent:", result.data?.id ?? "ok");
   return result;
 }
 
@@ -466,6 +466,6 @@ export async function sendVideoDelivery(order: Order, videoUrl: string) {
     html,
   });
 
-  console.log("Email video delivery sent:", result);
+  console.log("Email video delivery sent:", result.data?.id ?? "ok");
   return result;
 }
