@@ -83,8 +83,26 @@ export async function POST(req: NextRequest) {
 
         try {
           await sendOrderConfirmation(order as Order);
+          // Trace succès en DB pour que /admin sache que c'est OK.
+          await supabase
+            .from("orders")
+            .update({
+              confirmation_email_sent_at: new Date().toISOString(),
+              confirmation_email_error: null,
+            })
+            .eq("id", order.id);
         } catch (emailError) {
-          console.error("Confirmation email failed:", emailError);
+          // Trace échec en DB (message tronqué, pas la stack) pour qu'un
+          // admin puisse relancer manuellement depuis /admin.
+          const msg =
+            emailError instanceof Error
+              ? emailError.message.slice(0, 200)
+              : "unknown error";
+          console.error("Confirmation email failed:", msg);
+          await supabase
+            .from("orders")
+            .update({ confirmation_email_error: msg })
+            .eq("id", order.id);
         }
 
         break;
