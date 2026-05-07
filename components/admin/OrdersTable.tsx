@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Search, Download, Filter } from "lucide-react";
+import { Search, Download, Filter, RotateCcw, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { Order } from "@/types";
 
@@ -9,13 +9,71 @@ const STATUS_STYLES: Record<string, string> = {
   pending: "bg-yellow-400/10 text-yellow-700 border-yellow-400/30",
   paid: "bg-emerald/10 text-emerald border-emerald/30",
   failed: "bg-urgency/10 text-urgency border-urgency/30",
+  refunded: "bg-gray-200 text-gray-600 border-gray-300",
 };
 
 const STATUS_LABEL: Record<string, string> = {
   pending: "En attente",
   paid: "Payée",
   failed: "Échec",
+  refunded: "Remboursée",
 };
+
+function RefundButton({ order }: { order: Order }) {
+  const [state, setState] = useState<"idle" | "loading" | "done" | "error">("idle");
+  const [errMsg, setErrMsg] = useState<string | null>(null);
+
+  if (order.payment_status !== "paid") return null;
+
+  async function handleRefund() {
+    const reason = window.prompt(
+      `Rembourser la commande de ${order.prenom} ${order.nom} (${order.amount.toFixed(2)} €) ?\n\nMotif (visible dans Stripe + DB):`,
+      ""
+    );
+    if (reason === null) return; // cancel
+    if (!window.confirm("Confirmer le remboursement ? Cette action est irréversible.")) {
+      return;
+    }
+    setState("loading");
+    setErrMsg(null);
+    try {
+      const res = await fetch("/api/admin/orders/refund", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ order_id: order.id, reason }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setState("error");
+        setErrMsg(data.detail || data.error || "Erreur");
+        return;
+      }
+      setState("done");
+      // Refresh the page to show updated status everywhere
+      window.location.reload();
+    } catch {
+      setState("error");
+      setErrMsg("Réseau indisponible");
+    }
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={handleRefund}
+      disabled={state === "loading" || state === "done"}
+      title={errMsg ?? "Émettre un remboursement Stripe"}
+      className="inline-flex items-center gap-1 rounded-md border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 hover:border-urgency hover:text-urgency text-xs font-semibold px-2 py-1 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+    >
+      {state === "loading" ? (
+        <Loader2 size={12} className="animate-spin" />
+      ) : (
+        <RotateCcw size={12} />
+      )}
+      Rembourser
+    </button>
+  );
+}
 
 const METHOD_LABEL: Record<string, string> = {
   stripe: "CB",
@@ -176,12 +234,13 @@ export default function OrdersTable({ orders }: { orders: Order[] }) {
               <th className="text-left px-4 py-3 font-semibold">Statut</th>
               <th className="text-left px-4 py-3 font-semibold hidden sm:table-cell">Méthode</th>
               <th className="text-right px-4 py-3 font-semibold">Montant</th>
+              <th className="text-right px-4 py-3 font-semibold">Actions</th>
             </tr>
           </thead>
           <tbody>
             {filtered.length === 0 ? (
               <tr>
-                <td colSpan={7} className="px-4 py-12 text-center text-text-muted-light">
+                <td colSpan={8} className="px-4 py-12 text-center text-text-muted-light">
                   {orders.length === 0
                     ? "Aucune commande pour le moment."
                     : "Aucune commande ne correspond aux filtres."}
@@ -219,6 +278,9 @@ export default function OrdersTable({ orders }: { orders: Order[] }) {
                   </td>
                   <td className="px-4 py-3 text-right font-bold text-text-primary whitespace-nowrap">
                     {o.amount.toFixed(2)} €
+                  </td>
+                  <td className="px-4 py-3 text-right">
+                    <RefundButton order={o} />
                   </td>
                 </tr>
               ))

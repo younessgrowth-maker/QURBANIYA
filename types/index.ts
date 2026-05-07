@@ -1,4 +1,4 @@
-export type PaymentStatus = "pending" | "paid" | "failed";
+export type PaymentStatus = "pending" | "paid" | "failed" | "refunded";
 export type PaymentMethod = "stripe" | "paypal" | "virement";
 export type Intention = "pour_moi" | "famille" | "sadaqa";
 
@@ -27,6 +27,10 @@ export interface Order {
   // Tracking email de confirmation (migration 0008)
   confirmation_email_sent_at: string | null;
   confirmation_email_error: string | null;
+  // Refund (migration 0009)
+  refunded_at: string | null;
+  refund_reason: string | null;
+  stripe_refund_id: string | null;
   created_at: string;
   updated_at: string;
 }
