@@ -198,7 +198,11 @@ export async function sendOrderConfirmation(order: Order) {
       </td></tr>
     </table>
 
-    ${order.stripe_session_id ? goldButton("VOIR MA CONFIRMATION", `https://qurbaniya.fr/confirmation?session_id=${order.stripe_session_id}`) : ""}
+    ${goldButton("SUIVRE MON SACRIFICE", `https://qurbaniya.fr/ma-commande/${order.id}`)}
+
+    <p style="margin:0 0 16px;color:#5C5347;font-size:13px;text-align:center;line-height:1.6;">
+      Conservez ce lien : il permet de suivre l&apos;avancement de votre sacrifice (paiement, sourcing, jour de l&apos;Aïd, vidéo) à tout moment.
+    </p>
 
     <p style="margin:0;color:#5C5347;font-size:14px;text-align:center;line-height:1.7;">
       Une question ? Écrivez à <a href="mailto:${SUPPORT_EMAIL}" style="color:#1B4332;text-decoration:none;font-weight:bold;">${SUPPORT_EMAIL}</a><br>
