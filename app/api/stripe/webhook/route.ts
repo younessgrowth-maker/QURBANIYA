@@ -25,20 +25,52 @@ export async function POST(req: NextRequest) {
 
     const supabase = createServiceRoleClient();
 
+    // ─── Idempotency: bloquer les retry Stripe ───
+    // Stripe peut renvoyer le même event (timeout, 5xx transitoire). On marque
+    // l'event_id comme traité AVANT tout side effect. Un PK conflict (23505)
+    // = duplicate, on retourne 200 pour éviter d'autres retry.
+    const { error: idempError } = await supabase
+      .from("stripe_webhook_events")
+      .insert({ event_id: event.id, event_type: event.type });
+
+    if (idempError) {
+      if (idempError.code === "23505") {
+        // Already processed — return 200, Stripe stops retrying.
+        console.log(`Stripe webhook duplicate skipped: ${event.id} (${event.type})`);
+        return NextResponse.json({ received: true, idempotent: true });
+      }
+      // Autre erreur DB: fail-closed pour que Stripe retry
+      console.error("Idempotency insert failed:", idempError);
+      return NextResponse.json(
+        { error: "Idempotency check failed" },
+        { status: 500 }
+      );
+    }
+
     switch (event.type) {
       case "checkout.session.completed": {
         const session = event.data.object;
 
+        // Conditional update : on ne passe à 'paid' que si la commande est
+        // encore 'pending'. Si elle est déjà 'paid' (race condition entre
+        // 2 events ou retry qui aurait quand même passé l'idempotency check),
+        // .single() retourne PGRST116 et on skip les side effects.
         const { data: order, error: updateError } = await supabase
           .from("orders")
           .update({ payment_status: "paid", updated_at: new Date().toISOString() })
           .eq("stripe_session_id", session.id)
+          .eq("payment_status", "pending")
           .select()
           .single();
 
         if (updateError || !order) {
-          console.error("Order update failed on completed:", session.id, updateError);
-          // Return 200 : Stripe ne doit pas retry si la ligne n'existe pas (commande hors-DB)
+          // PGRST116 = "no rows" → commande déjà paid (skip silencieux)
+          // Autre erreur → log mais on rend 200 pour ne pas bloquer Stripe
+          if (updateError && updateError.code !== "PGRST116") {
+            console.error("Order update failed on completed:", session.id, updateError);
+          } else {
+            console.log(`Order already paid or not found: ${session.id}`);
+          }
           return NextResponse.json({ received: true });
         }
 
@@ -63,9 +95,10 @@ export async function POST(req: NextRequest) {
         const { error: updateError } = await supabase
           .from("orders")
           .update({ payment_status: "failed", updated_at: new Date().toISOString() })
-          .eq("stripe_session_id", session.id);
+          .eq("stripe_session_id", session.id)
+          .eq("payment_status", "pending");
 
-        if (updateError) {
+        if (updateError && updateError.code !== "PGRST116") {
           console.error("Order update failed on expired:", session.id, updateError);
         }
         break;
