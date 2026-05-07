@@ -147,6 +147,10 @@ export async function sendOrderConfirmation(order: Order) {
             <td style="color:#5C5347;font-size:14px;padding:6px 0;">Niyyah</td>
             <td style="color:#B8860B;font-size:14px;padding:6px 0;text-align:right;font-weight:bold;font-family:Georgia,serif;font-style:italic;">${order.niyyah}</td>
           </tr>
+          ${order.is_gift && order.recipient_name ? `<tr>
+            <td style="color:#5C5347;font-size:14px;padding:6px 0;">Offert à</td>
+            <td style="color:#1A1A18;font-size:14px;padding:6px 0;text-align:right;font-weight:bold;">🎁 ${order.recipient_name}</td>
+          </tr>` : ""}
         </table>
       </td></tr>
     </table>
