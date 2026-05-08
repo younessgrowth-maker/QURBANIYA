@@ -109,23 +109,42 @@ export default async function OrderTrackingPage({
 }: {
   params: { orderId: string };
 }) {
-  const supabase = createServiceRoleClient();
-  const { data: order, error } = await supabase
-    .from("orders")
-    .select(
-      "id, prenom, niyyah, intention, amount, payment_status, video_sent, video_url, created_at, updated_at"
-    )
-    .eq("id", params.orderId)
-    .single();
-
-  if (error || !order) {
+  // Validation simple du format UUID — évite un appel Supabase si l'URL
+  // est manifestement cassée (typo, tracker email malformé).
+  const UUID_RE =
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  if (!UUID_RE.test(params.orderId)) {
+    console.warn("[ma-commande] invalid UUID format:", params.orderId);
     notFound();
   }
 
-  const typed = order as Pick<
-    Order,
-    "id" | "prenom" | "niyyah" | "intention" | "amount" | "payment_status" | "video_sent" | "video_url" | "created_at" | "updated_at"
-  >;
+  const supabase = createServiceRoleClient();
+  // select("*") plutôt que liste explicite pour résister à d'éventuelles
+  // colonnes manquantes en prod (migration non appliquée). Le service role
+  // bypass la RLS de toute façon.
+  const { data: order, error } = await supabase
+    .from("orders")
+    .select("*")
+    .eq("id", params.orderId)
+    .maybeSingle();
+
+  if (error) {
+    console.error(
+      "[ma-commande] Supabase query error for orderId",
+      params.orderId,
+      "code:",
+      error.code,
+      "message:",
+      error.message
+    );
+    notFound();
+  }
+  if (!order) {
+    console.warn("[ma-commande] no order found for orderId", params.orderId);
+    notFound();
+  }
+
+  const typed = order as Order;
 
   const now = new Date();
   const steps = buildSteps(typed as Order, now);
