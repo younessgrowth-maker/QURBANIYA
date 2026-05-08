@@ -220,11 +220,38 @@ export default function ArticlePrixMouton() {
           <section>
             <h2 className="text-2xl font-bold text-text-primary mb-4">Pourquoi les prix augmentent chaque année en France ?</h2>
             <p className="text-text-muted leading-relaxed mb-4">
-              Plusieurs facteurs expliquent la hausse continue des prix des moutons en France : l&apos;inflation générale, la raréfaction des élevages ovins, les normes sanitaires de plus en plus strictes, et la forte demande concentrée sur quelques jours.
+              Plusieurs facteurs expliquent la hausse continue des prix des moutons en France : l&apos;inflation générale, la raréfaction des élevages ovins, les normes sanitaires de plus en plus strictes, et la forte demande concentrée sur quelques jours autour du <Link href="/blog/date-aid-al-adha-2026" className="text-gold hover:underline">mercredi 27 mai 2026, jour de l&apos;Aïd al-Adha</Link>.
             </p>
             <p className="text-text-muted leading-relaxed">
               En déléguant dans des pays où l&apos;élevage ovin est plus développé et moins coûteux, vous bénéficiez d&apos;un prix juste tout en ayant un impact social considérable.
             </p>
+          </section>
+
+          {/* Pour aller plus loin — internal linking pour booster les autres articles */}
+          <section className="bg-bg-secondary rounded-xl p-5 md:p-6 border border-gold/10">
+            <h3 className="text-gold font-bold text-sm uppercase tracking-wider mb-3 font-inter">Pour aller plus loin</h3>
+            <ul className="space-y-2 text-sm font-inter">
+              <li>
+                <Link href="/blog/date-aid-al-adha-2026" className="text-text-primary hover:text-gold transition-colors">
+                  → Date de l&apos;Aïd al-Adha 2026 : c&apos;est le mercredi 27 mai
+                </Link>
+              </li>
+              <li>
+                <Link href="/blog/combien-coute-mouton-aid-2026-france" className="text-text-primary hover:text-gold transition-colors">
+                  → Combien coûte un mouton de l&apos;Aïd 2026 ? (comparatif détaillé)
+                </Link>
+              </li>
+              <li>
+                <Link href="/blog/sacrifice-aid-en-ligne-comment-ca-marche" className="text-text-primary hover:text-gold transition-colors">
+                  → Sacrifice de l&apos;Aïd en ligne : comment ça marche ?
+                </Link>
+              </li>
+              <li>
+                <Link href="/faq" className="text-text-primary hover:text-gold transition-colors">
+                  → FAQ Aïd al-Adha 2026
+                </Link>
+              </li>
+            </ul>
           </section>
         </div>
 
