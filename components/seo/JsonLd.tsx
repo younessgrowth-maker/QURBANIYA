@@ -26,8 +26,44 @@ export function OrganizationJsonLd() {
   );
 }
 
-export function ProductJsonLd() {
-  const schema = {
+// Seuil minimum d'avis approuvés pour afficher aggregateRating dans le schema.
+// Google n'affiche les étoiles dans la SERP qu'à partir de plusieurs avis,
+// et un schema avec 1-2 avis a tendance à être ignoré ou pénalisé.
+const MIN_REVIEWS_FOR_RATING = 3;
+
+async function fetchAggregateRating(): Promise<{
+  ratingValue: number;
+  reviewCount: number;
+} | null> {
+  // Server-only: l'import est dynamique pour éviter de fail en client si
+  // Supabase env est manquante (ex: build statique d'une page client par erreur).
+  try {
+    const { createServiceRoleClient } = await import("@/lib/supabase/server");
+    const supabase = createServiceRoleClient();
+    const { data, error } = await supabase
+      .from("reviews")
+      .select("rating")
+      .eq("status", "approved");
+    if (error || !data || data.length < MIN_REVIEWS_FOR_RATING) return null;
+    const sum = data.reduce(
+      (acc: number, r: { rating: number }) => acc + r.rating,
+      0
+    );
+    const ratingValue = Math.round((sum / data.length) * 10) / 10;
+    return { ratingValue, reviewCount: data.length };
+  } catch {
+    return null;
+  }
+}
+
+export async function ProductJsonLd() {
+  // Avis VÉRIFIÉS uniquement (table reviews, status='approved'). Les 3 avis
+  // Google sont copiés dans cette table avec attribution dans le UI. Conforme
+  // à L.121-4 du Code de la consommation : les avis affichés doivent être
+  // réels et vérifiables — c'est le cas ici (Google + formulaire client).
+  const aggregate = await fetchAggregateRating();
+
+  const schema: Record<string, unknown> = {
     "@context": "https://schema.org",
     "@type": "Product",
     name: "Sacrifice Aïd al-Adha 2026 — Mouton avec vidéo nominative",
@@ -48,10 +84,17 @@ export function ProductJsonLd() {
       validThrough: "2026-05-27",
       priceValidUntil: "2026-05-27",
     },
-    // aggregateRating retiré — les avis clients seront collectés via Google
-    // Business Profile. Afficher des avis non vérifiés expose à l'art. L.121-4
-    // du Code de la consommation (pratique commerciale trompeuse).
   };
+
+  if (aggregate) {
+    schema.aggregateRating = {
+      "@type": "AggregateRating",
+      ratingValue: aggregate.ratingValue,
+      reviewCount: aggregate.reviewCount,
+      bestRating: 5,
+      worstRating: 1,
+    };
+  }
 
   return (
     <script

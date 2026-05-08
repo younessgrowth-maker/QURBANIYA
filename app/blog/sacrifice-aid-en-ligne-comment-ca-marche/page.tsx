@@ -200,6 +200,33 @@ export default function ArticleSacrificeEnLigne() {
               ))}
             </div>
           </section>
+
+          {/* Pour aller plus loin — internal linking */}
+          <section className="bg-bg-secondary rounded-xl p-5 md:p-6 border border-gold/10">
+            <h3 className="text-gold font-bold text-sm uppercase tracking-wider mb-3 font-inter">Pour aller plus loin</h3>
+            <ul className="space-y-2 text-sm font-inter">
+              <li>
+                <Link href="/blog/date-aid-al-adha-2026" className="text-text-primary hover:text-gold transition-colors">
+                  → Date de l&apos;Aïd al-Adha 2026 : c&apos;est le mercredi 27 mai
+                </Link>
+              </li>
+              <li>
+                <Link href="/blog/prix-mouton-france-2026" className="text-text-primary hover:text-gold transition-colors">
+                  → Prix du mouton en France 2026 : le comparatif
+                </Link>
+              </li>
+              <li>
+                <Link href="/blog/combien-coute-mouton-aid-2026-france" className="text-text-primary hover:text-gold transition-colors">
+                  → Combien coûte un mouton de l&apos;Aïd 2026 ?
+                </Link>
+              </li>
+              <li>
+                <Link href="/faq" className="text-text-primary hover:text-gold transition-colors">
+                  → FAQ Aïd al-Adha 2026
+                </Link>
+              </li>
+            </ul>
+          </section>
         </div>
 
         {/* Bottom navigation */}
