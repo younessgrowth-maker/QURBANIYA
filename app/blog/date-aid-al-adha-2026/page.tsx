@@ -28,7 +28,7 @@ export const metadata: Metadata = {
     url: "https://qurbaniya.fr/blog/date-aid-al-adha-2026",
     type: "article",
     publishedTime: "2026-03-15T00:00:00Z",
-    modifiedTime: "2026-05-07T00:00:00Z",
+    modifiedTime: "2026-05-08T00:00:00Z",
   },
 };
 
@@ -39,7 +39,7 @@ function ArticleJsonLd() {
     headline: "Aïd al-Adha 2026 : c'est le mercredi 27 mai en France",
     author: { "@type": "Organization", name: "Qurbaniya" },
     datePublished: "2026-03-15",
-    dateModified: "2026-05-07",
+    dateModified: "2026-05-08",
     publisher: {
       "@type": "Organization",
       name: "Qurbaniya",
@@ -136,10 +136,10 @@ export default function ArticleDateAid() {
         <div className="flex items-center gap-4 mb-4">
           <span className="text-xs font-semibold text-gold bg-gold/10 px-2.5 py-1 rounded-full font-inter">Guide</span>
           <span className="flex items-center gap-1 text-xs text-text-muted-light font-inter">
-            <Calendar size={12} /> Mis à jour le 7 mai 2026
+            <Calendar size={12} /> Mis à jour le 8 mai 2026
           </span>
           <span className="flex items-center gap-1 text-xs text-text-muted-light font-inter">
-            <Clock size={12} /> 5 min de lecture
+            <Clock size={12} /> 8 min de lecture
           </span>
         </div>
 
@@ -161,6 +161,19 @@ export default function ArticleDateAid() {
             </p>
             <p className="text-text-muted leading-relaxed">
               Comme chaque année, la date définitive sera confirmée par l&apos;observation du croissant lunaire. Elle pourrait varier d&apos;un jour selon les pays.
+            </p>
+          </section>
+
+          <section>
+            <h2 className="text-2xl font-bold text-text-primary mb-4">Pourquoi l&apos;Aïd al-Adha 2026 tombe-t-il le 27 mai ?</h2>
+            <p className="text-text-muted leading-relaxed mb-4">
+              L&apos;Aïd al-Adha est célébré le <strong className="text-text-primary">10 Dhoul Hijja</strong>, le 12ᵉ et dernier mois du calendrier hégirien. Le calendrier islamique étant lunaire, il compte environ 354 jours par an — soit 11 jours de moins que le calendrier grégorien. C&apos;est pourquoi la date de l&apos;Aïd al-Adha avance de ~11 jours chaque année dans le calendrier civil.
+            </p>
+            <p className="text-text-muted leading-relaxed mb-4">
+              En 2026, le mois de Dhoul Hijja 1447 commence le <strong className="text-text-primary">17 mai 2026</strong> selon les calculs astronomiques (<em>Umm al-Qura</em>, calendrier officiel saoudien). Ainsi le 10 Dhoul Hijja, jour du sacrifice, tombe le mercredi 27 mai 2026.
+            </p>
+            <p className="text-text-muted leading-relaxed">
+              Deux méthodes sont utilisées par les musulmans pour confirmer la date : le <strong className="text-text-primary">calcul astronomique</strong> (utilisé par la plupart des pays musulmans) ou l&apos;<strong className="text-text-primary">observation directe du croissant lunaire</strong> (<em>rou&apos;yat al-hilal</em>). En France, la Grande Mosquée de Paris suit traditionnellement la décision du Conseil Théologique Musulman, qui peut s&apos;appuyer sur l&apos;une ou l&apos;autre méthode selon les années.
             </p>
           </section>
 
@@ -200,6 +213,25 @@ export default function ArticleDateAid() {
             <h2 className="text-2xl font-bold text-text-primary mb-4">Le jour d&apos;Arafat : 26 mai 2026</h2>
             <p className="text-text-muted leading-relaxed">
               La veille de l&apos;Aïd, le <strong className="text-text-primary">26 mai 2026</strong>, correspond au jour d&apos;Arafat. Le jeûne de ce jour est fortement recommandé pour les non-pèlerins. Selon un hadith authentique, il expie les péchés de l&apos;année passée et de l&apos;année à venir.
+            </p>
+          </section>
+
+          <section>
+            <h2 className="text-2xl font-bold text-text-primary mb-4">Quand prier la prière de l&apos;Aïd al-Adha 2026 en France ?</h2>
+            <p className="text-text-muted leading-relaxed mb-4">
+              La prière de l&apos;Aïd (<em>Salat al-Eid</em>) se fait le matin du <strong className="text-text-primary">mercredi 27 mai 2026</strong>, en congrégation, après le lever du soleil et avant le passage du soleil au zénith. C&apos;est une <em>sounnah mou&apos;akkadah</em> (sounnah confirmée) selon la majorité des écoles juridiques.
+            </p>
+            <p className="text-text-muted leading-relaxed mb-4">
+              En France métropolitaine, le créneau de prière s&apos;étend approximativement de <strong className="text-text-primary">7h00 à 11h00</strong> selon la ville et la saison. Les grandes mosquées organisent généralement plusieurs vagues entre 7h30 et 10h pour absorber l&apos;affluence. Quelques exemples indicatifs :
+            </p>
+            <ul className="space-y-1.5 text-text-muted text-sm font-inter pl-1 mb-4">
+              <li>• <strong className="text-text-primary">Paris / Île-de-France</strong> : généralement vers 7h-9h</li>
+              <li>• <strong className="text-text-primary">Lyon</strong> : créneaux 7h30-9h30</li>
+              <li>• <strong className="text-text-primary">Marseille</strong> : 7h-9h selon les mosquées</li>
+              <li>• <strong className="text-text-primary">Toulouse, Bordeaux, Nice</strong> : variable, 7h30-10h</li>
+            </ul>
+            <p className="text-text-muted leading-relaxed">
+              Renseignez-vous directement auprès de votre mosquée locale environ 7-10 jours avant l&apos;Aïd, lorsque les horaires précis sont publiés.
             </p>
           </section>
 
@@ -257,6 +289,59 @@ export default function ArticleDateAid() {
             </p>
             <p className="text-text-muted leading-relaxed">
               L&apos;Aïd al-Adha est considéré comme la plus grande fête de l&apos;Islam. C&apos;est le jour où les musulmans qui en ont les moyens effectuent le sacrifice rituel.
+            </p>
+          </section>
+
+          <section>
+            <h2 className="text-2xl font-bold text-text-primary mb-4">L&apos;histoire de l&apos;Aïd al-Adha : le sacrifice d&apos;Ibrahim</h2>
+            <p className="text-text-muted leading-relaxed mb-4">
+              L&apos;Aïd al-Adha commémore l&apos;épreuve d&apos;Ibrahim (Abraham, paix sur lui), à qui Allah a demandé en songe de sacrifier son fils. Selon la tradition islamique, ce fils est <strong className="text-text-primary">Ismaël</strong> (Ismaïl). Père et fils acceptent l&apos;ordre divin avec soumission totale.
+            </p>
+            <p className="text-text-muted leading-relaxed mb-4">
+              Au moment du sacrifice, Allah substitue à Ismaël un bélier envoyé du paradis, récompensant la foi inébranlable d&apos;Ibrahim. C&apos;est en mémoire de cet acte de soumission (<em>islam</em>) que les musulmans sacrifient chaque année un animal le 10 Dhoul Hijja.
+            </p>
+            <p className="text-text-muted leading-relaxed">
+              Le récit est mentionné dans le Coran (sourate As-Saffat, versets 100-111). Le sacrifice de l&apos;Aïd n&apos;est pas un simple rituel : c&apos;est l&apos;expression d&apos;une obéissance totale à Allah et un partage avec les plus démunis (la viande est traditionnellement partagée en trois : famille, proches, nécessiteux).
+            </p>
+          </section>
+
+          <section>
+            <h2 className="text-2xl font-bold text-text-primary mb-4">Le pèlerinage du Hajj 2026 : calendrier complet</h2>
+            <p className="text-text-muted leading-relaxed mb-4">
+              L&apos;Aïd al-Adha s&apos;inscrit dans le cycle plus large du <strong className="text-text-primary">Hajj</strong>, le grand pèlerinage à La Mecque, cinquième pilier de l&apos;Islam. Voici le calendrier complet 2026 (correspondance hégirien ↔ grégorien) :
+            </p>
+            <div className="bg-bg-secondary rounded-xl p-5 border border-gold/10 mb-4">
+              <ul className="space-y-2 text-text-muted text-sm font-inter">
+                <li><strong className="text-gold">8 Dhoul Hijja</strong> (lundi 25 mai 2026) — <em>Yawm at-Tarwiya</em>, départ des pèlerins vers Mina</li>
+                <li><strong className="text-gold">9 Dhoul Hijja</strong> (mardi 26 mai 2026) — <em>Yawm &apos;Arafa</em>, jour d&apos;Arafat (jeûne recommandé pour les non-pèlerins)</li>
+                <li><strong className="text-gold">10 Dhoul Hijja</strong> (mercredi 27 mai 2026) — <em>Yawm an-Nahr</em>, jour du sacrifice et de l&apos;Aïd al-Adha</li>
+                <li><strong className="text-gold">11 Dhoul Hijja</strong> (jeudi 28 mai) — 1ᵉʳ jour de tachriq</li>
+                <li><strong className="text-gold">12 Dhoul Hijja</strong> (vendredi 29 mai) — 2ᵉ jour de tachriq</li>
+                <li><strong className="text-gold">13 Dhoul Hijja</strong> (samedi 30 mai) — 3ᵉ et dernier jour de tachriq</li>
+              </ul>
+            </div>
+            <p className="text-text-muted leading-relaxed">
+              Pour les pèlerins, le 9 Dhoul Hijja (jour d&apos;Arafat) est le moment le plus intense du Hajj : ils se rassemblent sur le mont Arafat pour invoquer Allah. Pour les non-pèlerins, c&apos;est un jour fortement recommandé pour le jeûne.
+            </p>
+          </section>
+
+          <section>
+            <h2 className="text-2xl font-bold text-text-primary mb-4">L&apos;Aïd al-Adha tombe-t-il le même jour partout dans le monde ?</h2>
+            <p className="text-text-muted leading-relaxed mb-4">
+              <strong className="text-text-primary">Pas toujours.</strong> Bien que la majorité des pays musulmans s&apos;alignent sur la décision saoudienne (méthode astronomique <em>Umm al-Qura</em>), des décalages d&apos;un jour peuvent exister selon la méthode adoptée localement.
+            </p>
+            <p className="text-text-muted leading-relaxed mb-4">
+              En 2026, les principales zones géographiques devraient suivre ce calendrier :
+            </p>
+            <ul className="space-y-1.5 text-text-muted text-sm font-inter pl-1 mb-4">
+              <li>• <strong className="text-text-primary">Arabie Saoudite, Émirats, Égypte, Jordanie</strong> : 27 mai 2026 (calcul astronomique)</li>
+              <li>• <strong className="text-text-primary">France, Belgique, Suisse</strong> : 27 mai 2026 (alignement sur la décision saoudienne par la plupart des fédérations)</li>
+              <li>• <strong className="text-text-primary">Maghreb (Maroc, Algérie, Tunisie)</strong> : 27 mai 2026, parfois +1 jour selon l&apos;observation locale du croissant</li>
+              <li>• <strong className="text-text-primary">Afrique de l&apos;Ouest (Tabaski)</strong> : généralement aligné, peut décaler de 24h</li>
+              <li>• <strong className="text-text-primary">Indonésie, Malaisie, Pakistan</strong> : 27 mai 2026 prévu, à confirmer par observation locale</li>
+            </ul>
+            <p className="text-text-muted leading-relaxed">
+              La date définitive est toujours confirmée la veille (le 26 mai 2026), après l&apos;observation officielle du croissant lunaire dans les pays qui suivent cette méthode. En France, la <em>Nuit du doute</em> est annoncée par les institutions musulmanes officielles.
             </p>
           </section>
         </div>
