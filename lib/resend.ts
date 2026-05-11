@@ -1,5 +1,11 @@
 import { Resend } from "resend";
 import type { Order } from "@/types";
+import {
+  shareUrl,
+  shareWhatsAppMessage,
+  REFERRAL_DISCOUNT_EUR,
+  REFERRER_REWARD_EUR,
+} from "@/lib/referral";
 
 let _resend: Resend | null = null;
 
@@ -94,6 +100,35 @@ function stepItem(num: string, title: string, text: string): string {
 /* ── Helper: référence commande ── */
 function orderRef(order: Order): string {
   return `QRB-2026-${order.id.slice(0, 4).toUpperCase()}`;
+}
+
+/* ── Helper: bloc parrainage (email confirmation) ── */
+function referralEmailBlock(code: string, prenom: string): string {
+  const url = shareUrl(code);
+  const waLink = `https://wa.me/?text=${encodeURIComponent(shareWhatsAppMessage(code, prenom))}`;
+  return `
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#FDF6E3;border:1px solid #D4A843;border-radius:12px;margin:32px 0 28px;">
+  <tr><td style="padding:24px;text-align:center;">
+    <p style="margin:0 0 6px;color:#B8860B;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;font-weight:bold;">🎁 Parrainez vos proches</p>
+    <p style="margin:0 0 16px;color:#5C5347;font-size:14px;line-height:1.6;">
+      Partagez votre code : vos filleuls bénéficient de <strong style="color:#1A1A18;">−${REFERRAL_DISCOUNT_EUR}€</strong>, vous recevez <strong style="color:#1A1A18;">${REFERRER_REWARD_EUR}€</strong> de cashback par filleul (versé après l'Aïd).
+    </p>
+    <p style="margin:0 0 4px;color:#8C8279;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;font-weight:bold;">Votre code</p>
+    <p style="margin:0 0 18px;color:#B8860B;font-size:26px;font-weight:bold;font-family:monospace;letter-spacing:6px;">
+      ${code}
+    </p>
+    <table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 auto;">
+      <tr><td style="background:#25D366;border-radius:8px;">
+        <a href="${waLink}" target="_blank" style="display:inline-block;padding:12px 24px;font-family:Helvetica,Arial,sans-serif;font-size:13px;font-weight:bold;color:#FEFCF8;text-decoration:none;text-transform:uppercase;letter-spacing:0.5px;">
+          📱 Partager sur WhatsApp
+        </a>
+      </td></tr>
+    </table>
+    <p style="margin:14px 0 0;color:#8C8279;font-size:12px;line-height:1.6;">
+      Lien direct : <a href="${url}" style="color:#1B4332;font-weight:bold;text-decoration:none;">${url}</a>
+    </p>
+  </td></tr>
+</table>`;
 }
 
 /* ═══════════════════════════════════════════
@@ -203,6 +238,8 @@ export async function sendOrderConfirmation(order: Order) {
     <p style="margin:0 0 16px;color:#5C5347;font-size:13px;text-align:center;line-height:1.6;">
       Conservez ce lien : il permet de suivre l&apos;avancement de votre sacrifice (paiement, sourcing, jour de l&apos;Aïd, vidéo) à tout moment.
     </p>
+
+    ${order.referral_code ? referralEmailBlock(order.referral_code, order.prenom) : ""}
 
     <p style="margin:0;color:#5C5347;font-size:14px;text-align:center;line-height:1.7;">
       Une question ? Écrivez à <a href="mailto:${SUPPORT_EMAIL}" style="color:#1B4332;text-decoration:none;font-weight:bold;">${SUPPORT_EMAIL}</a><br>

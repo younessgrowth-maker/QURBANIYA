@@ -20,6 +20,25 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(callback);
   }
 
+  // ─── Parrainage : capter ?ref=XXX et poser un cookie 30j ───
+  // Le cookie est lu côté client sur /commander pour pré-remplir le champ.
+  // 6 chars uppercase strict, sinon on ignore (anti-pollution cookie).
+  const ref = searchParams.get("ref");
+  if (ref && /^[A-Z0-9]{6}$/i.test(ref)) {
+    const response = NextResponse.next({ request });
+    response.cookies.set("qrb_ref", ref.toUpperCase(), {
+      maxAge: 60 * 60 * 24 * 30, // 30 jours
+      sameSite: "lax",
+      path: "/",
+      secure: process.env.NODE_ENV === "production",
+    });
+    // Si la route n'est pas protégée on retourne tout de suite, sinon on
+    // continue le check auth ci-dessous (cookie déjà posé sur la response).
+    if (!PROTECTED_ROUTES.some((r) => pathname.startsWith(r))) {
+      return response;
+    }
+  }
+
   // Only check protected routes
   if (!PROTECTED_ROUTES.some((r) => pathname.startsWith(r))) {
     return NextResponse.next();

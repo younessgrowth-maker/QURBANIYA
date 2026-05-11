@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import Header from "@/components/layout/Header";
 import Button from "@/components/ui/Button";
+import ReferralCard from "@/components/ui/ReferralCard";
 import { orderRef } from "@/lib/utils";
 import { whatsappUrl } from "@/lib/constants";
 import type { Intention, PaymentMethod, PaymentStatus } from "@/types";
@@ -32,6 +33,8 @@ type OrderPublic = {
   payment_status: PaymentStatus;
   payment_method: PaymentMethod;
   created_at: string;
+  referral_code?: string | null;
+  discount_amount?: number;
 };
 
 const MAX_POLL_ATTEMPTS = 15; // ~30s total (2s interval)
@@ -212,6 +215,12 @@ function StripeConfirmationView({
           )}
 
           {isPaid && <NextStepsCard />}
+
+          {isPaid && order?.referral_code && (
+            <div className="mt-6 text-left print:hidden">
+              <ReferralCard code={order.referral_code} prenom={order.prenom} />
+            </div>
+          )}
 
           {timedOut && <WhatsAppFallback orderId={order?.id} />}
 

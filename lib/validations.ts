@@ -41,6 +41,16 @@ export const orderSchema = z
       .email("Email destinataire invalide")
       .optional()
       .or(z.literal("")),
+    // ─── Parrainage ───
+    // Le client peut saisir un code parrain à l'achat (-15€). Validé côté
+    // serveur dans /api/orders avant création de la session Stripe.
+    referred_by_code: z
+      .string()
+      .trim()
+      .toUpperCase()
+      .regex(/^[A-Z0-9]{6}$/, "Code parrain invalide (6 caractères)")
+      .optional()
+      .or(z.literal("")),
   })
   .superRefine((data, ctx) => {
     // En mode cadeau, le nom du bénéficiaire est obligatoire.

@@ -1,15 +1,28 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { orderSchema, type OrderFormValues } from "@/lib/validations";
-import { User, Users, Heart, CreditCard, Check } from "lucide-react";
+import { User, Users, Heart, CreditCard, Check, Gift, X, Loader2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import Button from "@/components/ui/Button";
 import { cn } from "@/lib/utils";
 import { track } from "@/lib/track";
 import type { LucideIcon } from "lucide-react";
+
+// ─── Lecture du cookie qrb_ref posé par le middleware ─────────────
+function readReferralCookie(): string {
+  if (typeof document === "undefined") return "";
+  const match = document.cookie.match(/(?:^|;\s*)qrb_ref=([A-Z0-9]{6})/);
+  return match ? match[1] : "";
+}
+
+type ReferralState =
+  | { status: "idle" }
+  | { status: "checking" }
+  | { status: "valid"; ownerPrenom: string; discountEur: number }
+  | { status: "invalid"; reason: string };
 
 /* ── Field wrapper ── */
 function Field({ label, error, optional, hint, children }: {
@@ -86,6 +99,7 @@ function RadioCard({ label, icon: Icon, description, selected, onSelect }: {
 
 export default function OrderForm() {
   const [submitSuccess, setSubmitSuccess] = useState(false);
+  const [referralState, setReferralState] = useState<ReferralState>({ status: "idle" });
   // Guard double-submit synchrone : react-hook-form's isSubmitting set le bouton
   // disabled très vite, mais un useRef évite toute fenêtre de race entre clic
   // et passage en isSubmitting (et survit aux re-renders sans bouger).
@@ -103,6 +117,7 @@ export default function OrderForm() {
       intention: "pour_moi",
       is_gift: false,
       notify_recipient: false,
+      referred_by_code: "",
     },
     mode: "onSubmit",
   });
@@ -110,6 +125,47 @@ export default function OrderForm() {
   const intention = watch("intention");
   const isGift = watch("is_gift");
   const notifyRecipient = watch("notify_recipient");
+  const referralCode = watch("referred_by_code") || "";
+
+  // Auto-fill depuis le cookie posé par le middleware (?ref=XXX)
+  useEffect(() => {
+    const fromCookie = readReferralCookie();
+    if (fromCookie) {
+      setValue("referred_by_code", fromCookie);
+    }
+  }, [setValue]);
+
+  // Validation live du code parrain (debounce 400ms)
+  useEffect(() => {
+    const cleaned = referralCode.toUpperCase().replace(/[^A-Z0-9]/g, "");
+    if (cleaned.length === 0) {
+      setReferralState({ status: "idle" });
+      return;
+    }
+    if (cleaned.length < 6) {
+      setReferralState({ status: "idle" });
+      return;
+    }
+    setReferralState({ status: "checking" });
+    const t = setTimeout(async () => {
+      try {
+        const res = await fetch(`/api/referral/validate?code=${cleaned}`);
+        const data = await res.json();
+        if (data.valid) {
+          setReferralState({
+            status: "valid",
+            ownerPrenom: data.ownerPrenom,
+            discountEur: data.discountEur,
+          });
+        } else {
+          setReferralState({ status: "invalid", reason: data.reason || "unknown" });
+        }
+      } catch {
+        setReferralState({ status: "invalid", reason: "network" });
+      }
+    }, 400);
+    return () => clearTimeout(t);
+  }, [referralCode]);
 
   async function onSubmit(data: OrderFormValues) {
     if (inFlightRef.current) return;
@@ -280,6 +336,76 @@ export default function OrderForm() {
         </Field>
       </div>
 
+      {/* ── Code parrain ── */}
+      <div>
+        <h3 className="text-lg font-bold text-text-primary uppercase tracking-wide mb-5 flex items-center gap-2">
+          <Gift size={18} className="text-gold" /> Code parrain
+          <span className="text-text-muted font-normal normal-case text-sm">(optionnel)</span>
+        </h3>
+        <Field
+          label="Vous avez un code parrain ?"
+          error={errors.referred_by_code?.message}
+          hint="6 caractères — vous bénéficiez de −15€"
+        >
+          <div className="relative">
+            <input
+              {...register("referred_by_code", {
+                onChange: (e) => {
+                  e.target.value = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 6);
+                },
+              })}
+              className={cn(
+                inputClass,
+                "uppercase tracking-widest font-mono pr-12",
+                referralState.status === "valid" && "border-emerald focus:border-emerald focus:ring-emerald/30",
+                referralState.status === "invalid" && referralCode.length === 6 && "border-urgency focus:border-urgency focus:ring-urgency/30"
+              )}
+              placeholder="ABC123"
+              maxLength={6}
+              autoComplete="off"
+            />
+            <div className="absolute right-3 top-1/2 -translate-y-1/2">
+              {referralState.status === "checking" && (
+                <Loader2 size={18} className="text-text-muted animate-spin" />
+              )}
+              {referralState.status === "valid" && (
+                <Check size={18} className="text-emerald" strokeWidth={3} />
+              )}
+              {referralState.status === "invalid" && referralCode.length === 6 && (
+                <X size={18} className="text-urgency" strokeWidth={3} />
+              )}
+            </div>
+          </div>
+        </Field>
+
+        <AnimatePresence>
+          {referralState.status === "valid" && (
+            <motion.div
+              initial={{ opacity: 0, y: -6 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -6 }}
+              className="mt-3 flex items-center gap-3 p-3 rounded-lg bg-emerald/10 border border-emerald/30"
+            >
+              <Check size={18} className="text-emerald flex-shrink-0" strokeWidth={3} />
+              <div className="text-sm">
+                <span className="font-semibold text-emerald">Code valide</span>
+                <span className="text-text-muted"> · −{referralState.discountEur}€ appliqués grâce à {referralState.ownerPrenom}</span>
+              </div>
+            </motion.div>
+          )}
+          {referralState.status === "invalid" && referralCode.length === 6 && (
+            <motion.div
+              initial={{ opacity: 0, y: -6 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -6 }}
+              className="mt-3 text-sm text-urgency"
+            >
+              Code parrain inconnu — vérifiez l&apos;orthographe.
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+
       {/* ── Paiement ── */}
       <div>
         <h3 className="text-lg font-bold text-text-primary uppercase tracking-wide mb-5">
@@ -296,6 +422,15 @@ export default function OrderForm() {
             </span>
           </div>
         </div>
+        {referralState.status === "valid" && (
+          <div className="mt-3 flex items-center justify-between p-3 rounded-lg bg-bg-secondary border border-gold/20">
+            <span className="text-sm text-text-muted">Total après réduction parrain</span>
+            <span className="font-bold text-text-primary">
+              <span className="text-text-muted-light line-through mr-2 font-normal">140€</span>
+              <span className="text-emerald">{140 - referralState.discountEur}€</span>
+            </span>
+          </div>
+        )}
       </div>
 
       {/* ── Submit ── */}
@@ -319,7 +454,9 @@ export default function OrderForm() {
             </motion.div>
           ) : (
             <Button type="submit" size="lg" variant="primary" className="w-full" loading={isSubmitting}>
-              FINALISER MA COMMANDE — 140€
+              {referralState.status === "valid"
+                ? `FINALISER MA COMMANDE — ${140 - referralState.discountEur}€`
+                : "FINALISER MA COMMANDE — 140€"}
             </Button>
           )}
         </AnimatePresence>

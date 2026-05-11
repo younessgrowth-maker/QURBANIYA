@@ -6,6 +6,11 @@ import { getBaseUrl } from "@/lib/utils";
 import { createServiceRoleClient } from "@/lib/supabase/server";
 import { getInventory } from "@/lib/supabase/queries";
 import { PRICE_AMOUNT, CURRENT_YEAR, isOrderingOpen } from "@/lib/constants";
+import {
+  sanitizeReferralCode,
+  REFERRAL_DISCOUNT_EUR,
+  REFERRAL_DISCOUNT_CENTS,
+} from "@/lib/referral";
 
 export async function POST(req: NextRequest) {
   try {
@@ -47,6 +52,33 @@ export async function POST(req: NextRequest) {
     // d'entropie supplémentaires, contre lookup par session_id seul).
     const orderId = randomUUID();
 
+    // ─── Parrainage : valider le code et résoudre la commande du parrain ───
+    // On ne fait confiance qu'à un code dont la commande parrain est `paid`.
+    // Fail-open silencieux : si le code est invalide ou inconnu, on continue
+    // sans réduction (l'utilisateur n'est pas bloqué).
+    const requestedCode = sanitizeReferralCode(data.referred_by_code);
+    let referredByCode: string | null = null;
+    let referrerOrderId: string | null = null;
+    let discountAmount = 0;
+
+    if (requestedCode) {
+      const { data: referrer } = await supabase
+        .from("orders")
+        .select("id, payment_status, email")
+        .eq("referral_code", requestedCode)
+        .maybeSingle();
+
+      if (referrer && referrer.payment_status === "paid") {
+        // Garde-fou anti-self-referral : un client ne peut pas utiliser son
+        // propre code (même email). On compare insensiblement à la casse.
+        if (referrer.email?.toLowerCase() !== data.email.toLowerCase()) {
+          referredByCode = requestedCode;
+          referrerOrderId = referrer.id;
+          discountAmount = REFERRAL_DISCOUNT_EUR;
+        }
+      }
+    }
+
     // Mode cadeau : nettoyer/normaliser les champs avant persistance.
     const isGift = !!data.is_gift && !!data.recipient_name?.trim();
     const recipientName = isGift ? data.recipient_name?.trim() || null : null;
@@ -55,9 +87,31 @@ export async function POST(req: NextRequest) {
     const recipientEmail = notifyRecipient ? data.recipient_email?.trim() || null : null;
 
     const stripe = getStripe();
+
+    // ─── Création d'un coupon Stripe ad-hoc si parrainage valide ───
+    // Coupon "once" rattaché à la session via `discounts`. Plus traçable
+    // dans le dashboard Stripe que d'ajuster unit_amount à la main.
+    // NB: incompatible avec `allow_promotion_codes` (Stripe refuse les deux
+    // en même temps), donc on désactive la saisie d'autre code promo si
+    // un parrainage est déjà appliqué.
+    let stripeDiscounts: { coupon: string }[] | undefined;
+    if (referredByCode) {
+      const coupon = await stripe.coupons.create({
+        amount_off: REFERRAL_DISCOUNT_CENTS,
+        currency: "eur",
+        duration: "once",
+        max_redemptions: 1,
+        name: `Parrainage ${referredByCode}`,
+        metadata: { referred_by_code: referredByCode, order_id: orderId },
+      });
+      stripeDiscounts = [{ coupon: coupon.id }];
+    }
+
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ["card"],
-      allow_promotion_codes: true,
+      ...(stripeDiscounts
+        ? { discounts: stripeDiscounts }
+        : { allow_promotion_codes: true }),
       line_items: [
         {
           price_data: {
@@ -86,6 +140,8 @@ export async function POST(req: NextRequest) {
         is_gift: isGift ? "1" : "0",
         ...(recipientName ? { recipient_name: recipientName } : {}),
         ...(recipientEmail ? { recipient_email: recipientEmail } : {}),
+        // Parrainage (visible dans le dashboard Stripe)
+        ...(referredByCode ? { referred_by_code: referredByCode } : {}),
       },
     });
 
@@ -106,6 +162,9 @@ export async function POST(req: NextRequest) {
       recipient_message: recipientMessage,
       notify_recipient: notifyRecipient,
       recipient_email: recipientEmail,
+      referred_by_code: referredByCode,
+      referrer_order_id: referrerOrderId,
+      discount_amount: discountAmount,
     });
 
     if (insertError) {

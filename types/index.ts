@@ -34,6 +34,12 @@ export interface Order {
   refunded_at: string | null;
   refund_reason: string | null;
   stripe_refund_id: string | null;
+  // Parrainage (migration 0011)
+  referral_code: string | null;
+  referred_by_code: string | null;
+  referrer_order_id: string | null;
+  discount_amount: number;
+  referrer_reward_paid_at: string | null;
   created_at: string;
   updated_at: string;
 }
