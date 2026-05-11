@@ -45,7 +45,7 @@ export default function ReferralCard({ code, prenom }: Props) {
             Parrainez vos proches
           </h3>
           <p className="text-text-muted text-sm mt-1">
-            Vos filleuls bénéficient de <strong className="text-text-primary">−{REFERRAL_DISCOUNT_EUR}€</strong>, et vous recevez <strong className="text-text-primary">{REFERRER_REWARD_EUR}€</strong> de cashback par sacrifice parrainé (versé après l&apos;Aïd).
+            Vos filleuls bénéficient de <strong className="text-text-primary">−{REFERRAL_DISCOUNT_EUR}€</strong> (sans limite). Vous recevez <strong className="text-text-primary">{REFERRER_REWARD_EUR}€</strong> de cashback pour votre 1ᵉʳ filleul, versés après l&apos;Aïd.
           </p>
         </div>
       </div>
@@ -97,7 +97,7 @@ export default function ReferralCard({ code, prenom }: Props) {
       </div>
 
       <p className="text-xs text-text-muted-light mt-4 text-center">
-        Pas de limite. Plus vos proches commandent, plus votre cashback grandit. Le versement se fait après l&apos;Aïd al-Adha.
+        Côté filleul : pas de limite, chaque proche qui commande économise {REFERRAL_DISCOUNT_EUR}€. Côté parrain : un seul cashback de {REFERRER_REWARD_EUR}€ versé après l&apos;Aïd al-Adha.
       </p>
     </div>
   );
