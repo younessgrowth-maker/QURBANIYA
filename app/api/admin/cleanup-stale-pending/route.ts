@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServerSupabaseClient, createServiceRoleClient } from "@/lib/supabase/server";
 import { isAdminEmail } from "@/lib/admin";
-import type { Order } from "@/types";
 
 // POST /api/admin/cleanup-stale-pending
 // Body: { dry_run?: boolean }
