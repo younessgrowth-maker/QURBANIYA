@@ -48,9 +48,39 @@ export async function POST(req: NextRequest) {
   const body = (await req.json().catch(() => ({}))) as {
     dry_run?: boolean;
     target_phone?: string;
+    test?: boolean;
   };
   const dryRun = !!body.dry_run;
   const targetPhone = body.target_phone ? normalizePhone(body.target_phone) : null;
+
+  // ─── Mode test : bypass des filtres d'éligibilité ───
+  // Envoie le message template avec un code factice "TESTAB" à un numéro
+  // arbitraire (typiquement le numéro perso de l'admin pour vérifier que
+  // Whapi est bien configuré). N'écrit RIEN en DB.
+  if (body.test) {
+    if (!targetPhone) {
+      return NextResponse.json(
+        { error: "target_phone required in test mode" },
+        { status: 400 }
+      );
+    }
+    try {
+      const msg = referralLaunchMessage("Youness (test)", "TESTAB");
+      const result = await sendWhatsAppText({ to: targetPhone, body: msg });
+      return NextResponse.json({
+        ok: true,
+        test: true,
+        sent_to: targetPhone,
+        whapi_message_id: result.id,
+      });
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "unknown";
+      return NextResponse.json(
+        { ok: false, test: true, error: msg },
+        { status: 500 }
+      );
+    }
+  }
 
   const supabase = createServiceRoleClient();
 
