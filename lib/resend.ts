@@ -639,8 +639,8 @@ export async function sendReferralLaunchEmail(order: Order) {
     </table>
 
     <p style="margin:0;color:#5C5347;font-size:14px;text-align:center;line-height:1.7;">
-      Une question ? Répondez à cet email ou écrivez-moi sur <a href="${WHATSAPP_LINK}" style="color:#1B4332;text-decoration:none;font-weight:bold;">WhatsApp</a>.<br>
-      <em style="color:#B8860B;font-family:Georgia,serif;">— Youness, Qurbaniya</em>
+      Une question ? Répondez à cet email ou écrivez-nous sur <a href="${WHATSAPP_LINK}" style="color:#1B4332;text-decoration:none;font-weight:bold;">WhatsApp</a>.<br>
+      <em style="color:#B8860B;font-family:Georgia,serif;">— L'équipe Qurbaniya</em>
     </p>
   `);
 

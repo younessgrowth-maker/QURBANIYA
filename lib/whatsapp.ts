@@ -84,5 +84,5 @@ https://qurbaniya.fr/?ref=${code}
 Tu peux transférer ce message tel quel à ta famille et tes amis 🙏
 
 Aïd Moubarak en avance,
-— Youness`;
+— L'équipe Qurbaniya`;
 }
