@@ -3,21 +3,26 @@
 // La génération du code (qui utilise node:crypto) vit dans
 // `lib/referral-server.ts` pour ne PAS polluer les bundles client.
 
-const ALPHABET = "ABCDEFGHJKMNPQRSTUVWXYZ23456789"; // sans 0,O,1,I,L
 const CODE_LENGTH = 6;
 
 export const REFERRAL_DISCOUNT_EUR = 15;
 export const REFERRAL_DISCOUNT_CENTS = 1500;
 export const REFERRER_REWARD_EUR = 15;
 
-/** Sanitize un code reçu en input (upper + trim + filtre alphabet). */
+/**
+ * Sanitize un code reçu en input. Accepte tout code alphanumérique 6 chars
+ * uppercase. La validité d'un code est garantie par l'unicité DB, pas par
+ * un alphabet restrictif côté sanitize.
+ *
+ * Note : les nouveaux codes que NOUS générons utilisent un alphabet non-
+ * ambigu (cf. lib/referral-server.ts) pour limiter les erreurs de saisie.
+ * Mais on doit accepter en lecture les codes existants — notamment ceux
+ * issus du backfill SQL md5 qui contiennent 0/1.
+ */
 export function sanitizeReferralCode(raw: string | null | undefined): string | null {
   if (!raw) return null;
   const cleaned = raw.toUpperCase().trim().replace(/[^A-Z0-9]/g, "");
   if (cleaned.length !== CODE_LENGTH) return null;
-  for (const c of cleaned) {
-    if (!ALPHABET.includes(c)) return null;
-  }
   return cleaned;
 }
 
