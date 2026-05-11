@@ -538,6 +538,8 @@ function TimedOutHeading() {
 }
 
 function OrderRecapCard({ order, isPaid }: { order: OrderPublic; isPaid: boolean }) {
+  const discount = order.discount_amount ?? 0;
+  const netAmount = order.amount - discount;
   return (
     <motion.div
       initial={{ opacity: 0, y: 16 }}
@@ -547,12 +549,26 @@ function OrderRecapCard({ order, isPaid }: { order: OrderPublic; isPaid: boolean
     >
       <div className="flex items-center justify-between pb-4 border-b border-gold/10 print:border-gray-200">
         <span className="text-text-primary font-semibold print:text-black">Sacrifice Mouton</span>
-        <span className="text-gold font-bold">{formatAmount(order.amount)}</span>
+        {discount > 0 ? (
+          <span className="flex items-baseline gap-2">
+            <span className="text-text-muted-light line-through text-sm font-normal">{formatAmount(order.amount)}</span>
+            <span className="text-gold font-bold">{formatAmount(netAmount)}</span>
+          </span>
+        ) : (
+          <span className="text-gold font-bold">{formatAmount(order.amount)}</span>
+        )}
       </div>
       <div className="pt-4 space-y-2 text-sm">
         <RecapRow label="Commande" value={orderRef(order.id)} highlight />
         <RecapRow label="Intention" value={intentionLabel(order.intention)} />
         <RecapRow label="Année" value="Aïd el-Kébir 2026" />
+        {discount > 0 && (
+          <RecapRow
+            label="Réduction appliquée"
+            value={`−${formatAmount(discount)}`}
+            color="text-emerald"
+          />
+        )}
         <RecapRow
           label="Paiement"
           value={isPaid ? "Confirmé" : "En attente de validation"}
