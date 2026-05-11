@@ -42,6 +42,8 @@ export interface Order {
   referrer_reward_paid_at: string | null;
   // Broadcast email parrainage (migration 0012)
   referral_broadcast_sent_at: string | null;
+  // Broadcast WhatsApp parrainage (migration 0013)
+  whatsapp_broadcast_sent_at: string | null;
   created_at: string;
   updated_at: string;
 }

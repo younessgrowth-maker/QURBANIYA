@@ -4,6 +4,7 @@ import { KpiCard } from "@/components/admin/KpiCard";
 import OrdersTable from "@/components/admin/OrdersTable";
 import EmailFailuresPanel from "@/components/admin/EmailFailuresPanel";
 import ReferralBroadcastButton from "@/components/admin/ReferralBroadcastButton";
+import WhatsAppBroadcastButton from "@/components/admin/WhatsAppBroadcastButton";
 import CleanupStalePendingButton from "@/components/admin/CleanupStalePendingButton";
 import AnalyticsSection from "@/components/admin/AnalyticsSection";
 import { fetchAnalyticsSummary, EMPTY_ANALYTICS } from "@/lib/analytics-queries";
@@ -146,6 +147,17 @@ export default async function AdminDashboardPage() {
         remaining={
           paid.filter(
             (o) => o.referral_code && !o.referral_broadcast_sent_at
+          ).length
+        }
+      />
+
+      <WhatsAppBroadcastButton
+        remaining={
+          paid.filter(
+            (o) =>
+              o.referral_code &&
+              o.telephone &&
+              !o.whatsapp_broadcast_sent_at
           ).length
         }
       />
