@@ -3,6 +3,7 @@ import { ShoppingBag, CheckCircle2, Euro, TrendingUp, Package, Clock, CreditCard
 import { KpiCard } from "@/components/admin/KpiCard";
 import OrdersTable from "@/components/admin/OrdersTable";
 import EmailFailuresPanel from "@/components/admin/EmailFailuresPanel";
+import ReferralBroadcastButton from "@/components/admin/ReferralBroadcastButton";
 import AnalyticsSection from "@/components/admin/AnalyticsSection";
 import { fetchAnalyticsSummary, EMPTY_ANALYTICS } from "@/lib/analytics-queries";
 import { STATS, CURRENT_YEAR, PRICE_AMOUNT } from "@/lib/constants";
@@ -139,6 +140,14 @@ export default async function AdminDashboardPage() {
       </div>
 
       <EmailFailuresPanel orders={orders} />
+
+      <ReferralBroadcastButton
+        remaining={
+          paid.filter(
+            (o) => o.referral_code && !o.referral_broadcast_sent_at
+          ).length
+        }
+      />
 
       <div className="mb-4 flex items-baseline justify-between">
         <h2 className="text-lg font-bold text-text-primary flex items-center gap-2">

@@ -561,3 +561,97 @@ export async function sendReviewRequest(order: Order) {
   console.log("Email review request sent:", result.data?.id ?? "ok");
   return result;
 }
+
+/* ═══════════════════════════════════════════
+   EMAIL 7 — ANNONCE DU PROGRAMME PARRAINAGE
+   Broadcast one-shot envoyé aux clients existants pour leur
+   communiquer leur code parrain et activer le programme.
+   ═══════════════════════════════════════════ */
+export async function sendReferralLaunchEmail(order: Order) {
+  if (!order.referral_code) {
+    throw new Error(`Order ${order.id} has no referral_code — cannot broadcast`);
+  }
+  const code = order.referral_code;
+  const url = shareUrl(code);
+  const waLink = `https://wa.me/?text=${encodeURIComponent(shareWhatsAppMessage(code, order.prenom))}`;
+
+  const html = emailLayout(`
+    <div style="text-align:center;margin:0 0 16px;">
+      <span style="font-size:48px;">🎁</span>
+    </div>
+
+    <h1 style="color:#1A1A18;font-size:26px;margin:0 0 12px;font-weight:bold;text-align:center;font-family:Georgia,serif;">
+      Programme parrainage lancé, ${order.prenom} !
+    </h1>
+
+    <p style="margin:0 0 28px;color:#5C5347;font-size:15px;line-height:1.7;text-align:center;">
+      On a lancé aujourd'hui le programme parrainage Qurbaniya. En tant que client fidèle, vous avez votre propre code à partager.
+    </p>
+
+    <!-- Le code parrain -->
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#FDF6E3;border:2px solid #D4A843;border-radius:12px;margin:0 0 28px;">
+      <tr><td style="padding:28px 24px;text-align:center;">
+        <p style="margin:0 0 8px;color:#8C8279;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;font-weight:bold;">Votre code parrain</p>
+        <p style="margin:0 0 0;color:#B8860B;font-size:32px;font-weight:bold;font-family:monospace;letter-spacing:8px;">
+          ${code}
+        </p>
+      </td></tr>
+    </table>
+
+    <!-- Mécanique -->
+    <h2 style="color:#1A1A18;font-size:17px;margin:0 0 12px;font-weight:bold;font-family:Georgia,serif;">
+      Comment ça marche
+    </h2>
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 28px;">
+      <tr><td style="padding:8px 0;">
+        <p style="margin:0;color:#5C5347;font-size:14px;line-height:1.7;">
+          ✅ <strong style="color:#1A1A18;">Vos filleuls</strong> bénéficient de <strong style="color:#1B4332;">−${REFERRAL_DISCOUNT_EUR}€</strong> sur leur commande (140€ → 125€), <strong>sans limite</strong>. Plus vous partagez, plus vos proches économisent.
+        </p>
+      </td></tr>
+      <tr><td style="padding:8px 0;">
+        <p style="margin:0;color:#5C5347;font-size:14px;line-height:1.7;">
+          ✅ <strong style="color:#1A1A18;">Vous recevez ${REFERRER_REWARD_EUR}€</strong> de cashback pour votre 1ᵉʳ filleul, versés après l'Aïd al-Adha (le 27 mai 2026).
+        </p>
+      </td></tr>
+    </table>
+
+    <!-- CTA WhatsApp -->
+    <table role="presentation" cellpadding="0" cellspacing="0" style="margin:32px auto 16px;">
+      <tr><td align="center" style="background:#25D366;border-radius:10px;box-shadow:0 4px 12px rgba(37,211,102,0.25);">
+        <a href="${waLink}" target="_blank" style="display:inline-block;padding:16px 36px;font-family:Helvetica,Arial,sans-serif;font-size:15px;font-weight:bold;color:#FEFCF8;text-decoration:none;text-transform:uppercase;letter-spacing:1px;">
+          📱 Partager sur WhatsApp
+        </a>
+      </td></tr>
+    </table>
+
+    <p style="margin:0 0 6px;color:#8C8279;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;font-weight:bold;text-align:center;">Ou copiez ce lien</p>
+    <p style="margin:0 0 28px;text-align:center;">
+      <a href="${url}" style="color:#1B4332;font-weight:bold;text-decoration:none;font-family:monospace;font-size:13px;">${url}</a>
+    </p>
+
+    <!-- Encart contexte -->
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#F7F3ED;border-left:4px solid #B8860B;border-radius:0 8px 8px 0;margin:0 0 24px;">
+      <tr><td style="padding:16px 20px;">
+        <p style="margin:0;color:#5C5347;font-size:13px;line-height:1.6;">
+          L'Aïd al-Adha 2026 est dans quelques jours. Chaque sacrifice supplémentaire = une famille nourrie de plus à Madagascar. Votre partage compte.
+        </p>
+      </td></tr>
+    </table>
+
+    <p style="margin:0;color:#5C5347;font-size:14px;text-align:center;line-height:1.7;">
+      Une question ? Répondez à cet email ou écrivez-moi sur <a href="${WHATSAPP_LINK}" style="color:#1B4332;text-decoration:none;font-weight:bold;">WhatsApp</a>.<br>
+      <em style="color:#B8860B;font-family:Georgia,serif;">— Youness, Qurbaniya</em>
+    </p>
+  `);
+
+  const result = await getResend().emails.send({
+    from: FROM,
+    to: order.email,
+    subject: `🎁 ${order.prenom}, votre code parrain Qurbaniya : ${code}`,
+    html,
+    replyTo: SUPPORT_EMAIL,
+  });
+
+  console.log("Email referral launch sent:", order.email, result.data?.id ?? "ok");
+  return result;
+}
