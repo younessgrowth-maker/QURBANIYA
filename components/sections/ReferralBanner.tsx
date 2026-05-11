@@ -65,7 +65,7 @@ export default function ReferralBanner() {
               Programme parrainage Aïd 2026
             </p>
             <p className="text-xs text-text-muted">
-              Vos filleuls : <strong className="text-text-primary">−{REFERRAL_DISCOUNT_EUR}€</strong> · Vous : <strong className="text-text-primary">{REFERRER_REWARD_EUR}€</strong> par filleul
+              Filleuls : <strong className="text-text-primary">−{REFERRAL_DISCOUNT_EUR}€</strong> sans limite · Parrain : <strong className="text-text-primary">{REFERRER_REWARD_EUR}€</strong> de cashback (une fois)
             </p>
           </div>
         </div>
