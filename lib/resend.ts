@@ -140,6 +140,11 @@ export async function sendOrderConfirmation(order: Order) {
     order.intention === "pour_moi" ? "Pour vous-même" :
     order.intention === "famille" ? "Pour votre famille" : "En sadaqa";
 
+  // ─── Calcul du montant réellement payé (après code promo / parrainage) ───
+  const discount = order.discount_amount ?? 0;
+  const netAmount = order.amount - discount;
+  const fmt = (n: number) => `${n.toFixed(2).replace(".", ",")} €`;
+
   const html = emailLayout(`
     <!-- Hero coche verte -->
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 28px;">
@@ -170,9 +175,19 @@ export async function sendOrderConfirmation(order: Order) {
             <td style="color:#5C5347;font-size:14px;padding:6px 0;">Commande</td>
             <td style="color:#1A1A18;font-size:14px;padding:6px 0;text-align:right;font-weight:bold;font-family:monospace;">${ref}</td>
           </tr>
+          ${discount > 0 ? `
+          <tr>
+            <td style="color:#5C5347;font-size:14px;padding:6px 0;">Sous-total</td>
+            <td style="color:#5C5347;font-size:14px;padding:6px 0;text-align:right;text-decoration:line-through;">${fmt(order.amount)}</td>
+          </tr>
+          <tr>
+            <td style="color:#5C5347;font-size:14px;padding:6px 0;">Réduction</td>
+            <td style="color:#2D6A4F;font-size:14px;padding:6px 0;text-align:right;font-weight:bold;">−${fmt(discount)}</td>
+          </tr>
+          ` : ""}
           <tr>
             <td style="color:#5C5347;font-size:14px;padding:6px 0;">Montant payé</td>
-            <td style="color:#1B4332;font-size:14px;padding:6px 0;text-align:right;font-weight:bold;">140,00 €</td>
+            <td style="color:#1B4332;font-size:14px;padding:6px 0;text-align:right;font-weight:bold;">${fmt(netAmount)}</td>
           </tr>
           <tr>
             <td style="color:#5C5347;font-size:14px;padding:6px 0;">Intention</td>

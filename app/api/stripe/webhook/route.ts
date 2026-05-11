@@ -78,13 +78,28 @@ export async function POST(req: NextRequest) {
       case "checkout.session.completed": {
         const session = event.data.object;
 
+        // ─── Calcul du discount réel à partir du montant payé Stripe ───
+        // Notre DB stocke `amount = 140€` (le prix tarif) au moment de la
+        // création de l'order. Le client peut avoir appliqué un code promo
+        // Stripe (allow_promotion_codes=true) ou un coupon parrainage, ce
+        // qui réduit le `session.amount_total`. On synchronise `discount_amount`
+        // avec la réalité Stripe pour que /confirmation + email affichent
+        // le bon montant payé.
+        const amountTotalCents = session.amount_total ?? 0;
+        const amountPaidEuros = Math.round(amountTotalCents / 100);
+        const calculatedDiscount = Math.max(0, 140 - amountPaidEuros);
+
         // Conditional update : on ne passe à 'paid' que si la commande est
         // encore 'pending'. Si elle est déjà 'paid' (race condition entre
         // 2 events ou retry qui aurait quand même passé l'idempotency check),
         // .single() retourne PGRST116 et on skip les side effects.
         const { data: order, error: updateError } = await supabase
           .from("orders")
-          .update({ payment_status: "paid", updated_at: new Date().toISOString() })
+          .update({
+            payment_status: "paid",
+            discount_amount: calculatedDiscount,
+            updated_at: new Date().toISOString(),
+          })
           .eq("stripe_session_id", session.id)
           .eq("payment_status", "pending")
           .select()
