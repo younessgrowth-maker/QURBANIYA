@@ -40,6 +40,8 @@ export interface Order {
   referrer_order_id: string | null;
   discount_amount: number;
   referrer_reward_paid_at: string | null;
+  // Broadcast email parrainage (migration 0012)
+  referral_broadcast_sent_at: string | null;
   created_at: string;
   updated_at: string;
 }
