@@ -55,6 +55,34 @@ export async function GET(req: NextRequest) {
       continue;
     }
     try {
+      // ─── Skip si ce client a DÉJÀ une commande payée ───
+      // Cas typique : le client crée 3 commandes pending (clic sans payer),
+      // puis finit par payer via une 4ème commande. Sans cette vérif, le
+      // cron envoie 3 emails "vous avez abandonné" alors qu'il a déjà
+      // payé. On marque la pending obsolète comme failed pour ne plus la
+      // repasser au cron suivant + assainir les KPIs admin.
+      const { data: alreadyPaid } = await supabase
+        .from("orders")
+        .select("id")
+        .ilike("email", order.email)
+        .eq("payment_status", "paid")
+        .limit(1)
+        .maybeSingle();
+
+      if (alreadyPaid) {
+        await supabase
+          .from("orders")
+          .update({
+            payment_status: "failed",
+            reminder_sent_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", order.id)
+          .eq("payment_status", "pending");
+        skipped++;
+        continue;
+      }
+
       const session = await stripe.checkout.sessions.retrieve(order.stripe_session_id);
       // Skip si la session a déjà bougé (paid/expired) — le webhook s'en occupe.
       if (session.status !== "open" || session.payment_status === "paid") {
