@@ -9,6 +9,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     "sacrifice-aid-en-ligne-comment-ca-marche",
     "prix-mouton-france-2026",
     "combien-coute-mouton-aid-2026-france",
+    "tabaski-2026-france",
   ];
 
   const blogEntries = blogSlugs.map((slug) => ({
@@ -46,6 +47,24 @@ export default function sitemap(): MetadataRoute.Sitemap {
     },
     ...blogEntries,
     ...cityEntries,
+    {
+      url: `${baseUrl}/en`,
+      lastModified: new Date(),
+      changeFrequency: "weekly",
+      priority: 0.7,
+    },
+    {
+      url: `${baseUrl}/ar`,
+      lastModified: new Date(),
+      changeFrequency: "weekly",
+      priority: 0.7,
+    },
+    {
+      url: `${baseUrl}/tr`,
+      lastModified: new Date(),
+      changeFrequency: "weekly",
+      priority: 0.7,
+    },
     {
       url: `${baseUrl}/faq`,
       lastModified: new Date(),

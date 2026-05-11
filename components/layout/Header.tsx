@@ -6,6 +6,7 @@ import Image from "next/image";
 import { motion, AnimatePresence, useScroll, useSpring } from "framer-motion";
 import { Menu, X, Zap } from "lucide-react";
 import Button from "@/components/ui/Button";
+import LanguageSwitcher from "@/components/layout/LanguageSwitcher";
 import { getUrgencyMessage } from "@/lib/constants";
 
 const NAV_LINKS = [
@@ -145,6 +146,9 @@ export default function Header() {
               <Zap size={12} className="fill-current" />
               <span>{urgency.short}</span>
             </div>
+
+            {/* Language switcher */}
+            <LanguageSwitcher />
 
             {/* CTA */}
             <Link href="/commander" className="hidden sm:block">
