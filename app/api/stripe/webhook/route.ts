@@ -4,7 +4,34 @@ import { headers } from "next/headers";
 import { createServiceRoleClient } from "@/lib/supabase/server";
 import { sendOrderConfirmation } from "@/lib/resend";
 import { CURRENT_YEAR } from "@/lib/constants";
+import { generateReferralCode } from "@/lib/referral-server";
 import type { Order } from "@/types";
+
+// ─── Génération du code parrain unique (anti-collision) ────────────
+// Espace 30^6 ≈ 729M combinaisons, collision quasi-impossible. On boucle
+// max 5x au cas où, sinon on log et on continue sans code (la commande
+// reste valide, le client n'aura juste pas de code à partager).
+async function assignReferralCode(
+  supabase: ReturnType<typeof createServiceRoleClient>,
+  orderId: string
+): Promise<string | null> {
+  for (let attempt = 0; attempt < 5; attempt++) {
+    const code = generateReferralCode();
+    const { error } = await supabase
+      .from("orders")
+      .update({ referral_code: code })
+      .eq("id", orderId)
+      .is("referral_code", null);
+    if (!error) return code;
+    // 23505 = unique violation → collision, retry. Autre = on abandonne.
+    if ((error as { code?: string }).code !== "23505") {
+      console.error("Referral code assign failed:", error);
+      return null;
+    }
+  }
+  console.error("Referral code assign: 5 collisions, abandon. order:", orderId);
+  return null;
+}
 
 export async function POST(req: NextRequest) {
   const body = await req.text();
@@ -81,8 +108,15 @@ export async function POST(req: NextRequest) {
           console.error("Inventory decrement failed:", rpcError);
         }
 
+        // ─── Parrainage : générer le code de CE client (qu'il pourra partager)
+        // Échec non-bloquant : la commande reste valide même sans code.
+        const referralCode = await assignReferralCode(supabase, order.id);
+        const orderWithCode = referralCode
+          ? { ...order, referral_code: referralCode }
+          : order;
+
         try {
-          await sendOrderConfirmation(order as Order);
+          await sendOrderConfirmation(orderWithCode as Order);
           // Trace succès en DB pour que /admin sache que c'est OK.
           await supabase
             .from("orders")

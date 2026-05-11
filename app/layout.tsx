@@ -72,6 +72,10 @@ export const metadata: Metadata = {
     canonical: "https://qurbaniya.fr",
     languages: {
       "fr-FR": "https://qurbaniya.fr",
+      "en": "https://qurbaniya.fr/en",
+      "ar": "https://qurbaniya.fr/ar",
+      "tr": "https://qurbaniya.fr/tr",
+      "x-default": "https://qurbaniya.fr",
     },
   },
   robots: {
