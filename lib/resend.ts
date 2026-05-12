@@ -6,6 +6,25 @@ import {
   REFERRAL_DISCOUNT_EUR,
   REFERRER_REWARD_EUR,
 } from "@/lib/referral";
+import { unsubscribeHeaders, unsubscribeUrl } from "@/lib/unsubscribe";
+import { createServiceRoleClient } from "@/lib/supabase/server";
+
+/** Check si un email a été désinscrit. Cas marketing uniquement. */
+async function isUnsubscribed(email: string): Promise<boolean> {
+  try {
+    const supabase = createServiceRoleClient();
+    const { data } = await supabase
+      .from("email_unsubscribes")
+      .select("email")
+      .eq("email", email.toLowerCase())
+      .maybeSingle();
+    return !!data;
+  } catch (err) {
+    // Fail-open : si la DB tombe, on n'envoie pas plutôt que de spammer
+    console.error("isUnsubscribed check failed:", err);
+    return true;
+  }
+}
 
 let _resend: Resend | null = null;
 
@@ -22,7 +41,8 @@ const WHATSAPP_NUMBER = "+33 7 44 79 88 83";
 const WHATSAPP_LINK = "https://wa.me/33744798883";
 
 /* ── Base template wrapper — fond crème, hero accueillant ── */
-function emailLayout(content: string): string {
+function emailLayout(content: string, recipientEmail?: string): string {
+  const unsubLink = recipientEmail ? unsubscribeUrl(recipientEmail) : null;
   return `
 <!DOCTYPE html>
 <html lang="fr">
@@ -62,6 +82,9 @@ function emailLayout(content: string): string {
     <p style="margin:0;font-size:11px;color:#8C8279;">
       Vous recevez cet email suite à votre commande sur qurbaniya.fr
     </p>
+    ${unsubLink ? `<p style="margin:8px 0 0;font-size:11px;color:#8C8279;">
+      <a href="${unsubLink}" style="color:#8C8279;text-decoration:underline;">Se désinscrire des emails promotionnels</a>
+    </p>` : ""}
   </td></tr>
 
 </table>
@@ -260,11 +283,12 @@ export async function sendOrderConfirmation(order: Order) {
       Une question ? Écrivez à <a href="mailto:${SUPPORT_EMAIL}" style="color:#1B4332;text-decoration:none;font-weight:bold;">${SUPPORT_EMAIL}</a><br>
       ou contactez-nous sur <a href="${WHATSAPP_LINK}" style="color:#1B4332;text-decoration:none;font-weight:bold;">WhatsApp</a>.
     </p>
-  `);
+  `, order.email);
 
   const result = await getResend().emails.send({
     from: FROM,
     to: order.email,
+    headers: unsubscribeHeaders(order.email),
     subject: `✅ Votre sacrifice Aïd 2026 est confirmé — Qurbaniya`,
     html,
   });
@@ -333,11 +357,12 @@ export async function sendPaymentReminder(order: Order) {
     <p style="margin:0;color:#5C5347;font-size:14px;text-align:center;line-height:1.7;">
       Un doute ? Écrivez à <a href="mailto:${SUPPORT_EMAIL}" style="color:#1B4332;text-decoration:none;font-weight:bold;">${SUPPORT_EMAIL}</a>
     </p>
-  `);
+  `, order.email);
 
   const result = await getResend().emails.send({
     from: FROM,
     to: order.email,
+    headers: unsubscribeHeaders(order.email),
     subject: `⏳ Finalisez votre commande Qurbaniya — Informations de virement`,
     html,
   });
@@ -393,11 +418,12 @@ export async function sendSacrificeDay(order: Order) {
     <p style="margin:0;color:#5C5347;font-size:14px;text-align:center;font-family:Georgia,serif;font-style:italic;">
       Aïd Moubarak de toute l'équipe Qurbaniya
     </p>
-  `);
+  `, order.email);
 
   const result = await getResend().emails.send({
     from: FROM,
     to: order.email,
+    headers: unsubscribeHeaders(order.email),
     subject: `🌙 Votre sacrifice est en cours — Aïd Moubarak !`,
     html,
   });
@@ -410,6 +436,10 @@ export async function sendSacrificeDay(order: Order) {
    EMAIL 5 — RELANCE PANIER ABANDONNÉ
    ═══════════════════════════════════════════ */
 export async function sendAbandonedCartReminder(order: Order, resumeUrl: string) {
+  if (await isUnsubscribed(order.email)) {
+    console.log("Skip abandoned cart — unsubscribed:", order.email);
+    return null;
+  }
   const intentionLabel =
     order.intention === "pour_moi" ? "pour vous-même" :
     order.intention === "famille" ? "pour votre famille" : "en sadaqa";
@@ -461,11 +491,12 @@ export async function sendAbandonedCartReminder(order: Order, resumeUrl: string)
     <p style="margin:0;color:#5C5347;font-size:13px;text-align:center;line-height:1.7;font-style:italic;font-family:Georgia,serif;">
       Qu'Allah vous facilite — toute l'équipe Qurbaniya.
     </p>
-  `);
+  `, order.email);
 
   const result = await getResend().emails.send({
     from: FROM,
     to: order.email,
+    headers: unsubscribeHeaders(order.email),
     subject: `${order.prenom}, votre sacrifice Aïd 2026 vous attend`,
     html,
   });
@@ -513,11 +544,12 @@ export async function sendVideoDelivery(order: Order, videoUrl: string) {
       Qu'Allah accepte votre sacrifice.<br>
       <em style="color:#B8860B;font-family:Georgia,serif;">Aïd Moubarak de toute l'équipe Qurbaniya.</em>
     </p>
-  `);
+  `, order.email);
 
   const result = await getResend().emails.send({
     from: FROM,
     to: order.email,
+    headers: unsubscribeHeaders(order.email),
     subject: `📹 Votre vidéo de sacrifice est prête — Qurbaniya`,
     html,
   });
@@ -532,6 +564,10 @@ export async function sendVideoDelivery(order: Order, videoUrl: string) {
 const GOOGLE_REVIEW_URL = "https://g.page/r/CQT3MFQZ9CcfEBM/review";
 
 export async function sendReviewRequest(order: Order) {
+  if (await isUnsubscribed(order.email)) {
+    console.log("Skip review request — unsubscribed:", order.email);
+    return null;
+  }
   const html = emailLayout(`
     <div style="text-align:center;margin:0 0 20px;">
       <span style="font-size:48px;">⭐</span>
@@ -563,11 +599,12 @@ export async function sendReviewRequest(order: Order) {
       Encore merci pour votre confiance.<br>
       <em style="color:#B8860B;font-family:Georgia,serif;">L'équipe Qurbaniya.</em>
     </p>
-  `);
+  `, order.email);
 
   const result = await getResend().emails.send({
     from: FROM,
     to: order.email,
+    headers: unsubscribeHeaders(order.email),
     subject: `⭐ Un retour rapide sur votre Aïd 2026 ? — Qurbaniya`,
     html,
     replyTo: SUPPORT_EMAIL,
@@ -585,6 +622,10 @@ export async function sendReviewRequest(order: Order) {
 export async function sendReferralLaunchEmail(order: Order) {
   if (!order.referral_code) {
     throw new Error(`Order ${order.id} has no referral_code — cannot broadcast`);
+  }
+  if (await isUnsubscribed(order.email)) {
+    console.log("Skip referral launch — unsubscribed:", order.email);
+    return null;
   }
   const code = order.referral_code;
   const url = shareUrl(code);
@@ -657,11 +698,12 @@ export async function sendReferralLaunchEmail(order: Order) {
       Une question ? Répondez à cet email ou écrivez-nous sur <a href="${WHATSAPP_LINK}" style="color:#1B4332;text-decoration:none;font-weight:bold;">WhatsApp</a>.<br>
       <em style="color:#B8860B;font-family:Georgia,serif;">— L'équipe Qurbaniya</em>
     </p>
-  `);
+  `, order.email);
 
   const result = await getResend().emails.send({
     from: FROM,
     to: order.email,
+    headers: unsubscribeHeaders(order.email),
     subject: `🎁 ${order.prenom}, votre code parrain Qurbaniya : ${code}`,
     html,
     replyTo: SUPPORT_EMAIL,
