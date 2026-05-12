@@ -27,7 +27,7 @@ function RefundButton({ order }: { order: Order }) {
 
   async function handleRefund() {
     const reason = window.prompt(
-      `Rembourser la commande de ${order.prenom} ${order.nom} (${order.amount.toFixed(2)} €) ?\n\nMotif (visible dans Stripe + DB):`,
+      `Rembourser la commande de ${order.prenom} ${order.nom} (${(order.amount - (order.discount_amount ?? 0)).toFixed(2)} € payés) ?\n\nMotif (visible dans Stripe + DB):`,
       ""
     );
     if (reason === null) return; // cancel
@@ -124,7 +124,7 @@ function toCsv(orders: Order[]): string {
     o.niyyah,
     STATUS_LABEL[o.payment_status] || o.payment_status,
     METHOD_LABEL[o.payment_method] || o.payment_method,
-    o.amount.toFixed(2),
+    (o.amount - (o.discount_amount ?? 0)).toFixed(2),
     o.stripe_session_id || "",
     o.video_sent ? "Oui" : "Non",
     o.id,
@@ -276,8 +276,21 @@ export default function OrdersTable({ orders }: { orders: Order[] }) {
                   <td className="px-4 py-3 hidden sm:table-cell text-text-muted">
                     {METHOD_LABEL[o.payment_method] || o.payment_method}
                   </td>
-                  <td className="px-4 py-3 text-right font-bold text-text-primary whitespace-nowrap">
-                    {o.amount.toFixed(2)} €
+                  <td className="px-4 py-3 text-right whitespace-nowrap">
+                    {(o.discount_amount ?? 0) > 0 ? (
+                      <span className="flex items-baseline justify-end gap-1.5">
+                        <span className="text-text-muted-light line-through text-xs font-normal">
+                          {o.amount.toFixed(2)}€
+                        </span>
+                        <span className="font-bold text-emerald">
+                          {(o.amount - (o.discount_amount ?? 0)).toFixed(2)} €
+                        </span>
+                      </span>
+                    ) : (
+                      <span className="font-bold text-text-primary">
+                        {o.amount.toFixed(2)} €
+                      </span>
+                    )}
                   </td>
                   <td className="px-4 py-3 text-right">
                     <RefundButton order={o} />

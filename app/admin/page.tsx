@@ -37,9 +37,14 @@ export default async function AdminDashboardPage() {
   const pending = orders.filter((o) => o.payment_status === "pending");
   const failed = orders.filter((o) => o.payment_status === "failed");
 
-  // `orders.amount` est stocké en euros (cf. PRICE_AMOUNT dans lib/constants.ts).
-  // Pas de division par 100 ici — la conversion cents↔euros se fait côté Stripe.
-  const revenueEuros = paid.reduce((sum, o) => sum + o.amount, 0);
+  // `orders.amount` est le prix tarif (140€). On retire `discount_amount`
+  // pour avoir le CA réellement encaissé via Stripe (après codes promo et
+  // parrainage). Pas de division par 100 — la conversion cents↔euros se
+  // fait côté Stripe.
+  const revenueEuros = paid.reduce(
+    (sum, o) => sum + (o.amount - (o.discount_amount ?? 0)),
+    0
+  );
   const aov = paid.length > 0 ? revenueEuros / paid.length : 0;
   const conversion = orders.length > 0 ? (paid.length / orders.length) * 100 : 0;
 
