@@ -45,7 +45,7 @@ export default function ReferralCard({ code, prenom }: Props) {
             Parrainez vos proches
           </h3>
           <p className="text-text-muted text-sm mt-1">
-            Vos filleuls bénéficient de <strong className="text-text-primary">−{REFERRAL_DISCOUNT_EUR}€</strong> (sans limite). Vous recevez <strong className="text-text-primary">{REFERRER_REWARD_EUR}€</strong> de cashback pour votre 1ᵉʳ filleul, versés après l&apos;Aïd.
+            Vos filleuls bénéficient de <strong className="text-text-primary">−{REFERRAL_DISCOUNT_EUR}€</strong> (sans limite). Vous recevez <strong className="text-text-primary">{REFERRER_REWARD_EUR}€</strong> d&apos;avoir pour votre commande Aïd 2027 dès votre 1ᵉʳ filleul payé.
           </p>
         </div>
       </div>
@@ -97,7 +97,7 @@ export default function ReferralCard({ code, prenom }: Props) {
       </div>
 
       <p className="text-xs text-text-muted-light mt-4 text-center">
-        Côté filleul : pas de limite, chaque proche qui commande économise {REFERRAL_DISCOUNT_EUR}€. Côté parrain : un seul cashback de {REFERRER_REWARD_EUR}€ versé après l&apos;Aïd al-Adha.
+        Côté filleul : pas de limite, chaque proche qui commande économise {REFERRAL_DISCOUNT_EUR}€. Côté parrain : un avoir unique de {REFERRER_REWARD_EUR}€ crédité automatiquement sur votre commande Aïd 2027.
       </p>
     </div>
   );

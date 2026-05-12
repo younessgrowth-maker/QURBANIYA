@@ -134,7 +134,7 @@ function referralEmailBlock(code: string, prenom: string): string {
   <tr><td style="padding:24px;text-align:center;">
     <p style="margin:0 0 6px;color:#B8860B;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;font-weight:bold;">🎁 Parrainez vos proches</p>
     <p style="margin:0 0 16px;color:#5C5347;font-size:14px;line-height:1.6;">
-      Partagez votre code : vos filleuls bénéficient de <strong style="color:#1A1A18;">−${REFERRAL_DISCOUNT_EUR}€</strong> sans limite. Vous recevez <strong style="color:#1A1A18;">${REFERRER_REWARD_EUR}€</strong> de cashback pour votre 1ᵉʳ filleul (versés après l'Aïd).
+      Partagez votre code : vos filleuls bénéficient de <strong style="color:#1A1A18;">−${REFERRAL_DISCOUNT_EUR}€</strong> sans limite. Vous recevez <strong style="color:#1A1A18;">${REFERRER_REWARD_EUR}€</strong> d'avoir sur votre commande Aïd 2027 dès votre 1ᵉʳ filleul payé.
     </p>
     <p style="margin:0 0 4px;color:#8C8279;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;font-weight:bold;">Votre code</p>
     <p style="margin:0 0 18px;color:#B8860B;font-size:26px;font-weight:bold;font-family:monospace;letter-spacing:6px;">
@@ -666,7 +666,7 @@ export async function sendReferralLaunchEmail(order: Order) {
       </td></tr>
       <tr><td style="padding:8px 0;">
         <p style="margin:0;color:#5C5347;font-size:14px;line-height:1.7;">
-          ✅ <strong style="color:#1A1A18;">Vous recevez ${REFERRER_REWARD_EUR}€</strong> de cashback pour votre 1ᵉʳ filleul, versés après l'Aïd al-Adha (le 27 mai 2026).
+          ✅ <strong style="color:#1A1A18;">Vous recevez ${REFERRER_REWARD_EUR}€</strong> d'avoir sur votre commande Aïd 2027 dès votre 1ᵉʳ filleul payé (crédit automatique).
         </p>
       </td></tr>
     </table>

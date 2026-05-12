@@ -7,7 +7,12 @@ const CODE_LENGTH = 6;
 
 export const REFERRAL_DISCOUNT_EUR = 15;
 export const REFERRAL_DISCOUNT_CENTS = 1500;
-export const REFERRER_REWARD_EUR = 15;
+
+// Montant de l'avoir parrain crédité pour la prochaine édition (Aïd 2027).
+// Anciennement cashback de 15€ versé manuellement post-Aïd. Désormais un
+// avoir de 20€ à utiliser sur la commande Aïd 2027 — moins de cash sortant
+// et meilleure rétention.
+export const REFERRER_REWARD_EUR = 20;
 
 /**
  * Sanitize un code reçu en input. Accepte tout code alphanumérique 6 chars
