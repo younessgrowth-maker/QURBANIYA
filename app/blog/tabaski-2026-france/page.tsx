@@ -4,9 +4,9 @@ import { ArrowLeft, Calendar, Clock, ArrowRight } from "lucide-react";
 import { BreadcrumbJsonLd } from "@/components/seo/JsonLd";
 
 export const metadata: Metadata = {
-  title: "Tabaski 2026 en France : déléguer son sacrifice depuis l'Hexagone (27 mai)",
+  title: "🌙 Tabaski 2026 : c'est le mercredi 27 mai · Déléguer depuis la France",
   description:
-    "La Tabaski 2026 (Aïd al-Adha, fête du mouton) tombe le mercredi 27 mai 2026. Loin du pays ? Déléguez votre sacrifice depuis la France à un service certifié, distribution caritative à Madagascar — 140€ tout compris.",
+    "📅 Tabaski 2026 confirmée mercredi 27 mai. Loin du Sénégal, Mali, Côte d'Ivoire ou Guinée ? Déléguez votre sacrifice depuis la France à un service conforme à la Sounnah — 140€ tout compris 🐑",
   keywords: [
     "tabaski 2026 france",
     "fete de tabaski 2026 en france",
@@ -25,9 +25,9 @@ export const metadata: Metadata = {
     canonical: "https://qurbaniya.fr/blog/tabaski-2026-france",
   },
   openGraph: {
-    title: "Tabaski 2026 en France — Déléguez votre sacrifice (mercredi 27 mai)",
+    title: "🌙 Tabaski 2026 : 27 mai · Déléguer depuis la France",
     description:
-      "Loin de votre pays pour la Tabaski 2026 ? Déléguez votre sacrifice depuis la France : exécution conforme à la Sounnah, vidéo nominative, distribution aux familles dans le besoin.",
+      "Loin du pays pour la Tabaski 2026 ? Sacrifice conforme à la Sounnah, vidéo nominative, distribution aux familles dans le besoin — 140€ tout compris 🐑",
     url: "https://qurbaniya.fr/blog/tabaski-2026-france",
     type: "article",
     publishedTime: "2026-05-11T00:00:00Z",
