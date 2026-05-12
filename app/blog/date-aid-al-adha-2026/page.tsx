@@ -4,9 +4,9 @@ import { ArrowLeft, Calendar, Clock, ArrowRight } from "lucide-react";
 import { BreadcrumbJsonLd } from "@/components/seo/JsonLd";
 
 export const metadata: Metadata = {
-  title: "Aïd al-Adha 2026 : c'est le mercredi 27 mai en France",
+  title: "🌙 Aïd al-Adha 2026 : mercredi 27 mai · Date confirmée + calendrier complet",
   description:
-    "L'Aïd al-Adha 2026 (Aïd el-Kébir, Tabaski) tombe le mercredi 27 mai 2026 en France. Jour d'Arafat le 26 mai, jours de tachriq du 28 au 30 mai. Calendrier complet.",
+    "📅 Date confirmée : mercredi 27 mai 2026 (10 Dhoul Hijja). Jour d'Arafat 26 mai, tachriq 28-30 mai. Horaires de prière par ville, et comment réserver votre sacrifice avant la clôture 🐑",
   keywords: [
     "date aid al adha 2026",
     "aid el kebir 2026",
@@ -22,9 +22,9 @@ export const metadata: Metadata = {
     canonical: "https://qurbaniya.fr/blog/date-aid-al-adha-2026",
   },
   openGraph: {
-    title: "Aïd al-Adha 2026 : mercredi 27 mai 2026 en France",
+    title: "🌙 Aïd al-Adha 2026 : mercredi 27 mai · Calendrier complet",
     description:
-      "Date confirmée de l'Aïd al-Adha (Aïd el-Kébir / Tabaski) 2026 : mercredi 27 mai. Jour d'Arafat le 26 mai, tachriq du 28 au 30 mai.",
+      "📅 Date confirmée : 27 mai 2026. Jour d'Arafat 26 mai, tachriq 28-30 mai. Horaires de prière par ville + comment réserver votre sacrifice 🐑",
     url: "https://qurbaniya.fr/blog/date-aid-al-adha-2026",
     type: "article",
     publishedTime: "2026-03-15T00:00:00Z",

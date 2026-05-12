@@ -10,6 +10,8 @@ export default function sitemap(): MetadataRoute.Sitemap {
     "prix-mouton-france-2026",
     "combien-coute-mouton-aid-2026-france",
     "tabaski-2026-france",
+    "aid-al-adha-2026-dans-combien-de-jours",
+    "reserver-mouton-aid-derniere-minute-2026",
   ];
 
   const blogEntries = blogSlugs.map((slug) => ({
