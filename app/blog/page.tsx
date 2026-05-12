@@ -19,6 +19,33 @@ export const metadata: Metadata = {
 
 const articles = [
   {
+    slug: "aid-al-adha-2026-dans-combien-de-jours",
+    title: "🌙 Aïd al-Adha 2026 dans combien de jours ?",
+    excerpt:
+      "Compte à rebours officiel jusqu'à l'Aïd al-Adha 2026 (mercredi 27 mai). Calendrier complet (Arafat, tachriq), pourquoi le 27 mai, et que faire maintenant.",
+    date: "12 mai 2026",
+    readTime: "4 min",
+    category: "Compte à rebours",
+  },
+  {
+    slug: "reserver-mouton-aid-derniere-minute-2026",
+    title: "🚨 Réserver son mouton à la dernière minute pour l'Aïd 2026",
+    excerpt:
+      "Pas encore réservé ? Voici comment commander à la dernière minute (J-15 à J-1) en toute sérénité. Délais, options, conseils pour ne pas se louper.",
+    date: "12 mai 2026",
+    readTime: "5 min",
+    category: "Urgence",
+  },
+  {
+    slug: "tabaski-2026-france",
+    title: "Tabaski 2026 en France : déléguer son sacrifice depuis l'Hexagone",
+    excerpt:
+      "Loin du pays cette année pour la Tabaski 2026 ? La délégation du sacrifice est reconnue par les 4 écoles. Date, mécanique, et comment réserver depuis la France.",
+    date: "11 mai 2026",
+    readTime: "7 min",
+    category: "Guide Afrique francophone",
+  },
+  {
     slug: "combien-coute-mouton-aid-2026-france",
     title: "Combien coûte un mouton de l'Aïd al-Adha 2026 en France ?",
     excerpt:

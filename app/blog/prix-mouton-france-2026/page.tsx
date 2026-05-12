@@ -4,9 +4,9 @@ import { ArrowLeft, Calendar, Clock, ArrowRight, X, Check } from "lucide-react";
 import { BreadcrumbJsonLd } from "@/components/seo/JsonLd";
 
 export const metadata: Metadata = {
-  title: "Prix du mouton en France 2026 : pourquoi déléguer est plus malin",
+  title: "🐑 Prix du mouton en France 2026 : 140€ à 450€ · Le guide complet",
   description:
-    "Comparatif complet : acheter un mouton en France (350-400€) vs déléguer en ligne (140€). Économisez jusqu'à 260€ tout en ayant un impact social réel.",
+    "💰 Mouton vivant France : 350-450€. Sacrifice en ligne délégué : 140€ tout inclus. Comparatif détaillé des prix pour l'Aïd al-Adha 2026, ce qui est inclus, comment choisir.",
   keywords: [
     "prix mouton aid 2026",
     "mouton aid pas cher",
@@ -19,8 +19,8 @@ export const metadata: Metadata = {
     canonical: "https://qurbaniya.fr/blog/prix-mouton-france-2026",
   },
   openGraph: {
-    title: "Prix du mouton en France 2026 : pourquoi déléguer est plus malin",
-    description: "Comparatif : mouton en France (350-400€) vs en ligne (140€). Économisez 260€.",
+    title: "🐑 Prix du mouton en France 2026 : 140€ à 450€",
+    description: "Comparatif complet : mouton vivant France 350-450€ vs sacrifice en ligne 140€. Tout ce qu'il faut savoir avant de choisir 🌙",
     url: "https://qurbaniya.fr/blog/prix-mouton-france-2026",
     type: "article",
     publishedTime: "2026-03-05T00:00:00Z",
