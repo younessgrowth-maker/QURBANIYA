@@ -76,7 +76,7 @@ On a lancé le programme parrainage Qurbaniya pour l'Aïd 2026 (un email t'a aus
 🎁 Ton code : *${code}*
 
 • Tes proches qui l'utilisent ont −15€ sur leur commande
-• Tu reçois 15€ pour ton 1er filleul (versés après l'Aïd)
+• Tu reçois 20€ d'avoir pour ta commande Aïd 2027 dès ton 1er filleul payé
 
 👉 Ton lien à partager directement :
 https://qurbaniya.fr/?ref=${code}
