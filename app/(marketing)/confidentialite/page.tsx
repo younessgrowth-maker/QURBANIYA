@@ -1,13 +1,19 @@
 import LegalPage from "@/components/layout/LegalPage";
 import type { Metadata } from "next";
+import { notFound } from "next/navigation";
 
 export const metadata: Metadata = {
   title: "Politique de confidentialité — Qurbaniya",
   description:
     "Comment Qurbaniya collecte, utilise et protège vos données personnelles conformément au RGPD.",
+  robots: { index: false, follow: false },
 };
 
+// Page temporairement désactivée (en attente RCS/SIRET).
+const LEGAL_PAGES_ENABLED = false;
+
 export default function ConfidentialitePage() {
+  if (!LEGAL_PAGES_ENABLED) notFound();
   return (
     <LegalPage
       title="Politique de confidentialité"

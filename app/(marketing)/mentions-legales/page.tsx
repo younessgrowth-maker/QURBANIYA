@@ -1,12 +1,18 @@
 import LegalPage from "@/components/layout/LegalPage";
 import type { Metadata } from "next";
+import { notFound } from "next/navigation";
 
 export const metadata: Metadata = {
   title: "Mentions légales — Qurbaniya",
   description: "Informations légales du site Qurbaniya.",
+  robots: { index: false, follow: false },
 };
 
+// Page temporairement désactivée (en attente RCS/SIRET).
+const LEGAL_PAGES_ENABLED = false;
+
 export default function MentionsLegalesPage() {
+  if (!LEGAL_PAGES_ENABLED) notFound();
   return (
     <LegalPage title="Mentions légales" updatedAt="22 avril 2026">
       <h2>1. Éditeur du site</h2>

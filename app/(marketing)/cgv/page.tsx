@@ -1,14 +1,21 @@
 import LegalPage from "@/components/layout/LegalPage";
 import type { Metadata } from "next";
 import Link from "next/link";
+import { notFound } from "next/navigation";
 
 export const metadata: Metadata = {
   title: "Conditions Générales de Vente — Qurbaniya",
   description:
     "Conditions générales de vente et de service applicables aux commandes de sacrifice sur qurbaniya.fr.",
+  robots: { index: false, follow: false },
 };
 
+// Page temporairement désactivée (en attente RCS/SIRET de l'entreprise).
+// Retirer notFound() + restaurer Footer + sitemap quand les infos sont prêtes.
+const LEGAL_PAGES_ENABLED = false;
+
 export default function CGVPage() {
+  if (!LEGAL_PAGES_ENABLED) notFound();
   return (
     <LegalPage title="Conditions Générales de Vente" updatedAt="22 avril 2026">
       <p>
