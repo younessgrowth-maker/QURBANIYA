@@ -329,10 +329,31 @@ export default function OrderForm() {
           Niyyah <span className="text-text-muted font-normal normal-case text-sm">(intention)</span>
         </h3>
         <p className="text-text-muted-light text-sm mb-4">
-          Ce prénom sera mentionné lors du sacrifice.
+          {intention === "famille"
+            ? "Ce nom de famille sera mentionné lors du sacrifice."
+            : "Ce prénom sera mentionné lors du sacrifice."}
         </p>
-        <Field label="Prénom pour le sacrifice" error={errors.niyyah?.message}>
-          <input {...register("niyyah")} className={inputClass} placeholder="Prénom de la personne" />
+        <Field
+          label={
+            intention === "famille"
+              ? "Nom de famille pour le sacrifice"
+              : intention === "sadaqa"
+              ? "Prénom du bénéficiaire"
+              : "Prénom pour le sacrifice"
+          }
+          error={errors.niyyah?.message}
+        >
+          <input
+            {...register("niyyah")}
+            className={inputClass}
+            placeholder={
+              intention === "famille"
+                ? "Ex : Famille Mrabet"
+                : intention === "sadaqa"
+                ? "Prénom du proche / défunt"
+                : "Ton prénom"
+            }
+          />
         </Field>
       </div>
 
