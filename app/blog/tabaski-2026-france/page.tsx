@@ -4,9 +4,9 @@ import { ArrowLeft, Calendar, Clock, ArrowRight } from "lucide-react";
 import { BreadcrumbJsonLd } from "@/components/seo/JsonLd";
 
 export const metadata: Metadata = {
-  title: "🌙 Tabaski 2026 : c'est le mercredi 27 mai · Déléguer depuis la France",
+  title: "Tabaski 2026 en France : 27 mai · Sacrifice halal à 140€ 🐑",
   description:
-    "📅 Tabaski 2026 confirmée mercredi 27 mai. Loin du Sénégal, Mali, Côte d'Ivoire ou Guinée ? Déléguez votre sacrifice depuis la France à un service conforme à la Sounnah — 140€ tout compris 🐑",
+    "Tabaski 2026 confirmée mercredi 27 mai. Diaspora en France ? Sacrifice halal délégué, vidéo nominative, distribution aux familles dans le besoin. 140€ tout compris.",
   keywords: [
     "tabaski 2026 france",
     "fete de tabaski 2026 en france",
@@ -25,9 +25,9 @@ export const metadata: Metadata = {
     canonical: "https://qurbaniya.fr/blog/tabaski-2026-france",
   },
   openGraph: {
-    title: "🌙 Tabaski 2026 : 27 mai · Déléguer depuis la France",
+    title: "🐑 Tabaski 2026 — 27 mai · Sacrifice halal délégué depuis la France",
     description:
-      "Loin du pays pour la Tabaski 2026 ? Sacrifice conforme à la Sounnah, vidéo nominative, distribution aux familles dans le besoin — 140€ tout compris 🐑",
+      "Diaspora en France pour la Tabaski 2026 ? Sacrifice halal délégué, vidéo nominative, distribution aux familles. 140€ tout compris.",
     url: "https://qurbaniya.fr/blog/tabaski-2026-france",
     type: "article",
     publishedTime: "2026-05-11T00:00:00Z",
