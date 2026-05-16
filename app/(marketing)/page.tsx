@@ -6,6 +6,7 @@ import TrustBar from "@/components/ui/TrustBar";
 import ProblemSolution from "@/components/sections/ProblemSolution";
 import HowItWorks from "@/components/sections/HowItWorks";
 import Sheikh from "@/components/sections/Sheikh";
+import MadagascarVideo from "@/components/sections/MadagascarVideo";
 import Testimonials from "@/components/sections/Testimonials";
 import RealTestimonials from "@/components/sections/RealTestimonials";
 import ComparisonTable from "@/components/sections/ComparisonTable";
@@ -51,6 +52,10 @@ export default function HomePage() {
       {/* 4. AUTORITÉ — Le cheikh qui supervise */}
       <Divider />
       <Sheikh />
+
+      {/* 4bis. PREUVE TERRAIN — Vidéo collaborateur Madagascar */}
+      <Divider />
+      <MadagascarVideo />
 
       {/* 5. PREUVE SOCIALE — Témoignages clients */}
       <Divider />
