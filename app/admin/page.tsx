@@ -20,7 +20,11 @@ type AffiliateRow = {
   id: string;
   code: string;
   name: string;
+  email: string;
+  phone: string | null;
+  commission_eur: number;
   approved: boolean;
+  payout_note: string | null;
 };
 type ConversionRow = {
   affiliate_id: string;
@@ -38,7 +42,9 @@ async function fetchData(): Promise<{
     await Promise.all([
       supabase.from("orders").select("*").order("created_at", { ascending: false }),
       supabase.from("inventory").select("*").eq("year", CURRENT_YEAR).maybeSingle(),
-      supabase.from("affiliates").select("id, code, name, approved"),
+      supabase
+        .from("affiliates")
+        .select("id, code, name, email, phone, commission_eur, approved, payout_note"),
       supabase
         .from("affiliate_conversions")
         .select("affiliate_id, commission_eur, status"),
@@ -55,7 +61,11 @@ async function fetchData(): Promise<{
         id: a.id,
         code: a.code,
         name: a.name,
+        email: a.email,
+        phone: a.phone,
+        commissionEur: a.commission_eur,
         approved: a.approved,
+        payoutNote: a.payout_note,
         pendingCount: pending.length,
         pendingTotal: pending.reduce((s, c) => s + (c.commission_eur ?? 0), 0),
         paidCount: paid.length,
