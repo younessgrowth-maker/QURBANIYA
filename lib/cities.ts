@@ -7,7 +7,16 @@ export type CitySlug =
   | "strasbourg"
   | "bordeaux"
   | "nice"
-  | "montpellier";
+  | "montpellier"
+  | "rennes"
+  | "nantes"
+  | "grenoble"
+  | "nimes"
+  | "saint-etienne"
+  | "mulhouse"
+  | "dijon"
+  | "rouen"
+  | "ile-de-france";
 
 export type City = {
   slug: CitySlug;
@@ -118,6 +127,105 @@ export const CITIES: Record<CitySlug, City> = {
       "Montpellier, septième commune de France, accueille une communauté musulmane jeune et en croissance, présente notamment dans la Mosson, La Paillade, Petit Bard et Celleneuve. À l'approche de l'Aïd al-Adha 2026, la question du sacrifice conforme et accessible se pose chaque année.",
     challenge:
       "Dans l'Hérault, les abattoirs agréés pour l'abattage rituel sont peu nombreux, et les bouchers halal de la Mosson ou du Petit Bard affichent complet plusieurs semaines avant l'Aïd. Le sacrifice à domicile reste strictement interdit en France (art. R214-78 du Code rural). Le sacrifice délégué en ligne offre aux Montpelliérains une alternative simple et conforme : un cheikh diplômé sacrifie en votre nom, vous recevez la vidéo nominative par WhatsApp le jour même.",
+  },
+  rennes: {
+    slug: "rennes",
+    name: "Rennes",
+    region: "Bretagne (35)",
+    population: "220 000",
+    agglomeration: "750 000",
+    intro:
+      "Rennes et sa métropole accueillent une communauté musulmane jeune et en croissance, présente notamment au Blosne, à Maurepas et à Villejean. À l'approche de l'Aïd al-Adha 2026, la question d'un sacrifice conforme et accessible se pose chaque année.",
+    challenge:
+      "En Ille-et-Vilaine, les abattoirs agréés pour l'abattage rituel sont rares, et les bouchers halal du Blosne ou de Maurepas affichent complet plusieurs semaines avant l'Aïd. Le sacrifice à domicile reste strictement interdit en France (art. R214-78 du Code rural). Le sacrifice délégué en ligne offre aux Rennais une solution clé en main : commande en 2 minutes, sacrifice nominatif par notre cheikh, vidéo de preuve par WhatsApp le jour de l'Aïd.",
+  },
+  nantes: {
+    slug: "nantes",
+    name: "Nantes",
+    region: "Pays de la Loire (44)",
+    population: "320 000",
+    agglomeration: "1 million",
+    intro:
+      "Nantes Métropole abrite une communauté musulmane importante, présente notamment à Malakoff, Bellevue et au Breil. À l'approche de l'Aïd al-Adha 2026, des milliers de familles nantaises cherchent une solution simple pour accomplir le sacrifice sans gérer la logistique d'un mouton vivant.",
+    challenge:
+      "En Loire-Atlantique, l'accès à un abattoir agréé pratiquant l'abattage rituel est très limité, et les bouchers halal de Bellevue ou de Malakoff saturent à l'approche de l'Aïd. Sacrifier soi-même est strictement interdit en France. Le sacrifice délégué en ligne permet aux Nantais d'accomplir leur udhiyah en toute sérénité : commande en 2 minutes, sacrifice nominatif par notre cheikh, vidéo de preuve par WhatsApp.",
+  },
+  grenoble: {
+    slug: "grenoble",
+    name: "Grenoble",
+    region: "Auvergne-Rhône-Alpes (38)",
+    population: "160 000",
+    agglomeration: "690 000",
+    intro:
+      "Grenoble et son agglomération accueillent une communauté musulmane enracinée, marquée par les diasporas maghrébine et comorienne, présente notamment à la Villeneuve, à Mistral et à Échirolles. La demande pour un sacrifice conforme à l'Aïd al-Adha 2026 dépasse l'offre locale.",
+    challenge:
+      "En Isère, les abattoirs agréés pour l'abattage rituel sont peu nombreux, et les bouchers halal de la Villeneuve ou d'Échirolles affichent complet plusieurs semaines avant l'Aïd. Le sacrifice à domicile reste strictement interdit en France (art. R214-78 du Code rural). Le sacrifice délégué en ligne offre aux Grenoblois une alternative simple et conforme : un cheikh diplômé sacrifie en votre nom, vous recevez la vidéo nominative par WhatsApp le jour même.",
+  },
+  nimes: {
+    slug: "nimes",
+    name: "Nîmes",
+    region: "Occitanie (30)",
+    population: "150 000",
+    agglomeration: "260 000",
+    intro:
+      "Nîmes accueille une communauté musulmane importante, présente notamment à Pissevin, Valdegour et au Chemin-Bas-d'Avignon. Chaque année à l'Aïd al-Adha, des milliers de familles nîmoises cherchent un sacrifice conforme à la Sounnah sans contrainte logistique.",
+    challenge:
+      "Dans le Gard, les abattoirs agréés pour l'abattage rituel sont rares, et les bouchers halal de Pissevin ou de Valdegour saturent à l'approche de l'Aïd. Sacrifier soi-même reste illégal en France. Le sacrifice délégué en ligne offre aux Nîmois une solution clé en main : commande en 2 minutes, sacrifice nominatif par notre cheikh, vidéo de preuve par WhatsApp le jour de l'Aïd.",
+  },
+  "saint-etienne": {
+    slug: "saint-etienne",
+    name: "Saint-Étienne",
+    region: "Auvergne-Rhône-Alpes (42)",
+    population: "170 000",
+    agglomeration: "520 000",
+    intro:
+      "Saint-Étienne et sa métropole abritent une communauté musulmane enracinée, présente notamment à Montreynaud, au Crêt-de-Roc et à Tarentaize. À l'approche de l'Aïd al-Adha 2026, la demande pour un sacrifice conforme dépasse l'offre locale.",
+    challenge:
+      "Dans la Loire, les abattoirs agréés pour l'abattage rituel sont peu nombreux, et les bouchers halal de Montreynaud ou de Tarentaize affichent complet plusieurs semaines avant l'Aïd. Le sacrifice à domicile reste strictement interdit en France (art. R214-78 du Code rural). Le sacrifice délégué en ligne offre aux Stéphanois une alternative simple et conforme : un cheikh diplômé sacrifie en votre nom, vous recevez la vidéo nominative par WhatsApp.",
+  },
+  mulhouse: {
+    slug: "mulhouse",
+    name: "Mulhouse",
+    region: "Grand Est (68)",
+    population: "110 000",
+    agglomeration: "280 000",
+    intro:
+      "Mulhouse possède l'une des plus fortes proportions de citoyens de tradition musulmane de France, présente notamment aux Coteaux, à Bourtzwiller et à Drouot. Chaque année à l'Aïd al-Adha, la demande locale dépasse largement l'offre disponible.",
+    challenge:
+      "Dans le Haut-Rhin, la pression sur les abattoirs agréés et les bouchers halal est particulièrement forte à l'approche de l'Aïd, et les commandes saturent rapidement aux Coteaux et à Bourtzwiller. Sacrifier soi-même reste illégal en France. Le sacrifice délégué en ligne supprime cette contrainte : un cheikh diplômé sacrifie en votre nom, vous recevez la vidéo nominative, la viande est distribuée aux familles dans le besoin.",
+  },
+  dijon: {
+    slug: "dijon",
+    name: "Dijon",
+    region: "Bourgogne-Franche-Comté (21)",
+    population: "160 000",
+    agglomeration: "390 000",
+    intro:
+      "Dijon Métropole accueille une communauté musulmane enracinée, présente notamment aux Grésilles, à la Fontaine-d'Ouche et à Chenôve. À l'approche de l'Aïd al-Adha 2026, des familles dijonnaises cherchent chaque année une solution conforme et accessible.",
+    challenge:
+      "En Côte-d'Or, les abattoirs agréés pour l'abattage rituel sont rares, et les bouchers halal des Grésilles ou de la Fontaine-d'Ouche affichent complet plusieurs semaines avant l'Aïd. Le sacrifice à domicile reste strictement interdit en France (art. R214-78 du Code rural). Le sacrifice délégué en ligne offre aux Dijonnais une solution clé en main : commande en 2 minutes, sacrifice nominatif par notre cheikh, vidéo de preuve par WhatsApp.",
+  },
+  rouen: {
+    slug: "rouen",
+    name: "Rouen",
+    region: "Normandie (76)",
+    population: "115 000",
+    agglomeration: "660 000",
+    intro:
+      "Rouen et sa métropole abritent une communauté musulmane importante, présente notamment aux Hauts-de-Rouen, à Grammont et à Saint-Étienne-du-Rouvray. Chaque année à l'Aïd al-Adha, la demande pour un sacrifice conforme dépasse l'offre locale.",
+    challenge:
+      "En Seine-Maritime, l'accès à un abattoir agréé pratiquant l'abattage rituel est très limité, et les bouchers halal des Hauts-de-Rouen ou de Saint-Étienne-du-Rouvray saturent à l'approche de l'Aïd. Sacrifier soi-même est strictement interdit en France. Le sacrifice délégué en ligne permet aux Rouennais d'accomplir leur udhiyah sans contrainte logistique : sacrifice nominatif par notre cheikh, vidéo de preuve par WhatsApp le jour même.",
+  },
+  "ile-de-france": {
+    slug: "ile-de-france",
+    name: "Île-de-France",
+    region: "Île-de-France (75/77/78/91/92/93/94/95)",
+    population: "12 millions",
+    agglomeration: "12 millions",
+    intro:
+      "L'Île-de-France concentre la plus importante communauté musulmane d'Europe, répartie entre Paris et toute la banlieue — Seine-Saint-Denis, Val-d'Oise, Essonne, Val-de-Marne. Chaque année à l'Aïd al-Adha, des centaines de milliers de familles franciliennes cherchent une solution simple et conforme pour accomplir le sacrifice.",
+    challenge:
+      "En Île-de-France, malgré la taille de la communauté, les abattoirs agréés pratiquant l'abattage rituel restent largement insuffisants, et les bouchers halal de Saint-Denis, Argenteuil, Sarcelles, Évry ou Créteil affichent complet des semaines avant l'Aïd. Le sacrifice à domicile est strictement interdit (art. R214-78 du Code rural). Le sacrifice délégué en ligne est devenu la solution la plus pratique pour les Franciliens : commande en 2 minutes, sacrifice nominatif par notre cheikh, vidéo de preuve par WhatsApp le jour de l'Aïd.",
   },
 };
 
