@@ -51,6 +51,15 @@ export const orderSchema = z
       .regex(/^[A-Z0-9]{6}$/, "Code parrain invalide (6 caractères)")
       .optional()
       .or(z.literal("")),
+    // Code affilié partenaire (cookie qrb_aff, jamais saisi par le client).
+    // Validé réellement côté serveur contre la table affiliates approuvés.
+    affiliate_code: z
+      .string()
+      .trim()
+      .toUpperCase()
+      .regex(/^[A-Z0-9-]{3,24}$/, "Code affilié invalide")
+      .optional()
+      .or(z.literal("")),
   })
   .superRefine((data, ctx) => {
     // En mode cadeau, le nom du bénéficiaire est obligatoire.

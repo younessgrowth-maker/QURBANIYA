@@ -11,6 +11,7 @@ import {
   REFERRAL_DISCOUNT_EUR,
   REFERRAL_DISCOUNT_CENTS,
 } from "@/lib/referral";
+import { sanitizeAffiliateCode } from "@/lib/affiliate";
 
 export async function POST(req: NextRequest) {
   try {
@@ -165,6 +166,10 @@ export async function POST(req: NextRequest) {
       referred_by_code: referredByCode,
       referrer_order_id: referrerOrderId,
       discount_amount: discountAmount,
+      // Affiliation : passthrough du code (cookie qrb_aff). Aucune
+      // incidence sur le prix/Stripe — la commission est attribuée
+      // au webhook après paiement si l'affilié est approuvé.
+      affiliate_code: sanitizeAffiliateCode(data.affiliate_code),
     });
 
     if (insertError) {

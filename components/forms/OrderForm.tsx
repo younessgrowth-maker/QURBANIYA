@@ -18,6 +18,15 @@ function readReferralCookie(): string {
   return match ? match[1] : "";
 }
 
+// ─── Lecture du cookie qrb_aff (affiliation partenaire) ───────────
+// Attribution silencieuse : le client ne voit rien, l'affilié est juste
+// crédité côté serveur. N'affecte JAMAIS le prix payé.
+function readAffiliateCookie(): string {
+  if (typeof document === "undefined") return "";
+  const match = document.cookie.match(/(?:^|;\s*)qrb_aff=([A-Z0-9-]{3,24})/);
+  return match ? match[1] : "";
+}
+
 type ReferralState =
   | { status: "idle" }
   | { status: "checking" }
@@ -137,6 +146,7 @@ export default function OrderForm() {
     }
   }, [setValue]);
 
+
   // Validation live du code parrain (debounce 400ms)
   useEffect(() => {
     const cleaned = referralCode.toUpperCase().replace(/[^A-Z0-9]/g, "");
@@ -183,10 +193,19 @@ export default function OrderForm() {
         intention: data.intention,
         is_gift: data.is_gift,
       });
+      // Attribution affilié : on lit le cookie qrb_aff au moment du submit
+      // et on l'injecte directement dans le payload. Plus fiable qu'un champ
+      // RHF caché (l'attribution ne doit jamais être perdue). Aucune
+      // incidence sur le prix : le serveur ne crée la commission qu'au
+      // webhook si l'affilié est approuvé.
+      const affiliateCode = readAffiliateCookie();
+      const payload = affiliateCode
+        ? { ...data, affiliate_code: affiliateCode }
+        : data;
       const res = await fetch("/api/orders", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
+        body: JSON.stringify(payload),
       });
       const result = await res.json();
       if (result.checkout_url) {

@@ -33,6 +33,48 @@ async function assignReferralCode(
   return null;
 }
 
+// ─── Attribution commission affilié ────────────────────────────────
+// Si la commande payée porte un code affilié ET que cet affilié est
+// APPROUVÉ, on enregistre une conversion `pending` (commission = snapshot
+// du barème de l'affilié). AUCUN versement : l'admin paie à la main puis
+// marque `paid`. La contrainte unique(order_id) rend l'opération idempotente
+// (retry webhook → pas de double commission). Échec non-bloquant : la
+// commande reste valide même si l'attribution échoue.
+async function attributeAffiliateCommission(
+  supabase: ReturnType<typeof createServiceRoleClient>,
+  orderId: string,
+  affiliateCode: string | null | undefined
+): Promise<void> {
+  if (!affiliateCode) return;
+  const { data: affiliate, error: affErr } = await supabase
+    .from("affiliates")
+    .select("id, commission_eur, approved")
+    .eq("code", affiliateCode)
+    .maybeSingle();
+
+  if (affErr) {
+    console.error("Affiliate lookup failed:", affiliateCode, affErr);
+    return;
+  }
+  // Code inconnu ou affilié non approuvé → pas de commission (silencieux).
+  if (!affiliate || !affiliate.approved) return;
+
+  const { error: insErr } = await supabase
+    .from("affiliate_conversions")
+    .insert({
+      affiliate_id: affiliate.id,
+      order_id: orderId,
+      commission_eur: affiliate.commission_eur,
+      status: "pending",
+    });
+
+  // 23505 = unique(order_id) violation → conversion déjà créée (retry
+  // webhook), c'est normal et idempotent. Toute autre erreur = log.
+  if (insErr && (insErr as { code?: string }).code !== "23505") {
+    console.error("Affiliate conversion insert failed:", orderId, insErr);
+  }
+}
+
 export async function POST(req: NextRequest) {
   const body = await req.text();
   const headersList = headers();
@@ -152,6 +194,21 @@ export async function POST(req: NextRequest) {
             .from("orders")
             .update({ confirmation_email_error: msg })
             .eq("id", order.id);
+        }
+
+        // Attribution affilié (non-bloquant, idempotent). Ne touche ni
+        // le prix, ni l'email, ni le statut de la commande.
+        try {
+          await attributeAffiliateCommission(
+            supabase,
+            order.id,
+            (order as { affiliate_code?: string | null }).affiliate_code
+          );
+        } catch (affError) {
+          console.error(
+            "Affiliate attribution error:",
+            affError instanceof Error ? affError.message : "unknown"
+          );
         }
 
         break;
