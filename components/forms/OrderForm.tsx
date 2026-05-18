@@ -22,6 +22,7 @@ type ReferralState =
   | { status: "idle" }
   | { status: "checking" }
   | { status: "valid"; ownerPrenom: string; discountEur: number }
+  | { status: "own" }
   | { status: "invalid"; reason: string };
 
 /* ── Field wrapper ── */
@@ -126,6 +127,7 @@ export default function OrderForm() {
   const isGift = watch("is_gift");
   const notifyRecipient = watch("notify_recipient");
   const referralCode = watch("referred_by_code") || "";
+  const email = watch("email") || "";
 
   // Auto-fill depuis le cookie posé par le middleware (?ref=XXX)
   useEffect(() => {
@@ -149,7 +151,10 @@ export default function OrderForm() {
     setReferralState({ status: "checking" });
     const t = setTimeout(async () => {
       try {
-        const res = await fetch(`/api/referral/validate?code=${cleaned}`);
+        const params = new URLSearchParams({ code: cleaned });
+        const trimmedEmail = email.trim();
+        if (trimmedEmail) params.set("email", trimmedEmail);
+        const res = await fetch(`/api/referral/validate?${params.toString()}`);
         const data = await res.json();
         if (data.valid) {
           setReferralState({
@@ -157,6 +162,8 @@ export default function OrderForm() {
             ownerPrenom: data.ownerPrenom,
             discountEur: data.discountEur,
           });
+        } else if (data.reason === "own_code") {
+          setReferralState({ status: "own" });
         } else {
           setReferralState({ status: "invalid", reason: data.reason || "unknown" });
         }
@@ -165,7 +172,7 @@ export default function OrderForm() {
       }
     }, 400);
     return () => clearTimeout(t);
-  }, [referralCode]);
+  }, [referralCode, email]);
 
   async function onSubmit(data: OrderFormValues) {
     if (inFlightRef.current) return;
@@ -392,6 +399,9 @@ export default function OrderForm() {
               {referralState.status === "valid" && (
                 <Check size={18} className="text-emerald" strokeWidth={3} />
               )}
+              {referralState.status === "own" && (
+                <Gift size={18} className="text-gold" />
+              )}
               {referralState.status === "invalid" && referralCode.length === 6 && (
                 <X size={18} className="text-urgency" strokeWidth={3} />
               )}
@@ -411,6 +421,21 @@ export default function OrderForm() {
               <div className="text-sm">
                 <span className="font-semibold text-emerald">Code valide</span>
                 <span className="text-text-muted"> · −{referralState.discountEur}€ appliqués grâce à {referralState.ownerPrenom}</span>
+              </div>
+            </motion.div>
+          )}
+          {referralState.status === "own" && (
+            <motion.div
+              initial={{ opacity: 0, y: -6 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -6 }}
+              className="mt-3 flex items-start gap-3 p-3 rounded-lg bg-gold/10 border border-gold/30"
+            >
+              <Gift size={18} className="text-gold flex-shrink-0 mt-0.5" />
+              <div className="text-sm text-text-muted">
+                <span className="font-semibold text-gold">Ce code est le vôtre</span> — il
+                n&apos;est pas cumulable sur votre propre commande. Partagez-le à vos proches :
+                ils ont −15€, et vous gagnez un avoir pour l&apos;Aïd 2027.
               </div>
             </motion.div>
           )}
