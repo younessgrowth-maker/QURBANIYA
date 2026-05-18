@@ -20,20 +20,27 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(callback);
   }
 
-  // ─── Parrainage : capter ?ref=XXX et poser un cookie 30j ───
-  // Le cookie est lu côté client sur /commander pour pré-remplir le champ.
-  // 6 chars uppercase strict, sinon on ignore (anti-pollution cookie).
+  // ─── Attribution : capter ?ref= (parrainage) et ?aff= (affiliation) ───
+  // Cookies 30j lus côté client sur /commander. Formats stricts pour
+  // éviter la pollution cookie.
+  //  - qrb_ref : code parrain client, 6 chars
+  //  - qrb_aff : code partenaire affilié, 3-24 chars + tirets
   const ref = searchParams.get("ref");
-  if (ref && /^[A-Z0-9]{6}$/i.test(ref)) {
+  const aff = searchParams.get("aff");
+  const hasRef = !!ref && /^[A-Z0-9]{6}$/i.test(ref);
+  const hasAff = !!aff && /^[A-Z0-9-]{3,24}$/i.test(aff);
+  if (hasRef || hasAff) {
     const response = NextResponse.next({ request });
-    response.cookies.set("qrb_ref", ref.toUpperCase(), {
+    const cookieOpts = {
       maxAge: 60 * 60 * 24 * 30, // 30 jours
-      sameSite: "lax",
+      sameSite: "lax" as const,
       path: "/",
       secure: process.env.NODE_ENV === "production",
-    });
+    };
+    if (hasRef) response.cookies.set("qrb_ref", ref!.toUpperCase(), cookieOpts);
+    if (hasAff) response.cookies.set("qrb_aff", aff!.toUpperCase(), cookieOpts);
     // Si la route n'est pas protégée on retourne tout de suite, sinon on
-    // continue le check auth ci-dessous (cookie déjà posé sur la response).
+    // continue le check auth ci-dessous (cookies déjà posés sur la response).
     if (!PROTECTED_ROUTES.some((r) => pathname.startsWith(r))) {
       return response;
     }

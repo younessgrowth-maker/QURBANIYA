@@ -6,6 +6,7 @@ import EmailFailuresPanel from "@/components/admin/EmailFailuresPanel";
 import ReferralBroadcastButton from "@/components/admin/ReferralBroadcastButton";
 import WhatsAppBroadcastButton from "@/components/admin/WhatsAppBroadcastButton";
 import CleanupStalePendingButton from "@/components/admin/CleanupStalePendingButton";
+import AffiliatesPanel, { type AffiliateSummary } from "@/components/admin/AffiliatesPanel";
 import AnalyticsSection from "@/components/admin/AnalyticsSection";
 import { fetchAnalyticsSummary, EMPTY_ANALYTICS } from "@/lib/analytics-queries";
 import { STATS, CURRENT_YEAR, PRICE_AMOUNT } from "@/lib/constants";
@@ -15,20 +16,63 @@ export const dynamic = "force-dynamic";
 
 type OrderRow = Order;
 
-async function fetchData(): Promise<{ orders: OrderRow[]; inventory: Inventory | null }> {
+type AffiliateRow = {
+  id: string;
+  code: string;
+  name: string;
+  approved: boolean;
+};
+type ConversionRow = {
+  affiliate_id: string;
+  commission_eur: number;
+  status: "pending" | "paid";
+};
+
+async function fetchData(): Promise<{
+  orders: OrderRow[];
+  inventory: Inventory | null;
+  affiliates: AffiliateSummary[];
+}> {
   const supabase = createServiceRoleClient();
-  const [ordersRes, inventoryRes] = await Promise.all([
-    supabase.from("orders").select("*").order("created_at", { ascending: false }),
-    supabase.from("inventory").select("*").eq("year", CURRENT_YEAR).maybeSingle(),
-  ]);
+  const [ordersRes, inventoryRes, affiliatesRes, conversionsRes] =
+    await Promise.all([
+      supabase.from("orders").select("*").order("created_at", { ascending: false }),
+      supabase.from("inventory").select("*").eq("year", CURRENT_YEAR).maybeSingle(),
+      supabase.from("affiliates").select("id, code, name, approved"),
+      supabase
+        .from("affiliate_conversions")
+        .select("affiliate_id, commission_eur, status"),
+    ]);
+
+  const affRows = (affiliatesRes.data as AffiliateRow[]) ?? [];
+  const convRows = (conversionsRes.data as ConversionRow[]) ?? [];
+  const affiliates: AffiliateSummary[] = affRows
+    .map((a) => {
+      const mine = convRows.filter((c) => c.affiliate_id === a.id);
+      const pending = mine.filter((c) => c.status === "pending");
+      const paid = mine.filter((c) => c.status === "paid");
+      return {
+        id: a.id,
+        code: a.code,
+        name: a.name,
+        approved: a.approved,
+        pendingCount: pending.length,
+        pendingTotal: pending.reduce((s, c) => s + (c.commission_eur ?? 0), 0),
+        paidCount: paid.length,
+        paidTotal: paid.reduce((s, c) => s + (c.commission_eur ?? 0), 0),
+      };
+    })
+    .sort((a, b) => b.pendingTotal - a.pendingTotal);
+
   return {
     orders: (ordersRes.data as OrderRow[]) ?? [],
     inventory: (inventoryRes.data as Inventory) ?? null,
+    affiliates,
   };
 }
 
 export default async function AdminDashboardPage() {
-  const [{ orders, inventory }, analytics] = await Promise.all([
+  const [{ orders, inventory, affiliates }, analytics] = await Promise.all([
     fetchData(),
     fetchAnalyticsSummary().catch(() => EMPTY_ANALYTICS),
   ]);
@@ -168,6 +212,8 @@ export default async function AdminDashboardPage() {
       />
 
       <CleanupStalePendingButton pendingCount={pending.length} />
+
+      <AffiliatesPanel affiliates={affiliates} />
 
       <div className="mb-4 flex items-baseline justify-between">
         <h2 className="text-lg font-bold text-text-primary flex items-center gap-2">
