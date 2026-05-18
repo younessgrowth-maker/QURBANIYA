@@ -9,6 +9,7 @@ import { sanitizeReferralCode, REFERRAL_DISCOUNT_EUR } from "@/lib/referral";
 export async function GET(req: NextRequest) {
   const raw = req.nextUrl.searchParams.get("code");
   const code = sanitizeReferralCode(raw);
+  const email = req.nextUrl.searchParams.get("email")?.trim().toLowerCase() || null;
 
   if (!code) {
     return NextResponse.json(
@@ -20,7 +21,7 @@ export async function GET(req: NextRequest) {
   const supabase = createServiceRoleClient();
   const { data, error } = await supabase
     .from("orders")
-    .select("prenom, payment_status")
+    .select("prenom, payment_status, email")
     .eq("referral_code", code)
     .maybeSingle();
 
@@ -37,6 +38,17 @@ export async function GET(req: NextRequest) {
   if (data.payment_status !== "paid") {
     return NextResponse.json(
       { valid: false, reason: "not_paid" },
+      { status: 200 }
+    );
+  }
+
+  // Anti-auto-parrainage : le même contrôle qu'à la création de commande
+  // (app/api/orders/route.ts). Sans ça, l'UI afficherait une réduction qui
+  // serait silencieusement annulée côté serveur → Stripe facture le plein
+  // tarif et le client se sent trompé.
+  if (email && data.email?.toLowerCase() === email) {
+    return NextResponse.json(
+      { valid: false, reason: "own_code" },
       { status: 200 }
     );
   }
