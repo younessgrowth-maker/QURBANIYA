@@ -67,6 +67,22 @@ export async function sendWhatsAppText({ to, body }: SendOptions): Promise<{ id:
   return { id: data.message.id };
 }
 
+/** Template du message de relance panier abandonné (WhatsApp court). */
+export function abandonedCartMessage(prenom: string, resumeUrl: string): string {
+  return `Salam ${prenom} 🌙
+
+Tu as commencé une commande pour le sacrifice de l'Aïd al-Adha sur Qurbaniya mais le paiement n'a pas été finalisé.
+
+L'Aïd c'est le mercredi 27 mai 2026, in sha Allah. Il reste encore des places mais elles partent vite.
+
+👉 Reprends ton paiement directement :
+${resumeUrl}
+
+Si tu as une question, réponds à ce message.
+
+— L'équipe Qurbaniya`;
+}
+
 /** Template du message d'annonce du programme parrainage. */
 export function referralLaunchMessage(prenom: string, code: string): string {
   return `Salam ${prenom} 🌙
