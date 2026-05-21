@@ -7,6 +7,7 @@ import ReferralBroadcastButton from "@/components/admin/ReferralBroadcastButton"
 import WhatsAppBroadcastButton from "@/components/admin/WhatsAppBroadcastButton";
 import CleanupStalePendingButton from "@/components/admin/CleanupStalePendingButton";
 import AffiliatesPanel, { type AffiliateSummary } from "@/components/admin/AffiliatesPanel";
+import ReferralLookup from "@/components/admin/ReferralLookup";
 import AnalyticsSection from "@/components/admin/AnalyticsSection";
 import { fetchAnalyticsSummary, EMPTY_ANALYTICS } from "@/lib/analytics-queries";
 import { STATS, CURRENT_YEAR, PRICE_AMOUNT } from "@/lib/constants";
@@ -224,6 +225,8 @@ export default async function AdminDashboardPage() {
       <CleanupStalePendingButton pendingCount={pending.length} />
 
       <AffiliatesPanel affiliates={affiliates} />
+
+      <ReferralLookup />
 
       <div className="mb-4 flex items-baseline justify-between">
         <h2 className="text-lg font-bold text-text-primary flex items-center gap-2">
