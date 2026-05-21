@@ -44,6 +44,8 @@ export interface Order {
   referral_broadcast_sent_at: string | null;
   // Broadcast WhatsApp parrainage (migration 0013)
   whatsapp_broadcast_sent_at: string | null;
+  // Rappel J-7 (migration 0016)
+  aid_reminder_sent_at: string | null;
   created_at: string;
   updated_at: string;
 }
