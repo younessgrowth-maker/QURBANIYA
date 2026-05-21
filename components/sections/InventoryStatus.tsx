@@ -51,7 +51,7 @@ export default async function InventoryStatus({
       >
         <Package size={12} />
         Plus que <strong className="text-base leading-none">{inv.remaining}</strong>
-        place{inv.remaining > 1 ? "s" : ""} sur {inv.total}
+        place{inv.remaining > 1 ? "s" : ""}
       </div>
     );
   }
@@ -70,7 +70,7 @@ export default async function InventoryStatus({
         <div>
           <p className="font-bold text-sm md:text-base">
             Plus que <span className="text-lg md:text-xl">{inv.remaining}</span> place
-            {inv.remaining > 1 ? "s" : ""} sur {inv.total} pour l&apos;Aïd al-Adha 2026
+            {inv.remaining > 1 ? "s" : ""} pour l&apos;Aïd al-Adha 2026
           </p>
           <p className="text-xs opacity-80 font-inter mt-0.5">
             {isCritical
