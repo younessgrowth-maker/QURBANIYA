@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Search, Download, Filter, RotateCcw, Loader2 } from "lucide-react";
+import { Search, Download, Filter, RotateCcw, Loader2, Send } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { Order } from "@/types";
 
@@ -72,6 +72,139 @@ function RefundButton({ order }: { order: Order }) {
       )}
       Rembourser
     </button>
+  );
+}
+
+function RelanceButton({ order }: { order: Order }) {
+  const [state, setState] = useState<"idle" | "loading" | "done" | "error">("idle");
+  const [msg, setMsg] = useState<string | null>(null);
+
+  // N'apparaît que pour les pending Stripe avec une session existante.
+  if (order.payment_status !== "pending") return null;
+  if (order.payment_method !== "stripe" || !order.stripe_session_id) return null;
+
+  async function handleRelance() {
+    if (!window.confirm(
+      `Relancer ${order.prenom} ${order.nom} par email + WhatsApp ?\n\nLe message contient le lien Stripe pour reprendre le paiement.`
+    )) return;
+
+    setState("loading");
+    setMsg(null);
+    try {
+      const res = await fetch("/api/admin/relance", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ order_id: order.id }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setState("error");
+        setMsg(data.error || "Erreur");
+        return;
+      }
+      const r = data.result;
+      if (r.skipped) {
+        setState("error");
+        setMsg(r.skipped);
+        return;
+      }
+      setState("done");
+      const parts = [];
+      if (r.email_sent) parts.push("email ✓");
+      if (r.wa_sent) parts.push("WA ✓");
+      else if (r.wa_error) parts.push(`WA ✗ ${r.wa_error.slice(0, 40)}`);
+      setMsg(parts.join(" · "));
+    } catch {
+      setState("error");
+      setMsg("Réseau indisponible");
+    }
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={handleRelance}
+      disabled={state === "loading"}
+      title={msg ?? "Renvoyer email + WhatsApp avec lien de paiement"}
+      className={cn(
+        "inline-flex items-center gap-1 rounded-md border text-xs font-semibold px-2 py-1 mr-1.5 transition-colors disabled:opacity-50 disabled:cursor-not-allowed",
+        state === "done"
+          ? "border-emerald/40 bg-emerald/10 text-emerald"
+          : state === "error"
+          ? "border-urgency/40 bg-urgency/10 text-urgency"
+          : "border-gray-300 bg-white text-gray-700 hover:bg-gold/10 hover:border-gold hover:text-gold"
+      )}
+    >
+      {state === "loading" ? (
+        <Loader2 size={12} className="animate-spin" />
+      ) : (
+        <Send size={12} />
+      )}
+      {state === "done" ? "Relancé" : "Relancer"}
+    </button>
+  );
+}
+
+function RelanceAllButton({ orders }: { orders: Order[] }) {
+  const [state, setState] = useState<"idle" | "loading" | "done">("idle");
+  const [summary, setSummary] = useState<string | null>(null);
+
+  const eligible = useMemo(
+    () =>
+      orders.filter(
+        (o) =>
+          o.payment_status === "pending" &&
+          o.payment_method === "stripe" &&
+          o.stripe_session_id,
+      ),
+    [orders],
+  );
+
+  if (eligible.length === 0) return null;
+
+  async function handleRelanceAll() {
+    if (!window.confirm(
+      `Relancer les ${eligible.length} commande(s) en attente par email + WhatsApp ?\n\nDélai 1.5s entre chaque envoi. Si > 10 commandes, certaines seront sautées (timeout Vercel 60s).`
+    )) return;
+
+    setState("loading");
+    setSummary(null);
+    try {
+      const res = await fetch("/api/admin/relance", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ all: true }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setSummary(data.error || "Erreur");
+        setState("idle");
+        return;
+      }
+      setSummary(`${data.email_sent} email · ${data.wa_sent} WA · ${data.skipped} sautés (sur ${data.total})`);
+      setState("done");
+    } catch {
+      setSummary("Réseau indisponible");
+      setState("idle");
+    }
+  }
+
+  return (
+    <div className="flex items-center gap-2">
+      <button
+        onClick={handleRelanceAll}
+        disabled={state === "loading"}
+        className="h-9 px-3 text-sm font-semibold bg-gold/10 text-gold border border-gold/30 rounded-lg hover:bg-gold/20 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1.5"
+      >
+        {state === "loading" ? (
+          <Loader2 size={14} className="animate-spin" />
+        ) : (
+          <Send size={14} />
+        )}
+        Relancer pending ({eligible.length})
+      </button>
+      {summary && <span className="text-xs text-text-muted">{summary}</span>}
+    </div>
   );
 }
 
@@ -212,6 +345,7 @@ export default function OrdersTable({ orders }: { orders: Order[] }) {
             <option value="virement">Virement</option>
           </select>
         </div>
+        <RelanceAllButton orders={orders} />
         <button
           onClick={handleExport}
           disabled={filtered.length === 0}
@@ -292,7 +426,8 @@ export default function OrdersTable({ orders }: { orders: Order[] }) {
                       </span>
                     )}
                   </td>
-                  <td className="px-4 py-3 text-right">
+                  <td className="px-4 py-3 text-right whitespace-nowrap">
+                    <RelanceButton order={o} />
                     <RefundButton order={o} />
                   </td>
                 </tr>
