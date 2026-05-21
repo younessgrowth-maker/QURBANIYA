@@ -712,3 +712,85 @@ export async function sendReferralLaunchEmail(order: Order) {
   console.log("Email referral launch sent:", order.email, result.data?.id ?? "ok");
   return result;
 }
+
+/* ═══════════════════════════════════════════
+   EMAIL 8 — RAPPEL J-7 (sacrifice imminent)
+   ═══════════════════════════════════════════ */
+export async function sendAidReminder(order: Order) {
+  const intentionLabel =
+    order.intention === "pour_moi" ? "pour vous-même" :
+    order.intention === "famille" ? "pour votre famille" : "en sadaqa";
+
+  const html = emailLayout(`
+    <div style="text-align:center;margin:0 0 20px;">
+      <span style="font-size:48px;">🐑</span>
+    </div>
+
+    <h1 style="color:#1A1A18;font-size:26px;margin:0 0 12px;font-weight:bold;text-align:center;font-family:Georgia,serif;">
+      ${order.prenom}, votre sacrifice approche
+    </h1>
+
+    <p style="margin:0 0 24px;color:#5C5347;font-size:15px;line-height:1.7;text-align:center;">
+      L'Aïd al-Adha sera célébré le <strong style="color:#1A1A18;">mercredi 27 mai 2026</strong>, in sha Allah. Votre sacrifice <strong>${intentionLabel}</strong> au nom de <strong style="color:#1A1A18;font-family:Georgia,serif;font-style:italic;">${order.niyyah}</strong> est confirmé — référence <strong>${orderRef(order)}</strong>.
+    </p>
+
+    <!-- Récap commande -->
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#F7F3ED;border:1px solid #EFE9DF;border-radius:12px;margin:0 0 28px;">
+      <tr><td style="padding:20px 24px;">
+        <p style="margin:0 0 6px;color:#B8860B;font-size:11px;font-weight:bold;text-transform:uppercase;letter-spacing:1.5px;">Récapitulatif</p>
+        <p style="margin:0;color:#1A1A18;font-size:14px;line-height:1.8;">
+          <strong>Référence&nbsp;:</strong> ${orderRef(order)}<br>
+          <strong>Niyyah&nbsp;:</strong> <span style="font-family:Georgia,serif;font-style:italic;">${order.niyyah}</span><br>
+          <strong>Date du sacrifice&nbsp;:</strong> mercredi 27 mai 2026
+        </p>
+      </td></tr>
+    </table>
+
+    <!-- Action WhatsApp -->
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#E8F0EB;border-left:4px solid #2D6A4F;border-radius:0 8px 8px 0;margin:0 0 24px;">
+      <tr><td style="padding:20px 22px;">
+        <p style="margin:0 0 8px;color:#1B4332;font-size:15px;font-weight:bold;">
+          📱 Confirmez votre numéro WhatsApp
+        </p>
+        <p style="margin:0 0 4px;color:#1B4332;font-size:13px;line-height:1.6;">
+          La vidéo nominative de votre sacrifice vous sera envoyée par WhatsApp dans les 24h après le 27 mai. Vérifiez que votre numéro est correct&nbsp;:
+        </p>
+        <p style="margin:8px 0 0;color:#1A1A18;font-size:15px;font-weight:bold;font-family:monospace;">
+          ${order.telephone || "—"}
+        </p>
+        <p style="margin:8px 0 0;color:#1B4332;font-size:12px;line-height:1.6;">
+          Si ce numéro est incorrect ou si vous préférez un autre, répondez simplement à cet email avec le bon numéro.
+        </p>
+      </td></tr>
+    </table>
+
+    <!-- Étapes restantes -->
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 24px;">
+      ${stepItem("1", "Jour de l'Aïd — 27 mai", "Le cheikh effectue le sacrifice en votre nom, dans le respect total de la Sunnah.")}
+      ${stepItem("2", "Vidéo nominative", "Vous la recevez par WhatsApp dans les 24h qui suivent. Aucune action à faire de votre côté.")}
+    </table>
+
+    <p style="margin:24px 0 0;color:#5C5347;font-size:14px;line-height:1.6;text-align:center;">
+      Pour toute question&nbsp;:
+      <a href="mailto:${SUPPORT_EMAIL}" style="color:#1B4332;font-weight:bold;text-decoration:none;">${SUPPORT_EMAIL}</a>
+      <span style="color:#8C8279;">&nbsp;·&nbsp;</span>
+      <a href="${WHATSAPP_LINK}" style="color:#1B4332;font-weight:bold;text-decoration:none;">WhatsApp</a>
+    </p>
+
+    <p style="margin:24px 0 0;color:#B8860B;font-size:14px;font-style:italic;text-align:center;font-family:Georgia,serif;">
+      Qu'Allah accepte votre sacrifice.
+    </p>
+  `, order.email);
+
+  const result = await getResend().emails.send({
+    from: FROM,
+    to: order.email,
+    headers: unsubscribeHeaders(order.email),
+    subject: `🐑 ${order.prenom}, votre sacrifice du 27 mai approche`,
+    html,
+    replyTo: SUPPORT_EMAIL,
+  });
+
+  console.log("Email aid reminder sent:", order.email, result.data?.id ?? "ok");
+  return result;
+}
