@@ -4,9 +4,9 @@ import { ArrowLeft, Calendar, Clock, ArrowRight, Check, X } from "lucide-react";
 import { BreadcrumbJsonLd } from "@/components/seo/JsonLd";
 
 export const metadata: Metadata = {
-  title: "💰 Combien coûte un mouton pour l'Aïd 2026 en France ? (140€ à 450€)",
+  title: "Combien coûte un mouton pour l'Aïd 2026 ? Comparatif des 3 options en France",
   description:
-    "🐑 De 140€ (sacrifice délégué en ligne, tout inclus) à 450€+ (mouton vivant + abattoir privé). Comparatif détaillé, critères, et pourquoi déléguer est souvent plus simple à l'Aïd 2026.",
+    "Acheter un mouton vivant, passer par un abattoir ou déléguer en ligne ? Comparatif complet des 3 options pour l'Aïd al-Adha 2026, avec critères, coûts cachés et conseils.",
   keywords: [
     "combien coute un mouton en france",
     "combien coute le mouton de l'aid en france",
@@ -22,9 +22,9 @@ export const metadata: Metadata = {
     canonical: "https://qurbaniya.fr/blog/combien-coute-mouton-aid-2026-france",
   },
   openGraph: {
-    title: "💰 Combien coûte un mouton pour l'Aïd 2026 ? (140€ à 450€)",
+    title: "Combien coûte un mouton pour l'Aïd 2026 ? Comparatif des 3 options",
     description:
-      "Comparatif détaillé : 140€ (sacrifice en ligne) à 450€+ (vivant + abattoir privé). Tout ce qu'il faut savoir avant de choisir 🐑",
+      "Mouton vivant, abattoir ou sacrifice délégué : quelle option pour l'Aïd 2026 en France ? Comparatif des 3 méthodes avec coûts réels.",
     url: "https://qurbaniya.fr/blog/combien-coute-mouton-aid-2026-france",
     type: "article",
     publishedTime: "2026-05-07T00:00:00Z",
