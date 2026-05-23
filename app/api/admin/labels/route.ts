@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { renderToStream, type DocumentProps } from "@react-pdf/renderer";
+import { renderToBuffer, type DocumentProps } from "@react-pdf/renderer";
 import React from "react";
 import { createServerSupabaseClient, createServiceRoleClient } from "@/lib/supabase/server";
 import { isAdminEmail } from "@/lib/admin";
@@ -7,6 +7,10 @@ import { CURRENT_YEAR } from "@/lib/constants";
 import { getBaseUrl } from "@/lib/utils";
 import LabelsPdf from "@/lib/labels/LabelsPdf";
 import type { Order } from "@/types";
+
+// PDF generation peut prendre plusieurs secondes pour 171+ commandes,
+// surtout avec Font.register qui charge la police arabe via HTTPS.
+export const maxDuration = 60;
 
 // Année hijri correspondant à l'Aïd al-Adha de l'année grégorienne courante.
 // Aïd al-Adha 2026 = 10 Dhul Hijjah 1447.
@@ -64,19 +68,42 @@ export async function GET() {
   const arabicFontUrl = `${getBaseUrl()}/fonts/NotoNaskhArabic.ttf`;
   const hijriYear = HIJRI_YEAR_BY_GREGORIAN[CURRENT_YEAR] ?? CURRENT_YEAR;
 
-  const pdfStream = await renderToStream(
-    React.createElement(LabelsPdf, {
-      orders: labelOrders,
-      logoUrl,
-      arabicFontUrl,
-      year: CURRENT_YEAR,
-      hijriYear,
-    }) as React.ReactElement<DocumentProps>
-  );
+  // renderToBuffer (vs renderToStream) attend que tout le PDF soit généré
+  // avant de retourner — permet un try/catch propre. Avec renderToStream,
+  // si Font.register échoue async, le stream se ferme silencieusement et
+  // le client reçoit un fichier vide (bug constaté en prod le 2026-05-23).
+  let buffer: Buffer;
+  try {
+    buffer = await renderToBuffer(
+      React.createElement(LabelsPdf, {
+        orders: labelOrders,
+        logoUrl,
+        arabicFontUrl,
+        year: CURRENT_YEAR,
+        hijriYear,
+      }) as React.ReactElement<DocumentProps>
+    );
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : "unknown";
+    console.error("[labels] renderToBuffer failed:", msg, e);
+    return NextResponse.json(
+      { error: `PDF generation failed: ${msg}` },
+      { status: 500 }
+    );
+  }
 
-  return new NextResponse(pdfStream as unknown as ReadableStream, {
+  if (!buffer || buffer.length === 0) {
+    console.error("[labels] renderToBuffer returned empty buffer");
+    return NextResponse.json(
+      { error: "PDF buffer is empty" },
+      { status: 500 }
+    );
+  }
+
+  return new NextResponse(new Uint8Array(buffer), {
     headers: {
       "Content-Type": "application/pdf",
+      "Content-Length": String(buffer.length),
       "Content-Disposition": `attachment; filename="etiquettes-qurbaniya-${CURRENT_YEAR}.pdf"`,
     },
   });
