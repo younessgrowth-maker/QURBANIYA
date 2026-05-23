@@ -1,5 +1,9 @@
-import { Document, Page, Text, View, StyleSheet, Image as PdfImage } from "@react-pdf/renderer";
-// Font import temporairement retiré — voir ensureArabicFont() pour contexte.
+import { Document, Page, Text, View, StyleSheet, Image as PdfImage, Font } from "@react-pdf/renderer";
+
+// Plage Unicode couvrant l'arabe standard + presentation forms (formes
+// contextuelles initiales/médianes/finales) + Arabic Supplement.
+const ARABIC_REGEX = /[؀-ۿݐ-ݿࢠ-ࣿﭐ-﷿ﹰ-﻿]/;
+const hasArabic = (text: string) => ARABIC_REGEX.test(text);
 
 // Une étiquette pleine page A4 (210×297mm) par commande.
 // Avant : 2 étiquettes / A4 en A5 chacune (à couper). On passe à 1 / page
@@ -92,25 +96,28 @@ function intentionBadgeLabel(intention: Intention): string | null {
 interface LabelsPdfProps {
   orders: LabelOrder[];
   logoUrl: string;
+  arabicFontBuffer: Buffer | null;
   year: number;
   hijriYear: number;
 }
 
-// TEMPORAIRE — le fix police arabe (PR #79) cause un crash interne de
-// @react-pdf 4.5.1 ("Cannot read properties of undefined (reading 'id')")
-// qui retourne un PDF vide en prod. On désactive le Font.register en
-// attendant un fix propre post-Aïd. Conséquence : les ~2 niyyahs en
-// arabe (5f0c, a576) seront rendues en "GDG# H RFNDHODR9#" sur leur
-// étiquette. À corriger manuellement avant impression.
-//
-// Suspect : Font.register avec src HTTPS qui timeout pendant le cold
-// start serverless Vercel, laissant la sourcesArray dans un état
-// inconsistant que le rendering n'attend pas.
-function ensureArabicFont() {
-  // no-op temporaire — voir commentaire ci-dessus.
-  // À ré-activer (avec import Font) une fois la cause root identifiée :
-  //   Font.register({ family: "NotoNaskhArabic", src: arabicFontUrl });
-  //   Font.registerHyphenationCallback((word) => [word]);
+// On enregistre la police arabe via un Buffer pré-chargé côté route
+// (cf. /api/admin/labels/route.ts). Différence avec la 1ère tentative
+// (PR #79) : on passait src: URL HTTPS, ce qui faisait crasher @react-pdf
+// 4.5.1 ("Cannot read properties of undefined (reading 'id')") pendant
+// le cold start serverless car Font.register essayait de fetch async
+// pendant le render. Avec un Buffer pré-chargé, plus de fetch async :
+// la police est dispo immédiatement quand register est appelé.
+let _arabicFontRegistered = false;
+function ensureArabicFont(arabicFontBuffer: Buffer | null) {
+  if (_arabicFontRegistered || !arabicFontBuffer) return;
+  Font.register({
+    family: "NotoNaskhArabic",
+    src: arabicFontBuffer as unknown as string, // @react-pdf accepte Buffer
+  });
+  // Désactive l'algorithme de césure (pas pertinent pour l'arabe).
+  Font.registerHyphenationCallback((word) => [word]);
+  _arabicFontRegistered = true;
 }
 
 function Label({
@@ -129,10 +136,15 @@ function Label({
       <Text style={styles.subtitle}>Aïd al-Adha {hijriYear}</Text>
       {badge && <Text style={styles.intentionBadge}>{badge}</Text>}
       <Text style={styles.niyyahLabel}>Niyyah</Text>
-      {/* TEMPORAIRE — fontFamily NotoNaskhArabic désactivé suite au crash
-          @react-pdf en prod. Les niyyahs arabes sont rendues en glyphs
-          Helvetica par défaut (illisible). Voir ensureArabicFont(). */}
-      <Text style={styles.niyyah}>{niyyah}</Text>
+      <Text
+        style={
+          hasArabic(niyyah)
+            ? [styles.niyyah, { fontFamily: "NotoNaskhArabic" }]
+            : styles.niyyah
+        }
+      >
+        {niyyah}
+      </Text>
       <Text style={styles.name}>Commande : {fullName}</Text>
       <Text style={styles.number}>N°{orderNumber}</Text>
     </View>
@@ -142,14 +154,15 @@ function Label({
 export default function LabelsPdf({
   orders,
   logoUrl,
+  arabicFontBuffer,
   hijriYear,
 }: LabelsPdfProps) {
-  ensureArabicFont();
+  ensureArabicFont(arabicFontBuffer);
 
   return (
     <Document>
       {orders.map((order) => (
-        <Page key={order.orderNumber} size="A4" style={styles.page}>
+        <Page key={order.orderNumber} size="A4" orientation="landscape" style={styles.page}>
           <Label
             orderNumber={order.orderNumber}
             fullName={order.fullName}

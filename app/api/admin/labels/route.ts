@@ -65,8 +65,25 @@ export async function GET() {
   }));
 
   const logoUrl = `${getBaseUrl()}/logos/export/qurbaniya-symbol-1024.png`;
-  // arabicFontUrl temporairement retiré — voir ensureArabicFont() dans LabelsPdf.tsx
   const hijriYear = HIJRI_YEAR_BY_GREGORIAN[CURRENT_YEAR] ?? CURRENT_YEAR;
+
+  // Pré-charge la police arabe en Buffer. La 1ère tentative (PR #79)
+  // passait l'URL HTTPS à Font.register, ce qui faisait crasher @react-pdf
+  // pendant le cold start serverless. En pré-fetchant ici on garantit que
+  // la police est dispo quand Font.register est appelé pendant le render.
+  // Failure n'est pas bloquante — on render sans la police (cf. fallback
+  // Helvetica côté composant).
+  let arabicFontBuffer: Buffer | null = null;
+  try {
+    const fontRes = await fetch(`${getBaseUrl()}/fonts/NotoNaskhArabic.ttf`);
+    if (fontRes.ok) {
+      arabicFontBuffer = Buffer.from(await fontRes.arrayBuffer());
+    } else {
+      console.warn("[labels] Arabic font fetch returned", fontRes.status);
+    }
+  } catch (e) {
+    console.warn("[labels] Arabic font preload failed:", e instanceof Error ? e.message : e);
+  }
 
   // renderToBuffer (vs renderToStream) attend que tout le PDF soit généré
   // avant de retourner — permet un try/catch propre. Avec renderToStream,
@@ -78,6 +95,7 @@ export async function GET() {
       React.createElement(LabelsPdf, {
         orders: labelOrders,
         logoUrl,
+        arabicFontBuffer,
         year: CURRENT_YEAR,
         hijriYear,
       }) as React.ReactElement<DocumentProps>
