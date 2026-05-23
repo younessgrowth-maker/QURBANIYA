@@ -5,8 +5,10 @@ import { Document, Page, Text, View, StyleSheet, Image as PdfImage, Font } from 
 const ARABIC_REGEX = /[؀-ۿݐ-ݿࢠ-ࣿﭐ-﷿ﹰ-﻿]/;
 const hasArabic = (text: string) => ARABIC_REGEX.test(text);
 
-// Deux étiquettes par page A4 (format A5 chacune, 148×210mm ~ format de celles
-// utilisées en 2025). À imprimer puis couper en deux.
+// Une étiquette pleine page A4 (210×297mm) par commande.
+// Avant : 2 étiquettes / A4 en A5 chacune (à couper). On passe à 1 / page
+// pour plus de lisibilité au moment du sacrifice + moins d'erreurs de
+// manipulation côté équipe.
 const styles = StyleSheet.create({
   page: {
     flexDirection: "column",
@@ -15,69 +17,62 @@ const styles = StyleSheet.create({
   },
   label: {
     flex: 1,
-    borderBottom: "1pt dashed #CCCCCC",
-    padding: 24,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  labelLast: {
-    flex: 1,
-    padding: 24,
+    padding: 48,
     justifyContent: "center",
     alignItems: "center",
   },
   logo: {
-    width: 60,
-    height: 60,
-    marginBottom: 8,
+    width: 90,
+    height: 90,
+    marginBottom: 12,
   },
   brand: {
-    fontSize: 18,
+    fontSize: 26,
     fontWeight: "bold",
     color: "#2D6A4F",
-    marginBottom: 2,
+    marginBottom: 4,
   },
   subtitle: {
-    fontSize: 11,
+    fontSize: 14,
     color: "#888888",
-    marginBottom: 32,
+    marginBottom: 48,
   },
   intentionBadge: {
-    fontSize: 11,
+    fontSize: 16,
     fontWeight: "bold",
     color: "#B8860B",
     backgroundColor: "#FDF6E3",
-    paddingTop: 4,
-    paddingBottom: 4,
-    paddingLeft: 12,
-    paddingRight: 12,
-    borderRadius: 4,
+    paddingTop: 6,
+    paddingBottom: 6,
+    paddingLeft: 18,
+    paddingRight: 18,
+    borderRadius: 6,
     textTransform: "uppercase",
     letterSpacing: 2,
     marginBottom: 10,
   },
   niyyahLabel: {
-    fontSize: 10,
+    fontSize: 14,
     color: "#888888",
     textTransform: "uppercase",
-    letterSpacing: 1,
-    marginBottom: 4,
+    letterSpacing: 2,
+    marginBottom: 8,
   },
   niyyah: {
-    fontSize: 28,
+    fontSize: 44,
     fontWeight: "bold",
     textAlign: "center",
-    marginBottom: 18,
+    marginBottom: 36,
     color: "#2D6A4F",
   },
   name: {
-    fontSize: 14,
+    fontSize: 18,
     textAlign: "center",
-    marginBottom: 24,
+    marginBottom: 48,
     color: "#555555",
   },
   number: {
-    fontSize: 48,
+    fontSize: 80,
     fontWeight: "bold",
     color: "#B8860B",
   },
@@ -93,7 +88,7 @@ interface LabelOrder {
 }
 
 function intentionBadgeLabel(intention: Intention): string | null {
-  if (intention === "famille") return "En famille";
+  if (intention === "famille") return "Famille";
   if (intention === "sadaqa") return "Sadaqa";
   return null; // pour_moi → pas de badge (cas par défaut)
 }
@@ -129,11 +124,10 @@ function Label({
   intention,
   logoUrl,
   hijriYear,
-  isLast,
-}: LabelOrder & { logoUrl: string; hijriYear: number; isLast: boolean }) {
+}: LabelOrder & { logoUrl: string; hijriYear: number }) {
   const badge = intentionBadgeLabel(intention);
   return (
-    <View style={isLast ? styles.labelLast : styles.label}>
+    <View style={styles.label}>
       <PdfImage src={logoUrl} style={styles.logo} />
       <Text style={styles.brand}>Qurbaniya.fr</Text>
       <Text style={styles.subtitle}>Aïd al-Adha {hijriYear}</Text>
@@ -162,27 +156,18 @@ export default function LabelsPdf({
 }: LabelsPdfProps) {
   ensureArabicFont(arabicFontUrl);
 
-  const pages: LabelOrder[][] = [];
-  for (let i = 0; i < orders.length; i += 2) {
-    pages.push(orders.slice(i, i + 2));
-  }
-
   return (
     <Document>
-      {pages.map((pair, pageIdx) => (
-        <Page key={pageIdx} size="A4" style={styles.page}>
-          {pair.map((order, idx) => (
-            <Label
-              key={order.orderNumber}
-              orderNumber={order.orderNumber}
-              fullName={order.fullName}
-              niyyah={order.niyyah}
-              intention={order.intention}
-              logoUrl={logoUrl}
-              hijriYear={hijriYear}
-              isLast={idx === pair.length - 1}
-            />
-          ))}
+      {orders.map((order) => (
+        <Page key={order.orderNumber} size="A4" style={styles.page}>
+          <Label
+            orderNumber={order.orderNumber}
+            fullName={order.fullName}
+            niyyah={order.niyyah}
+            intention={order.intention}
+            logoUrl={logoUrl}
+            hijriYear={hijriYear}
+          />
         </Page>
       ))}
     </Document>
