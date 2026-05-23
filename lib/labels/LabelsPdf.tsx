@@ -1,9 +1,13 @@
-import { Document, Page, Text, View, StyleSheet, Image as PdfImage, Font } from "@react-pdf/renderer";
+import { Document, Page, Text, View, StyleSheet, Image as PdfImage } from "@react-pdf/renderer";
 
-// Plage Unicode couvrant l'arabe standard + presentation forms (formes
-// contextuelles initiales/médianes/finales) + Arabic Supplement.
-const ARABIC_REGEX = /[؀-ۿݐ-ݿࢠ-ࣿﭐ-﷿ﹰ-﻿]/;
-const hasArabic = (text: string) => ARABIC_REGEX.test(text);
+// Police arabe DÉFINITIVEMENT désactivée : @react-pdf 4.5.1 crashe avec
+// "Cannot read properties of undefined (reading 'id')" peu importe le
+// format du src (URL HTTPS, Buffer, data URL base64). Bug profond de la
+// lib avec n'importe quelle police custom.
+//
+// Workaround retenu : les niyyahs en arabe sont translittérées en latin
+// directement en base (UPDATE orders SET niyyah = ...) AVANT impression.
+// La translit est lue par le cheikh, qui prononce de toute façon en arabe.
 
 // Une étiquette pleine page A4 (210×297mm) par commande.
 // Avant : 2 étiquettes / A4 en A5 chacune (à couper). On passe à 1 / page
@@ -96,33 +100,12 @@ function intentionBadgeLabel(intention: Intention): string | null {
 interface LabelsPdfProps {
   orders: LabelOrder[];
   logoUrl: string;
-  arabicFontDataUrl: string | null;
   year: number;
   hijriYear: number;
 }
 
-// On enregistre la police arabe via un data URL base64 pré-construit
-// côté route (cf. /api/admin/labels/route.ts).
-//
-// Historique des essais :
-// - PR #79 : src: URL HTTPS → crash "Cannot read properties of undefined
-//   (reading 'id')" pendant cold start serverless (fetch async pendant
-//   le render).
-// - PR #83 : src: Buffer Node → crash "dataUrl.substring is not a
-//   function" (Font.register exige une string).
-// - Maintenant : src: data URL base64 (string, mais sans fetch réseau).
-//   La police est inline dans le src → pas d'I/O pendant le render.
-let _arabicFontRegistered = false;
-function ensureArabicFont(arabicFontDataUrl: string | null) {
-  if (_arabicFontRegistered || !arabicFontDataUrl) return;
-  Font.register({
-    family: "NotoNaskhArabic",
-    src: arabicFontDataUrl,
-  });
-  // Désactive l'algorithme de césure (pas pertinent pour l'arabe).
-  Font.registerHyphenationCallback((word) => [word]);
-  _arabicFontRegistered = true;
-}
+// no-op — voir commentaire sur la police arabe en haut du fichier.
+function ensureArabicFont() {}
 
 function Label({
   orderNumber,
@@ -140,13 +123,7 @@ function Label({
       <Text style={styles.subtitle}>Aïd al-Adha {hijriYear}</Text>
       {badge && <Text style={styles.intentionBadge}>{badge}</Text>}
       <Text style={styles.niyyahLabel}>Niyyah</Text>
-      <Text
-        style={
-          hasArabic(niyyah)
-            ? [styles.niyyah, { fontFamily: "NotoNaskhArabic" }]
-            : styles.niyyah
-        }
-      >
+      <Text style={styles.niyyah}>
         {niyyah}
       </Text>
       <Text style={styles.name}>Commande : {fullName}</Text>
@@ -158,10 +135,9 @@ function Label({
 export default function LabelsPdf({
   orders,
   logoUrl,
-  arabicFontDataUrl,
   hijriYear,
 }: LabelsPdfProps) {
-  ensureArabicFont(arabicFontDataUrl);
+  ensureArabicFont();
 
   return (
     <Document>

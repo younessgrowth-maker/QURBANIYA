@@ -67,25 +67,8 @@ export async function GET() {
   const logoUrl = `${getBaseUrl()}/logos/export/qurbaniya-symbol-1024.png`;
   const hijriYear = HIJRI_YEAR_BY_GREGORIAN[CURRENT_YEAR] ?? CURRENT_YEAR;
 
-  // Pré-charge la police arabe en data URL base64. Font.register exige
-  // une string (URL ou data URL) — passer un Buffer brut crashe avec
-  // "dataUrl.substring is not a function". Le data URL inline la police
-  // dans le src, donc aucun fetch async pendant le render → plus de race
-  // condition au cold start (cf. PR #79 qui crashait avec URL HTTPS).
-  // Failure n'est pas bloquante — on render sans police (fallback
-  // Helvetica côté composant).
-  let arabicFontDataUrl: string | null = null;
-  try {
-    const fontRes = await fetch(`${getBaseUrl()}/fonts/NotoNaskhArabic.ttf`);
-    if (fontRes.ok) {
-      const buf = Buffer.from(await fontRes.arrayBuffer());
-      arabicFontDataUrl = `data:font/ttf;base64,${buf.toString("base64")}`;
-    } else {
-      console.warn("[labels] Arabic font fetch returned", fontRes.status);
-    }
-  } catch (e) {
-    console.warn("[labels] Arabic font preload failed:", e instanceof Error ? e.message : e);
-  }
+  // Police arabe désactivée — voir commentaire dans LabelsPdf.tsx.
+  // Workaround : translittérer les niyyahs arabes en base avant impression.
 
   // renderToBuffer (vs renderToStream) attend que tout le PDF soit généré
   // avant de retourner — permet un try/catch propre. Avec renderToStream,
@@ -97,7 +80,6 @@ export async function GET() {
       React.createElement(LabelsPdf, {
         orders: labelOrders,
         logoUrl,
-        arabicFontDataUrl,
         year: CURRENT_YEAR,
         hijriYear,
       }) as React.ReactElement<DocumentProps>
