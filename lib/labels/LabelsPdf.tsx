@@ -96,24 +96,28 @@ function intentionBadgeLabel(intention: Intention): string | null {
 interface LabelsPdfProps {
   orders: LabelOrder[];
   logoUrl: string;
-  arabicFontBuffer: Buffer | null;
+  arabicFontDataUrl: string | null;
   year: number;
   hijriYear: number;
 }
 
-// On enregistre la police arabe via un Buffer pré-chargé côté route
-// (cf. /api/admin/labels/route.ts). Différence avec la 1ère tentative
-// (PR #79) : on passait src: URL HTTPS, ce qui faisait crasher @react-pdf
-// 4.5.1 ("Cannot read properties of undefined (reading 'id')") pendant
-// le cold start serverless car Font.register essayait de fetch async
-// pendant le render. Avec un Buffer pré-chargé, plus de fetch async :
-// la police est dispo immédiatement quand register est appelé.
+// On enregistre la police arabe via un data URL base64 pré-construit
+// côté route (cf. /api/admin/labels/route.ts).
+//
+// Historique des essais :
+// - PR #79 : src: URL HTTPS → crash "Cannot read properties of undefined
+//   (reading 'id')" pendant cold start serverless (fetch async pendant
+//   le render).
+// - PR #83 : src: Buffer Node → crash "dataUrl.substring is not a
+//   function" (Font.register exige une string).
+// - Maintenant : src: data URL base64 (string, mais sans fetch réseau).
+//   La police est inline dans le src → pas d'I/O pendant le render.
 let _arabicFontRegistered = false;
-function ensureArabicFont(arabicFontBuffer: Buffer | null) {
-  if (_arabicFontRegistered || !arabicFontBuffer) return;
+function ensureArabicFont(arabicFontDataUrl: string | null) {
+  if (_arabicFontRegistered || !arabicFontDataUrl) return;
   Font.register({
     family: "NotoNaskhArabic",
-    src: arabicFontBuffer as unknown as string, // @react-pdf accepte Buffer
+    src: arabicFontDataUrl,
   });
   // Désactive l'algorithme de césure (pas pertinent pour l'arabe).
   Font.registerHyphenationCallback((word) => [word]);
@@ -154,10 +158,10 @@ function Label({
 export default function LabelsPdf({
   orders,
   logoUrl,
-  arabicFontBuffer,
+  arabicFontDataUrl,
   hijriYear,
 }: LabelsPdfProps) {
-  ensureArabicFont(arabicFontBuffer);
+  ensureArabicFont(arabicFontDataUrl);
 
   return (
     <Document>

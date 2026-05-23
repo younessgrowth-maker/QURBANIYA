@@ -67,17 +67,19 @@ export async function GET() {
   const logoUrl = `${getBaseUrl()}/logos/export/qurbaniya-symbol-1024.png`;
   const hijriYear = HIJRI_YEAR_BY_GREGORIAN[CURRENT_YEAR] ?? CURRENT_YEAR;
 
-  // Pré-charge la police arabe en Buffer. La 1ère tentative (PR #79)
-  // passait l'URL HTTPS à Font.register, ce qui faisait crasher @react-pdf
-  // pendant le cold start serverless. En pré-fetchant ici on garantit que
-  // la police est dispo quand Font.register est appelé pendant le render.
-  // Failure n'est pas bloquante — on render sans la police (cf. fallback
+  // Pré-charge la police arabe en data URL base64. Font.register exige
+  // une string (URL ou data URL) — passer un Buffer brut crashe avec
+  // "dataUrl.substring is not a function". Le data URL inline la police
+  // dans le src, donc aucun fetch async pendant le render → plus de race
+  // condition au cold start (cf. PR #79 qui crashait avec URL HTTPS).
+  // Failure n'est pas bloquante — on render sans police (fallback
   // Helvetica côté composant).
-  let arabicFontBuffer: Buffer | null = null;
+  let arabicFontDataUrl: string | null = null;
   try {
     const fontRes = await fetch(`${getBaseUrl()}/fonts/NotoNaskhArabic.ttf`);
     if (fontRes.ok) {
-      arabicFontBuffer = Buffer.from(await fontRes.arrayBuffer());
+      const buf = Buffer.from(await fontRes.arrayBuffer());
+      arabicFontDataUrl = `data:font/ttf;base64,${buf.toString("base64")}`;
     } else {
       console.warn("[labels] Arabic font fetch returned", fontRes.status);
     }
@@ -95,7 +97,7 @@ export async function GET() {
       React.createElement(LabelsPdf, {
         orders: labelOrders,
         logoUrl,
-        arabicFontBuffer,
+        arabicFontDataUrl,
         year: CURRENT_YEAR,
         hijriYear,
       }) as React.ReactElement<DocumentProps>
