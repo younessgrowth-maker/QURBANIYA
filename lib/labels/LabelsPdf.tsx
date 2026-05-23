@@ -37,6 +37,20 @@ const styles = StyleSheet.create({
     color: "#888888",
     marginBottom: 32,
   },
+  intentionBadge: {
+    fontSize: 11,
+    fontWeight: "bold",
+    color: "#B8860B",
+    backgroundColor: "#FDF6E3",
+    paddingTop: 4,
+    paddingBottom: 4,
+    paddingLeft: 12,
+    paddingRight: 12,
+    borderRadius: 4,
+    textTransform: "uppercase",
+    letterSpacing: 2,
+    marginBottom: 10,
+  },
   niyyahLabel: {
     fontSize: 10,
     color: "#888888",
@@ -64,10 +78,19 @@ const styles = StyleSheet.create({
   },
 });
 
+type Intention = "pour_moi" | "famille" | "sadaqa";
+
 interface LabelOrder {
   orderNumber: number;
   fullName: string;
   niyyah: string;
+  intention: Intention;
+}
+
+function intentionBadgeLabel(intention: Intention): string | null {
+  if (intention === "famille") return "En famille";
+  if (intention === "sadaqa") return "Sadaqa";
+  return null; // pour_moi → pas de badge (cas par défaut)
 }
 
 interface LabelsPdfProps {
@@ -81,15 +104,18 @@ function Label({
   orderNumber,
   fullName,
   niyyah,
+  intention,
   logoUrl,
   hijriYear,
   isLast,
 }: LabelOrder & { logoUrl: string; hijriYear: number; isLast: boolean }) {
+  const badge = intentionBadgeLabel(intention);
   return (
     <View style={isLast ? styles.labelLast : styles.label}>
       <PdfImage src={logoUrl} style={styles.logo} />
       <Text style={styles.brand}>Qurbaniya.fr</Text>
       <Text style={styles.subtitle}>Aïd al-Adha {hijriYear}</Text>
+      {badge && <Text style={styles.intentionBadge}>{badge}</Text>}
       <Text style={styles.niyyahLabel}>Niyyah</Text>
       <Text style={styles.niyyah}>{niyyah}</Text>
       <Text style={styles.name}>Commande : {fullName}</Text>
@@ -118,6 +144,7 @@ export default function LabelsPdf({
               orderNumber={order.orderNumber}
               fullName={order.fullName}
               niyyah={order.niyyah}
+              intention={order.intention}
               logoUrl={logoUrl}
               hijriYear={hijriYear}
               isLast={idx === pair.length - 1}
