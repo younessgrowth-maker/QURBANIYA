@@ -154,12 +154,18 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "order_id or all=true required" }, { status: 400 });
   }
 
+  // Filtre IMPORTANT : on exclut les commandes déjà relancées (soit par le
+  // cron auto, soit par un clic précédent sur ce même bouton). Sinon l'admin
+  // qui clique 2x sur "Relancer pending" renvoie 2 emails à chaque client.
+  // Le mode 'single' (order_id) ne filtre pas — l'admin peut toujours forcer
+  // une re-relance ponctuelle via le bouton "Relancer" individuel sur la ligne.
   const { data: orders, error } = await supabase
     .from("orders")
     .select("*")
     .eq("payment_status", "pending")
     .eq("payment_method", "stripe")
     .not("stripe_session_id", "is", null)
+    .is("reminder_sent_at", null)
     .order("created_at", { ascending: false });
 
   if (error) {
