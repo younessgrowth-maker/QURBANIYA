@@ -14,72 +14,71 @@ import { Document, Page, Text, View, StyleSheet, Image as PdfImage } from "@reac
 // pour plus de lisibilité au moment du sacrifice + moins d'erreurs de
 // manipulation côté équipe.
 const styles = StyleSheet.create({
-  // Le centrage est fait directement sur Page (et non sur un View flex:1
-  // imbriqué) : avec flex:1 + padding, @react-pdf 4.5.1 calcule mal la
-  // hauteur du contenu et insère une page de débordement vide après
-  // chaque vraie page. Symptôme constaté : 280 pages au lieu de 172.
+  // Layout compact pour que tout rentre dans une A4 paysage (595pt × 421pt
+  // utiles avec padding 30). On laisse couler depuis le haut sans
+  // justifyContent center sur Page : ça évitait le pb des pages en
+  // double, mais avec badge le contenu débordait sur une 2e page.
   page: {
     flexDirection: "column",
     backgroundColor: "#FFFFFF",
-    padding: 48,
-    justifyContent: "center",
+    padding: 30,
     alignItems: "center",
   },
   label: {
     alignItems: "center",
   },
   logo: {
-    width: 90,
-    height: 90,
-    marginBottom: 12,
+    width: 70,
+    height: 70,
+    marginBottom: 8,
   },
   brand: {
-    fontSize: 26,
+    fontSize: 22,
     fontWeight: "bold",
     color: "#2D6A4F",
-    marginBottom: 4,
+    marginBottom: 2,
   },
   subtitle: {
-    fontSize: 14,
+    fontSize: 12,
     color: "#888888",
-    marginBottom: 48,
+    marginBottom: 22,
   },
   intentionBadge: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: "bold",
     color: "#B8860B",
     backgroundColor: "#FDF6E3",
-    paddingTop: 6,
-    paddingBottom: 6,
-    paddingLeft: 18,
-    paddingRight: 18,
-    borderRadius: 6,
-    textTransform: "uppercase",
-    letterSpacing: 2,
-    marginBottom: 10,
-  },
-  niyyahLabel: {
-    fontSize: 14,
-    color: "#888888",
+    paddingTop: 4,
+    paddingBottom: 4,
+    paddingLeft: 14,
+    paddingRight: 14,
+    borderRadius: 4,
     textTransform: "uppercase",
     letterSpacing: 2,
     marginBottom: 8,
   },
+  niyyahLabel: {
+    fontSize: 12,
+    color: "#888888",
+    textTransform: "uppercase",
+    letterSpacing: 2,
+    marginBottom: 6,
+  },
   niyyah: {
-    fontSize: 44,
+    fontSize: 38,
     fontWeight: "bold",
     textAlign: "center",
-    marginBottom: 36,
+    marginBottom: 22,
     color: "#2D6A4F",
   },
   name: {
-    fontSize: 18,
+    fontSize: 16,
     textAlign: "center",
-    marginBottom: 48,
+    marginBottom: 22,
     color: "#555555",
   },
   number: {
-    fontSize: 80,
+    fontSize: 64,
     fontWeight: "bold",
     color: "#B8860B",
   },
