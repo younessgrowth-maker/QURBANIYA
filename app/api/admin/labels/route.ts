@@ -56,6 +56,7 @@ export async function GET() {
   const labelOrders = (orders as Order[]).map((order, idx) => ({
     orderNumber: idx + 1,
     fullName: `${order.prenom} ${order.nom}`.toUpperCase(),
+    niyyah: order.niyyah?.trim() || `${order.prenom} ${order.nom}`,
   }));
 
   const logoUrl = `${getBaseUrl()}/logos/export/qurbaniya-symbol-1024.png`;

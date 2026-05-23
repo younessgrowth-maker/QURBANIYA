@@ -37,12 +37,25 @@ const styles = StyleSheet.create({
     color: "#888888",
     marginBottom: 32,
   },
-  name: {
-    fontSize: 26,
+  niyyahLabel: {
+    fontSize: 10,
+    color: "#888888",
+    textTransform: "uppercase",
+    letterSpacing: 1,
+    marginBottom: 4,
+  },
+  niyyah: {
+    fontSize: 28,
     fontWeight: "bold",
     textAlign: "center",
+    marginBottom: 18,
+    color: "#2D6A4F",
+  },
+  name: {
+    fontSize: 14,
+    textAlign: "center",
     marginBottom: 24,
-    color: "#111111",
+    color: "#555555",
   },
   number: {
     fontSize: 48,
@@ -54,6 +67,7 @@ const styles = StyleSheet.create({
 interface LabelOrder {
   orderNumber: number;
   fullName: string;
+  niyyah: string;
 }
 
 interface LabelsPdfProps {
@@ -66,6 +80,7 @@ interface LabelsPdfProps {
 function Label({
   orderNumber,
   fullName,
+  niyyah,
   logoUrl,
   hijriYear,
   isLast,
@@ -75,7 +90,9 @@ function Label({
       <PdfImage src={logoUrl} style={styles.logo} />
       <Text style={styles.brand}>Qurbaniya.fr</Text>
       <Text style={styles.subtitle}>Aïd al-Adha {hijriYear}</Text>
-      <Text style={styles.name}>{fullName}</Text>
+      <Text style={styles.niyyahLabel}>Niyyah</Text>
+      <Text style={styles.niyyah}>{niyyah}</Text>
+      <Text style={styles.name}>Commande : {fullName}</Text>
       <Text style={styles.number}>N°{orderNumber}</Text>
     </View>
   );
@@ -100,6 +117,7 @@ export default function LabelsPdf({
               key={order.orderNumber}
               orderNumber={order.orderNumber}
               fullName={order.fullName}
+              niyyah={order.niyyah}
               logoUrl={logoUrl}
               hijriYear={hijriYear}
               isLast={idx === pair.length - 1}
