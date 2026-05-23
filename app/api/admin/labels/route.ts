@@ -57,6 +57,7 @@ export async function GET() {
     orderNumber: idx + 1,
     fullName: `${order.prenom} ${order.nom}`.toUpperCase(),
     niyyah: order.niyyah?.trim() || `${order.prenom} ${order.nom}`,
+    intention: order.intention,
   }));
 
   const logoUrl = `${getBaseUrl()}/logos/export/qurbaniya-symbol-1024.png`;
