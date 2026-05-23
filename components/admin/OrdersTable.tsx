@@ -155,7 +155,8 @@ function RelanceAllButton({ orders }: { orders: Order[] }) {
         (o) =>
           o.payment_status === "pending" &&
           o.payment_method === "stripe" &&
-          o.stripe_session_id,
+          o.stripe_session_id &&
+          !o.reminder_sent_at, // anti re-spam : exclut les pending déjà relancés (cron auto ou bouton manuel)
       ),
     [orders],
   );
@@ -164,7 +165,7 @@ function RelanceAllButton({ orders }: { orders: Order[] }) {
 
   async function handleRelanceAll() {
     if (!window.confirm(
-      `Relancer les ${eligible.length} commande(s) en attente par email + WhatsApp ?\n\nDélai 1.5s entre chaque envoi. Si > 10 commandes, certaines seront sautées (timeout Vercel 60s).`
+      `Relancer les ${eligible.length} commande(s) en attente (non encore relancées) par email + WhatsApp ?\n\nUn seul envoi par commande grâce au flag reminder_sent_at. Délai 1.5s entre chaque envoi.`
     )) return;
 
     setState("loading");
