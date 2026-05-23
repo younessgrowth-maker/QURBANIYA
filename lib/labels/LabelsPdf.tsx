@@ -14,15 +14,18 @@ import { Document, Page, Text, View, StyleSheet, Image as PdfImage } from "@reac
 // pour plus de lisibilité au moment du sacrifice + moins d'erreurs de
 // manipulation côté équipe.
 const styles = StyleSheet.create({
+  // Le centrage est fait directement sur Page (et non sur un View flex:1
+  // imbriqué) : avec flex:1 + padding, @react-pdf 4.5.1 calcule mal la
+  // hauteur du contenu et insère une page de débordement vide après
+  // chaque vraie page. Symptôme constaté : 280 pages au lieu de 172.
   page: {
     flexDirection: "column",
     backgroundColor: "#FFFFFF",
-    padding: 0,
-  },
-  label: {
-    flex: 1,
     padding: 48,
     justifyContent: "center",
+    alignItems: "center",
+  },
+  label: {
     alignItems: "center",
   },
   logo: {
