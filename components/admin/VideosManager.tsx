@@ -181,7 +181,13 @@ export default function VideosManager({ initialOrders }: VideosManagerProps) {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ order_id: match.order.id, video_path: path }),
         });
-        if (!updateRes.ok) throw new Error("update failed");
+        if (!updateRes.ok) {
+          const errBody = await updateRes.json().catch(() => ({}));
+          console.error("update failed:", errBody);
+          throw new Error(
+            errBody.details || errBody.error || `update ${updateRes.status}`,
+          );
+        }
 
         updateOrder(detectedNumber, {
           status: "uploaded",

@@ -36,7 +36,18 @@ export async function POST(req: NextRequest) {
 
   if (error) {
     console.error("Video update failed:", error);
-    return NextResponse.json({ error: "Update failed" }, { status: 500 });
+    // Expose le message Postgres exact dans la response (endpoint admin
+    // protégé donc OK de leak les détails techniques au front, ça permet
+    // de débugger directement depuis la console DevTools).
+    return NextResponse.json(
+      {
+        error: "Update failed",
+        details: error.message,
+        code: error.code,
+        hint: error.hint,
+      },
+      { status: 500 }
+    );
   }
 
   if (!data) {
