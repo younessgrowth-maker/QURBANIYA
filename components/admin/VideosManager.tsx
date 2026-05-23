@@ -26,29 +26,43 @@ interface VideosManagerProps {
   initialOrders: OrderWithNumber[];
 }
 
-// Extrait la première frame utile d'un fichier vidéo (à 0.5s pour éviter la
-// frame noire d'ouverture). Retourne un canvas prêt pour l'OCR.
-async function extractFrame(file: File): Promise<HTMLCanvasElement> {
+// Extrait plusieurs frames de la vidéo (à 0.5s, 2s, 4s, 6s) pour donner
+// plusieurs chances à l'OCR. Safari fait parfois un seek imprécis qui
+// tombe sur une frame floue/noire → on essaie plusieurs timestamps et
+// le caller s'arrête au premier OCR réussi (early exit).
+async function* extractFrames(file: File): AsyncGenerator<HTMLCanvasElement> {
   const url = URL.createObjectURL(file);
+  const video = document.createElement("video");
+  video.src = url;
+  video.muted = true;
+  video.playsInline = true;
+  video.preload = "auto";
   try {
-    const video = document.createElement("video");
-    video.src = url;
-    video.muted = true;
-    video.playsInline = true;
     await new Promise<void>((resolve, reject) => {
       video.onloadedmetadata = () => resolve();
       video.onerror = () => reject(new Error("video load failed"));
     });
-    video.currentTime = Math.min(0.5, video.duration);
-    await new Promise<void>((resolve) => { video.onseeked = () => resolve(); });
 
-    const canvas = document.createElement("canvas");
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) throw new Error("canvas context failed");
-    ctx.drawImage(video, 0, 0);
-    return canvas;
+    const duration = video.duration;
+    const timestamps = [0.5, 2, 4, 6, 8].filter((t) => t < duration);
+    if (timestamps.length === 0) timestamps.push(Math.max(0, duration / 2));
+
+    for (const t of timestamps) {
+      video.currentTime = t;
+      await new Promise<void>((resolve) => {
+        video.onseeked = () => resolve();
+      });
+      // Petit délai supplémentaire pour laisser le frame buffer se peindre
+      await new Promise((r) => setTimeout(r, 100));
+
+      const canvas = document.createElement("canvas");
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) continue;
+      ctx.drawImage(video, 0, 0);
+      yield canvas;
+    }
   } finally {
     URL.revokeObjectURL(url);
   }
@@ -114,9 +128,18 @@ export default function VideosManager({ initialOrders }: VideosManagerProps) {
 
       let detectedNumber: number | null = null;
       try {
-        const canvas = await extractFrame(file);
-        const { data: { text } } = await workerRef.current.recognize(canvas);
-        detectedNumber = parseNumber(text);
+        // Multi-frame OCR : essaie plusieurs timestamps (0.5s, 2s, 4s, 6s, 8s)
+        // et arrête au premier qui détecte un N°X. Safari fait parfois un
+        // seek imprécis qui tombe sur une frame floue → multi-essai indispensable.
+        for await (const canvas of extractFrames(file)) {
+          if (!workerRef.current) break;
+          const { data: { text } } = await workerRef.current.recognize(canvas);
+          const n = parseNumber(text);
+          if (n !== null) {
+            detectedNumber = n;
+            break;
+          }
+        }
       } catch (err) {
         console.error("OCR failed for", file.name, err);
       }
