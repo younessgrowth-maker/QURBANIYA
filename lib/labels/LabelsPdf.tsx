@@ -92,7 +92,6 @@ function intentionBadgeLabel(intention: Intention): string | null {
 interface LabelsPdfProps {
   orders: LabelOrder[];
   logoUrl: string;
-  arabicFontUrl: string;
   year: number;
   hijriYear: number;
 }
@@ -107,9 +106,9 @@ interface LabelsPdfProps {
 // Suspect : Font.register avec src HTTPS qui timeout pendant le cold
 // start serverless Vercel, laissant la sourcesArray dans un état
 // inconsistant que le rendering n'attend pas.
-function ensureArabicFont(_arabicFontUrl: string) {
-  // no-op temporaire — voir commentaire ci-dessus
-  // À ré-activer une fois la cause root identifiée :
+function ensureArabicFont() {
+  // no-op temporaire — voir commentaire ci-dessus.
+  // À ré-activer (avec import Font) une fois la cause root identifiée :
   //   Font.register({ family: "NotoNaskhArabic", src: arabicFontUrl });
   //   Font.registerHyphenationCallback((word) => [word]);
 }
@@ -143,10 +142,9 @@ function Label({
 export default function LabelsPdf({
   orders,
   logoUrl,
-  arabicFontUrl,
   hijriYear,
 }: LabelsPdfProps) {
-  ensureArabicFont(arabicFontUrl);
+  ensureArabicFont();
 
   return (
     <Document>

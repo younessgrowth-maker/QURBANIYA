@@ -65,7 +65,7 @@ export async function GET() {
   }));
 
   const logoUrl = `${getBaseUrl()}/logos/export/qurbaniya-symbol-1024.png`;
-  const arabicFontUrl = `${getBaseUrl()}/fonts/NotoNaskhArabic.ttf`;
+  // arabicFontUrl temporairement retiré — voir ensureArabicFont() dans LabelsPdf.tsx
   const hijriYear = HIJRI_YEAR_BY_GREGORIAN[CURRENT_YEAR] ?? CURRENT_YEAR;
 
   // renderToBuffer (vs renderToStream) attend que tout le PDF soit généré
@@ -78,7 +78,6 @@ export async function GET() {
       React.createElement(LabelsPdf, {
         orders: labelOrders,
         logoUrl,
-        arabicFontUrl,
         year: CURRENT_YEAR,
         hijriYear,
       }) as React.ReactElement<DocumentProps>
