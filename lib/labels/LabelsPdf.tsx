@@ -1,9 +1,5 @@
-import { Document, Page, Text, View, StyleSheet, Image as PdfImage, Font } from "@react-pdf/renderer";
-
-// Plage Unicode couvrant l'arabe standard + presentation forms (formes
-// contextuelles initiales/médianes/finales) + Arabic Supplement.
-const ARABIC_REGEX = /[؀-ۿݐ-ݿࢠ-ࣿﭐ-﷿ﹰ-﻿]/;
-const hasArabic = (text: string) => ARABIC_REGEX.test(text);
+import { Document, Page, Text, View, StyleSheet, Image as PdfImage } from "@react-pdf/renderer";
+// Font import temporairement retiré — voir ensureArabicFont() pour contexte.
 
 // Une étiquette pleine page A4 (210×297mm) par commande.
 // Avant : 2 étiquettes / A4 en A5 chacune (à couper). On passe à 1 / page
@@ -96,25 +92,25 @@ function intentionBadgeLabel(intention: Intention): string | null {
 interface LabelsPdfProps {
   orders: LabelOrder[];
   logoUrl: string;
-  arabicFontUrl: string;
   year: number;
   hijriYear: number;
 }
 
-// On enregistre la police arabe une seule fois. URL passée depuis la route
-// (cf. /api/admin/labels/route.ts) car @react-pdf charge depuis HTTPS au
-// rendu serveur — accès au filesystem Vercel pas garanti.
-let _arabicFontRegistered = false;
-function ensureArabicFont(arabicFontUrl: string) {
-  if (_arabicFontRegistered) return;
-  Font.register({
-    family: "NotoNaskhArabic",
-    src: arabicFontUrl,
-  });
-  // Désactive l'algorithme de césure (pas pertinent pour l'arabe et
-  // peut casser les ligatures).
-  Font.registerHyphenationCallback((word) => [word]);
-  _arabicFontRegistered = true;
+// TEMPORAIRE — le fix police arabe (PR #79) cause un crash interne de
+// @react-pdf 4.5.1 ("Cannot read properties of undefined (reading 'id')")
+// qui retourne un PDF vide en prod. On désactive le Font.register en
+// attendant un fix propre post-Aïd. Conséquence : les ~2 niyyahs en
+// arabe (5f0c, a576) seront rendues en "GDG# H RFNDHODR9#" sur leur
+// étiquette. À corriger manuellement avant impression.
+//
+// Suspect : Font.register avec src HTTPS qui timeout pendant le cold
+// start serverless Vercel, laissant la sourcesArray dans un état
+// inconsistant que le rendering n'attend pas.
+function ensureArabicFont() {
+  // no-op temporaire — voir commentaire ci-dessus.
+  // À ré-activer (avec import Font) une fois la cause root identifiée :
+  //   Font.register({ family: "NotoNaskhArabic", src: arabicFontUrl });
+  //   Font.registerHyphenationCallback((word) => [word]);
 }
 
 function Label({
@@ -133,15 +129,10 @@ function Label({
       <Text style={styles.subtitle}>Aïd al-Adha {hijriYear}</Text>
       {badge && <Text style={styles.intentionBadge}>{badge}</Text>}
       <Text style={styles.niyyahLabel}>Niyyah</Text>
-      <Text
-        style={
-          hasArabic(niyyah)
-            ? [styles.niyyah, { fontFamily: "NotoNaskhArabic" }]
-            : styles.niyyah
-        }
-      >
-        {niyyah}
-      </Text>
+      {/* TEMPORAIRE — fontFamily NotoNaskhArabic désactivé suite au crash
+          @react-pdf en prod. Les niyyahs arabes sont rendues en glyphs
+          Helvetica par défaut (illisible). Voir ensureArabicFont(). */}
+      <Text style={styles.niyyah}>{niyyah}</Text>
       <Text style={styles.name}>Commande : {fullName}</Text>
       <Text style={styles.number}>N°{orderNumber}</Text>
     </View>
@@ -151,10 +142,9 @@ function Label({
 export default function LabelsPdf({
   orders,
   logoUrl,
-  arabicFontUrl,
   hijriYear,
 }: LabelsPdfProps) {
-  ensureArabicFont(arabicFontUrl);
+  ensureArabicFont();
 
   return (
     <Document>
