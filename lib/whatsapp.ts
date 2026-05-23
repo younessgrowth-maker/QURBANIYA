@@ -83,6 +83,25 @@ Si tu as une question, réponds à ce message.
 — L'équipe Qurbaniya`;
 }
 
+/** Template du message de livraison vidéo de sacrifice. */
+export function videoDeliveryMessage(
+  prenom: string,
+  niyyah: string,
+  videoUrl: string,
+): string {
+  return `Salam ${prenom} 🌙
+
+Aïd Moubarak ! La vidéo nominative de votre sacrifice au nom de *${niyyah}* est prête.
+
+👉 Regardez ou téléchargez ici (lien valide 90 jours) :
+${videoUrl}
+
+Qu'Allah accepte de vous et de votre famille.
+Taqabbal Allahou minna wa minkoum.
+
+— L'équipe Qurbaniya`;
+}
+
 /** Template du message d'annonce du programme parrainage. */
 export function referralLaunchMessage(prenom: string, code: string): string {
   return `Salam ${prenom} 🌙

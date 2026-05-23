@@ -3,6 +3,7 @@ import { z } from "zod";
 import { createServerSupabaseClient, createServiceRoleClient } from "@/lib/supabase/server";
 import { isAdminEmail } from "@/lib/admin";
 import { sendVideoDelivery } from "@/lib/resend";
+import { normalizePhone, sendWhatsAppText, videoDeliveryMessage } from "@/lib/whatsapp";
 import type { Order } from "@/types";
 
 // Envoie au client l'email avec le lien signé vers sa vidéo (expire 90 jours).
@@ -63,11 +64,33 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Signed URL failed" }, { status: 500 });
   }
 
+  // ─── 1. Email (bloquant — l'email est la garantie principale de livraison) ───
   try {
     await sendVideoDelivery(order as Order, signed.signedUrl);
   } catch (emailError) {
     console.error("Video delivery email failed:", emailError);
     return NextResponse.json({ error: "Email send failed" }, { status: 500 });
+  }
+
+  // ─── 2. WhatsApp (best-effort — n'échoue PAS la requête si ça plante) ───
+  // On envoie un message texte avec le lien signé, pas la vidéo en pièce jointe
+  // (moins lourd, moins de chance de re-déclencher une restriction Whapi).
+  // Si le numéro est invalide ou Whapi 401, on log et on continue.
+  let waSent = false;
+  let waError: string | null = null;
+  const phone = normalizePhone((order as Order).telephone);
+  if (phone) {
+    try {
+      const niyyahText = (order as Order).niyyah || `${(order as Order).prenom} ${(order as Order).nom}`;
+      const msg = videoDeliveryMessage((order as Order).prenom, niyyahText, signed.signedUrl);
+      await sendWhatsAppText({ to: phone, body: msg });
+      waSent = true;
+    } catch (e) {
+      waError = e instanceof Error ? e.message.slice(0, 200) : "unknown";
+      console.warn("Video delivery WA failed:", waError);
+    }
+  } else {
+    waError = "phone invalid";
   }
 
   const sentAt = new Date().toISOString();
@@ -76,5 +99,10 @@ export async function POST(req: NextRequest) {
     .update({ video_sent: true, video_sent_at: sentAt, updated_at: sentAt })
     .eq("id", order.id);
 
-  return NextResponse.json({ ok: true });
+  return NextResponse.json({
+    ok: true,
+    email_sent: true,
+    wa_sent: waSent,
+    wa_error: waError,
+  });
 }

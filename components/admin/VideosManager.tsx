@@ -223,11 +223,16 @@ export default function VideosManager({ initialOrders }: VideosManagerProps) {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ order_id: order.id }),
         });
+        const body = await res.json().catch(() => ({} as { error?: string; wa_sent?: boolean; wa_error?: string }));
         if (!res.ok) {
-          const { error } = await res.json().catch(() => ({ error: "send failed" }));
-          throw new Error(error);
+          throw new Error(body.error || "send failed");
         }
-        updateOrder(order.order_number, { status: "sent", message: undefined });
+        // L'email est forcément parti si on est ici (la route renvoie 500 sinon).
+        // Le WA est best-effort : on affiche le résultat dans le message.
+        const waNote = body.wa_sent
+          ? "Email ✓ WA ✓"
+          : `Email ✓ WA ✗ ${body.wa_error ?? ""}`.trim();
+        updateOrder(order.order_number, { status: "sent", message: waNote });
       } catch (err) {
         updateOrder(order.order_number, {
           status: "error",
