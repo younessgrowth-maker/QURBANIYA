@@ -1,4 +1,9 @@
-import { Document, Page, Text, View, StyleSheet, Image as PdfImage } from "@react-pdf/renderer";
+import { Document, Page, Text, View, StyleSheet, Image as PdfImage, Font } from "@react-pdf/renderer";
+
+// Plage Unicode couvrant l'arabe standard + presentation forms (formes
+// contextuelles initiales/médianes/finales) + Arabic Supplement.
+const ARABIC_REGEX = /[؀-ۿݐ-ݿࢠ-ࣿﭐ-﷿ﹰ-﻿]/;
+const hasArabic = (text: string) => ARABIC_REGEX.test(text);
 
 // Deux étiquettes par page A4 (format A5 chacune, 148×210mm ~ format de celles
 // utilisées en 2025). À imprimer puis couper en deux.
@@ -96,8 +101,25 @@ function intentionBadgeLabel(intention: Intention): string | null {
 interface LabelsPdfProps {
   orders: LabelOrder[];
   logoUrl: string;
+  arabicFontUrl: string;
   year: number;
   hijriYear: number;
+}
+
+// On enregistre la police arabe une seule fois. URL passée depuis la route
+// (cf. /api/admin/labels/route.ts) car @react-pdf charge depuis HTTPS au
+// rendu serveur — accès au filesystem Vercel pas garanti.
+let _arabicFontRegistered = false;
+function ensureArabicFont(arabicFontUrl: string) {
+  if (_arabicFontRegistered) return;
+  Font.register({
+    family: "NotoNaskhArabic",
+    src: arabicFontUrl,
+  });
+  // Désactive l'algorithme de césure (pas pertinent pour l'arabe et
+  // peut casser les ligatures).
+  Font.registerHyphenationCallback((word) => [word]);
+  _arabicFontRegistered = true;
 }
 
 function Label({
@@ -117,7 +139,15 @@ function Label({
       <Text style={styles.subtitle}>Aïd al-Adha {hijriYear}</Text>
       {badge && <Text style={styles.intentionBadge}>{badge}</Text>}
       <Text style={styles.niyyahLabel}>Niyyah</Text>
-      <Text style={styles.niyyah}>{niyyah}</Text>
+      <Text
+        style={
+          hasArabic(niyyah)
+            ? [styles.niyyah, { fontFamily: "NotoNaskhArabic" }]
+            : styles.niyyah
+        }
+      >
+        {niyyah}
+      </Text>
       <Text style={styles.name}>Commande : {fullName}</Text>
       <Text style={styles.number}>N°{orderNumber}</Text>
     </View>
@@ -127,8 +157,11 @@ function Label({
 export default function LabelsPdf({
   orders,
   logoUrl,
+  arabicFontUrl,
   hijriYear,
 }: LabelsPdfProps) {
+  ensureArabicFont(arabicFontUrl);
+
   const pages: LabelOrder[][] = [];
   for (let i = 0; i < orders.length; i += 2) {
     pages.push(orders.slice(i, i + 2));

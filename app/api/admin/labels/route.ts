@@ -61,12 +61,14 @@ export async function GET() {
   }));
 
   const logoUrl = `${getBaseUrl()}/logos/export/qurbaniya-symbol-1024.png`;
+  const arabicFontUrl = `${getBaseUrl()}/fonts/NotoNaskhArabic.ttf`;
   const hijriYear = HIJRI_YEAR_BY_GREGORIAN[CURRENT_YEAR] ?? CURRENT_YEAR;
 
   const pdfStream = await renderToStream(
     React.createElement(LabelsPdf, {
       orders: labelOrders,
       logoUrl,
+      arabicFontUrl,
       year: CURRENT_YEAR,
       hijriYear,
     }) as React.ReactElement<DocumentProps>
