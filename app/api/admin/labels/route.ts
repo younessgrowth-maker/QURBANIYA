@@ -6,6 +6,7 @@ import { isAdminEmail } from "@/lib/admin";
 import { CURRENT_YEAR } from "@/lib/constants";
 import { getBaseUrl } from "@/lib/utils";
 import LabelsPdf from "@/lib/labels/LabelsPdf";
+import { expandOrderToSacrifices } from "@/lib/sacrifices";
 import type { Order } from "@/types";
 
 // PDF generation peut prendre plusieurs secondes pour 171+ commandes,
@@ -57,12 +58,21 @@ export async function GET() {
     );
   }
 
-  const labelOrders = (orders as Order[]).map((order, idx) => ({
-    orderNumber: idx + 1,
-    fullName: `${order.prenom} ${order.nom}`.toUpperCase(),
-    niyyah: order.niyyah?.trim() || `${order.prenom} ${order.nom}`,
-    intention: order.intention,
-  }));
+  // Fan-out commande → N sacrifices. Une commande multi-mouton génère N
+  // étiquettes consécutives (12a, 12b, ...) avec niyyahs/intentions
+  // distinctes lues depuis sacrifices[]. Une commande single-mouton garde
+  // sa numérotation classique (12).
+  const labelItems = (orders as Order[]).flatMap((order, idx) => {
+    const items = expandOrderToSacrifices(order, idx + 1);
+    return items.map((item) => ({
+      combinedLabel: item.combinedLabel,
+      fullName: item.fullName,
+      niyyah: item.niyyah,
+      intention: item.intention,
+      totalForOrder: item.quantity,
+      positionInOrder: item.sacrificeIndex + 1,
+    }));
+  });
 
   const logoUrl = `${getBaseUrl()}/logos/export/qurbaniya-symbol-1024.png`;
   const hijriYear = HIJRI_YEAR_BY_GREGORIAN[CURRENT_YEAR] ?? CURRENT_YEAR;
@@ -78,7 +88,7 @@ export async function GET() {
   try {
     buffer = await renderToBuffer(
       React.createElement(LabelsPdf, {
-        orders: labelOrders,
+        items: labelItems,
         logoUrl,
         year: CURRENT_YEAR,
         hijriYear,

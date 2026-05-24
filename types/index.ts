@@ -52,6 +52,10 @@ export interface Order {
   // Array de longueur = quantity. La 1re entrée miroir niyyah/intention
   // top-level pour backward compat.
   sacrifices: Array<{ niyyah: string; intention: Intention }>;
+  // Multi-vidéos par commande (migration 0020). Array de paths Supabase
+  // Storage de longueur = quantity. La 1re entrée miroir video_url pour
+  // backward compat.
+  video_paths: string[];
   created_at: string;
   updated_at: string;
 }

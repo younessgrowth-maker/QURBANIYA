@@ -553,16 +553,45 @@ export async function sendAbandonedCartReminder(order: Order, resumeUrl: string)
 }
 
 /* ═══════════════════════════════════════════
-   EMAIL 4 — LIVRAISON DE LA VIDÉO
+   EMAIL 4 — LIVRAISON DE LA VIDÉO (ou des vidéos pour multi-mouton)
    ═══════════════════════════════════════════ */
-export async function sendVideoDelivery(order: Order, videoUrl: string) {
+// `videos` est une liste de signed URLs avec leur niyyah associée. Pour une
+// commande single-mouton : 1 entrée. Pour multi-mouton : N entrées dans
+// l'ordre des sacrifices. Affiche 1 bouton par vidéo, chacun annoté avec
+// la niyyah correspondante (cohérent avec l'email de confirmation).
+export async function sendVideoDelivery(
+  order: Order,
+  videos: Array<{ niyyah: string; url: string }>
+) {
+  const isMulti = videos.length > 1;
+  const firstNiyyah = videos[0]?.niyyah ?? order.niyyah;
+
+  const videoBlocks = videos
+    .map((v, i) => {
+      const label = isMulti
+        ? `<p style="margin:0 0 8px;color:#8C8279;font-size:12px;letter-spacing:1.5px;text-transform:uppercase;font-weight:bold;text-align:center;">
+             ${i === 0 ? "1er" : `${i + 1}e`} sacrifice — au nom de <span style="color:#B8860B;font-family:Georgia,serif;font-style:italic;text-transform:none;letter-spacing:0;">${v.niyyah}</span>
+           </p>`
+        : "";
+      return `${label}${goldButton(isMulti ? "VOIR CETTE VIDÉO" : "VOIR MA VIDÉO", v.url)}`;
+    })
+    .join('<div style="height:16px;"></div>');
+
+  const intro = isMulti
+    ? `Vos ${videos.length} sacrifices ont été accomplis dans le respect total de la Sunnah. Voici les preuves vidéos nominatives que nous vous avions promises.`
+    : `Votre sacrifice au nom de <strong style="color:#1A1A18;font-family:Georgia,serif;font-style:italic;">${firstNiyyah}</strong> a été accompli dans le respect total de la Sunnah. Voici la preuve vidéo nominative que nous vous avions promise.`;
+
+  const title = isMulti
+    ? `Vos vidéos sont prêtes, ${order.prenom}`
+    : `Votre vidéo est prête, ${order.prenom}`;
+
   const html = emailLayout(`
     <div style="text-align:center;margin:0 0 20px;">
       <span style="font-size:48px;">📹</span>
     </div>
 
     <h1 style="color:#1A1A18;font-size:26px;margin:0 0 8px;font-weight:bold;text-align:center;font-family:Georgia,serif;">
-      Votre vidéo est prête, ${order.prenom}
+      ${title}
     </h1>
 
     <p style="text-align:center;margin:0 0 28px;color:#B8860B;font-size:15px;font-style:italic;font-family:Georgia,serif;">
@@ -570,34 +599,38 @@ export async function sendVideoDelivery(order: Order, videoUrl: string) {
     </p>
 
     <p style="margin:0 0 24px;color:#5C5347;font-size:15px;line-height:1.7;text-align:center;">
-      Votre sacrifice au nom de <strong style="color:#1A1A18;font-family:Georgia,serif;font-style:italic;">${order.niyyah}</strong> a été accompli dans le respect total de la Sunnah. Voici la preuve vidéo nominative que nous vous avions promise.
+      ${intro}
     </p>
 
-    ${goldButton("VOIR MA VIDÉO", videoUrl)}
+    ${videoBlocks}
 
     <!-- Avertissement délai -->
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#FDF6E3;border-left:4px solid #D4A843;border-radius:0 8px 8px 0;margin:0 0 24px;">
       <tr><td style="padding:16px 20px;">
         <p style="margin:0 0 4px;color:#8B6508;font-size:14px;font-weight:bold;">
-          ⏱ Ce lien reste valable 90 jours
+          ⏱ ${isMulti ? "Ces liens restent" : "Ce lien reste"} valable${isMulti ? "s" : ""} 90 jours
         </p>
         <p style="margin:0;color:#5C5347;font-size:13px;line-height:1.6;">
-          Pensez à télécharger la vidéo sur votre téléphone ou ordinateur pour la conserver durablement.
+          Pensez à télécharger ${isMulti ? "les vidéos" : "la vidéo"} sur votre téléphone ou ordinateur pour ${isMulti ? "les" : "la"} conserver durablement.
         </p>
       </td></tr>
     </table>
 
     <p style="margin:0;color:#5C5347;font-size:14px;text-align:center;line-height:1.7;">
-      Qu'Allah accepte votre sacrifice.<br>
+      Qu'Allah accepte ${isMulti ? "vos sacrifices" : "votre sacrifice"}.<br>
       <em style="color:#B8860B;font-family:Georgia,serif;">Aïd Moubarak de toute l'équipe Qurbaniya.</em>
     </p>
   `, order.email);
+
+  const subject = isMulti
+    ? `📹 Vos ${videos.length} vidéos de sacrifice sont prêtes — Qurbaniya`
+    : `📹 Votre vidéo de sacrifice est prête — Qurbaniya`;
 
   const result = await getResend().emails.send({
     from: FROM,
     to: order.email,
     headers: unsubscribeHeaders(order.email),
-    subject: `📹 Votre vidéo de sacrifice est prête — Qurbaniya`,
+    subject,
     html,
   });
 
