@@ -30,6 +30,8 @@ type OrderPublic = {
   niyyah: string;
   intention: Intention;
   amount: number;
+  quantity?: number;
+  sacrifices?: Array<{ niyyah: string; intention: Intention }>;
   payment_status: PaymentStatus;
   payment_method: PaymentMethod;
   created_at: string;
@@ -278,7 +280,11 @@ function VirementView({ orderId }: { orderId: string | null }) {
             <div className="bg-bg-secondary border border-gold/20 rounded-xl p-6 text-left mb-6">
               <div className="flex items-center justify-between pb-4 border-b border-gold/10">
                 <span className="text-text-primary font-semibold">Virement en attente</span>
-                <span className="text-gold font-bold">{formatAmount(order.amount)}</span>
+                <span className="text-gold font-bold">
+                  {formatAmount(
+                    order.amount * (order.quantity ?? 1) - (order.discount_amount ?? 0)
+                  )}
+                </span>
               </div>
               <div className="pt-4 space-y-2 text-sm">
                 <div className="flex justify-between">
@@ -538,8 +544,14 @@ function TimedOutHeading() {
 }
 
 function OrderRecapCard({ order, isPaid }: { order: OrderPublic; isPaid: boolean }) {
+  const qty = order.quantity ?? 1;
+  const grossAmount = order.amount * qty;
   const discount = order.discount_amount ?? 0;
-  const netAmount = order.amount - discount;
+  const netAmount = grossAmount - discount;
+  const sacrificesList =
+    Array.isArray(order.sacrifices) && order.sacrifices.length > 0
+      ? order.sacrifices
+      : null;
   return (
     <motion.div
       initial={{ opacity: 0, y: 16 }}
@@ -548,19 +560,37 @@ function OrderRecapCard({ order, isPaid }: { order: OrderPublic; isPaid: boolean
       className="bg-bg-secondary border border-gold/20 rounded-xl p-6 text-left mb-8 print:bg-white print:border-gray-300"
     >
       <div className="flex items-center justify-between pb-4 border-b border-gold/10 print:border-gray-200">
-        <span className="text-text-primary font-semibold print:text-black">Sacrifice Mouton</span>
+        <span className="text-text-primary font-semibold print:text-black">
+          {qty > 1 ? `Sacrifice de ${qty} moutons` : "Sacrifice Mouton"}
+        </span>
         {discount > 0 ? (
           <span className="flex items-baseline gap-2">
-            <span className="text-text-muted-light line-through text-sm font-normal">{formatAmount(order.amount)}</span>
+            <span className="text-text-muted-light line-through text-sm font-normal">{formatAmount(grossAmount)}</span>
             <span className="text-gold font-bold">{formatAmount(netAmount)}</span>
           </span>
         ) : (
-          <span className="text-gold font-bold">{formatAmount(order.amount)}</span>
+          <span className="text-gold font-bold">{formatAmount(netAmount)}</span>
         )}
       </div>
       <div className="pt-4 space-y-2 text-sm">
         <RecapRow label="Commande" value={orderRef(order.id)} highlight />
-        <RecapRow label="Intention" value={intentionLabel(order.intention)} />
+        {qty > 1 && (
+          <RecapRow
+            label="Nombre de moutons"
+            value={`${qty} × ${formatAmount(order.amount)}`}
+          />
+        )}
+        {sacrificesList && sacrificesList.length > 1 ? (
+          sacrificesList.map((s, i) => (
+            <RecapRow
+              key={i}
+              label={`${i === 0 ? "1er" : `${i + 1}e`} sacrifice`}
+              value={`${intentionLabel(s.intention)} · ${s.niyyah}`}
+            />
+          ))
+        ) : (
+          <RecapRow label="Intention" value={intentionLabel(order.intention)} />
+        )}
         <RecapRow label="Année" value="Aïd el-Kébir 2026" />
         {discount > 0 && (
           <RecapRow

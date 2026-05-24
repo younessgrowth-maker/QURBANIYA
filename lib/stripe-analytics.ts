@@ -238,7 +238,8 @@ type SupabaseOrder = {
   prenom: string;
   nom: string;
   payment_status: "pending" | "paid" | "failed";
-  amount: number; // en EUROS (cf insert dans app/api/orders/route.ts)
+  amount: number; // PRIX UNITAIRE en EUROS (cf insert dans app/api/orders/route.ts)
+  quantity?: number; // nombre de moutons (migration 0018), default 1
   discount_amount?: number; // en euros, 0 si pas de promo
   intention: "pour_moi" | "famille" | "sadaqa";
   created_at: string; // ISO timestamp
@@ -253,7 +254,7 @@ async function fetchSupabaseOrdersInWindow(
     const { data, error } = await supabase
       .from("orders")
       .select(
-        "id, email, prenom, nom, payment_status, amount, discount_amount, intention, created_at"
+        "id, email, prenom, nom, payment_status, amount, quantity, discount_amount, intention, created_at"
       )
       .gte("created_at", fromDate.toISOString())
       .lte("created_at", toDate.toISOString())
@@ -379,9 +380,10 @@ async function buildYearStats(
       const dba = dateToDaysBefore.get(dk);
       if (dba === undefined) continue;
       const bucket = bucketsByDaysBefore.get(dba)!;
-      // Charged amount = amount - discount (cohérent avec admin/page.tsx).
-      // amount est stocké en EUROS (140 = 140€), pas en cents.
-      const charged = o.amount - (o.discount_amount ?? 0);
+      // Charged amount = amount × quantity - discount (cohérent avec admin/page.tsx).
+      // amount est le prix UNITAIRE stocké en EUROS (140 = 140€), pas en cents.
+      // Multi-mouton (migration 0018) : multiplier par quantity.
+      const charged = o.amount * (o.quantity ?? 1) - (o.discount_amount ?? 0);
       bucket.count += 1;
       bucket.grossEur += charged;
 

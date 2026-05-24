@@ -35,6 +35,7 @@ interface Candidate {
   referred_by_code: string | null;
   payment_status: string;
   amount: number;
+  quantity: number;
   discount_amount: number;
   created_at: string;
   filleuls: Array<{
@@ -45,6 +46,7 @@ interface Candidate {
     telephone: string;
     payment_status: string;
     amount: number;
+    quantity: number;
     discount_amount: number;
     created_at: string;
   }>;
@@ -111,7 +113,7 @@ export async function GET(req: NextRequest) {
       if (c.referral_code) {
         const { data: filleulData } = await supabase
           .from("orders")
-          .select("id, prenom, nom, email, telephone, payment_status, amount, discount_amount, created_at")
+          .select("id, prenom, nom, email, telephone, payment_status, amount, quantity, discount_amount, created_at")
           .eq("referred_by_code", c.referral_code)
           .order("created_at", { ascending: false })
           .limit(MAX_FILLEULS_PER_CANDIDATE);
@@ -124,6 +126,7 @@ export async function GET(req: NextRequest) {
           telephone: (f.telephone as string) ?? "",
           payment_status: f.payment_status as string,
           amount: f.amount as number,
+          quantity: (f.quantity as number) ?? 1,
           discount_amount: (f.discount_amount as number) ?? 0,
           created_at: f.created_at as string,
         }));
@@ -140,6 +143,7 @@ export async function GET(req: NextRequest) {
         referred_by_code: c.referred_by_code,
         payment_status: c.payment_status,
         amount: c.amount,
+        quantity: c.quantity ?? 1,
         discount_amount: c.discount_amount ?? 0,
         created_at: c.created_at,
         filleuls,
