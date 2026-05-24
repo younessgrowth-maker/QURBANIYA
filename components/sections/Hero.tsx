@@ -146,18 +146,11 @@ export default function Hero({ aidDate = "Mai 2026" }: HeroProps) {
         </motion.div>
       </section>
 
-      {/* Garanties iconiques (remplace l'ancien placeholder vidéo cheikh) */}
-      <section className="bg-bg-primary section-padding !py-10 md:!py-14">
-        <div className="max-w-3xl mx-auto px-4">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5 }}
-          >
-            <HeroGuarantees />
-          </motion.div>
-        </div>
+      {/* Trust strip horizontal — countdown + 3 garanties + trust stats.
+          Padding réduit pour rester collé au Hero (continuité visuelle),
+          max-width plus large pour les 4 colonnes égales. */}
+      <section className="bg-bg-primary py-8 md:py-10 px-4">
+        <HeroGuarantees />
       </section>
     </>
   );

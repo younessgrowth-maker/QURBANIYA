@@ -1,62 +1,127 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { ShieldCheck, Video, GraduationCap } from "lucide-react";
+import { Shield, Video, GraduationCap, Star, Clock } from "lucide-react";
+import { useEffect, useState } from "react";
+import { AID_DATE } from "@/lib/constants";
 
-// 3 garanties iconiques remplaçant le VideoPlaceholder "Message du cheikh"
-// dans le Hero. Tant que la vidéo n'est pas tournée, on évite le placeholder
-// "bientôt disponible" qui casse la confiance — on affiche du concret à la
-// place : paiement sécurisé, vidéo nominative, supervision diplômée.
+// Trust strip horizontal compact remplaçant l'ancienne carte 3-garanties
+// trop verticale et vide. Inspiré du pattern "trust bar" des leaders du
+// secteur (Stripe, Vercel, Apple Pay) :
+//   - Mini-header urgence (countdown live)
+//   - 4 colonnes égales : 3 garanties + 1 trust micro-stats
+//   - Dividers fins (gap-px sur fond gris), look pro et premium
+//   - Responsive : 4 cols desktop → 2x2 mobile
 
-const GUARANTEES = [
+type Col = {
+  icon: typeof Shield;
+  title: string;
+  subtitle: string;
+  accent?: "gold" | "emerald";
+};
+
+const COLS: Col[] = [
   {
-    icon: ShieldCheck,
+    icon: Shield,
     title: "Paiement 100% sécurisé",
-    body: "Stripe · Vos données ne sont jamais stockées chez nous",
+    subtitle: "Stripe · Données protégées",
+    accent: "emerald",
   },
   {
     icon: Video,
-    title: "Vidéo nominative garantie",
-    body: "Filmée le jour J · Reçue par WhatsApp dans la soirée",
+    title: "Vidéo nominative",
+    subtitle: "Reçue par WhatsApp · jour J",
+    accent: "emerald",
   },
   {
     icon: GraduationCap,
-    title: "Supervisé par un imam diplômé",
-    body: "Cheikh Chamsouddin · Conforme à la Sunnah · Halal certifié",
+    title: "Imam diplômé",
+    subtitle: "Cheikh Chamsouddin · Sunnah",
+    accent: "emerald",
   },
-] as const;
+  {
+    icon: Star,
+    title: "+300 sacrifices · 5 ans",
+    subtitle: "4.8/5 (89 avis) · 100% satisfaction",
+    accent: "gold",
+  },
+];
+
+function formatCountdown(target: Date): string {
+  const diff = target.getTime() - Date.now();
+  if (diff <= 0) return "Aïd aujourd'hui";
+  const totalHours = Math.floor(diff / 3_600_000);
+  if (totalHours < 24) return `Aïd dans ${totalHours}h`;
+  const days = Math.floor(totalHours / 24);
+  const hours = totalHours % 24;
+  return `Aïd dans ${days}j ${hours}h`;
+}
 
 export default function HeroGuarantees() {
-  return (
-    <div className="bg-gradient-to-br from-emerald/5 via-bg-primary to-gold/5 border border-gray-100 rounded-2xl p-5 md:p-6 shadow-soft">
-      <div className="space-y-4">
-        {GUARANTEES.map((g, i) => (
-          <motion.div
-            key={g.title}
-            initial={{ opacity: 0, x: -8 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.1 + i * 0.08 }}
-            className="flex items-start gap-3"
-          >
-            <div className="w-10 h-10 rounded-xl bg-emerald/10 flex items-center justify-center flex-shrink-0">
-              <g.icon size={18} className="text-emerald" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="font-bold text-sm text-text-primary leading-tight">
-                {g.title}
-              </div>
-              <div className="text-xs text-text-muted mt-0.5 leading-snug">
-                {g.body}
-              </div>
-            </div>
-          </motion.div>
-        ))}
-      </div>
+  const [countdown, setCountdown] = useState(() => formatCountdown(AID_DATE));
 
-      <div className="mt-5 pt-4 border-t border-gray-100 flex items-center justify-center gap-2 text-[11px] text-text-muted-light">
-        <span className="w-1.5 h-1.5 rounded-full bg-emerald animate-pulse" />
-        <span>+300 sacrifices déjà accomplis depuis 5 ans</span>
-      </div>
+  useEffect(() => {
+    const t = setInterval(() => setCountdown(formatCountdown(AID_DATE)), 60_000);
+    return () => clearInterval(t);
+  }, []);
+
+  return (
+    <div className="max-w-5xl mx-auto">
+      {/* Mini header urgence */}
+      <motion.div
+        initial={{ opacity: 0, y: -6 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true }}
+        transition={{ duration: 0.4 }}
+        className="flex items-center justify-center gap-2 mb-5"
+      >
+        <Clock size={13} className="text-urgency flex-shrink-0" />
+        <span className="text-[11px] md:text-xs uppercase tracking-[0.12em] font-bold text-urgency leading-none">
+          {countdown}
+        </span>
+        <span className="text-text-muted-light text-xs leading-none hidden sm:inline">
+          · Sécurisez votre sacrifice
+        </span>
+      </motion.div>
+
+      {/* Trust strip — 4 colonnes avec dividers fins */}
+      <motion.div
+        initial={{ opacity: 0, y: 12 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true }}
+        transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+        className="rounded-2xl bg-gray-200 overflow-hidden shadow-soft"
+      >
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-px">
+          {COLS.map((col) => {
+            const Icon = col.icon;
+            const iconColor =
+              col.accent === "gold" ? "text-gold" : "text-emerald";
+            const iconBg =
+              col.accent === "gold" ? "bg-gold/10" : "bg-emerald/10";
+            return (
+              <div
+                key={col.title}
+                className="bg-white p-5 md:p-6 flex flex-col items-start gap-3 transition-colors hover:bg-bg-tertiary/40"
+              >
+                <div
+                  className={`w-9 h-9 rounded-lg flex items-center justify-center ${iconBg}`}
+                >
+                  <Icon size={17} className={iconColor} />
+                </div>
+                <div>
+                  <div className="text-sm font-bold text-text-primary leading-tight">
+                    {col.title}
+                  </div>
+                  <div className="text-[11px] md:text-xs text-text-muted-light mt-1 leading-snug">
+                    {col.subtitle}
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </motion.div>
     </div>
   );
 }
