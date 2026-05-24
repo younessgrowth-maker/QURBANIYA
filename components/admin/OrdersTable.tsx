@@ -26,8 +26,10 @@ function RefundButton({ order }: { order: Order }) {
   if (order.payment_status !== "paid") return null;
 
   async function handleRefund() {
+    const totalPaid =
+      order.amount * (order.quantity ?? 1) - (order.discount_amount ?? 0);
     const reason = window.prompt(
-      `Rembourser la commande de ${order.prenom} ${order.nom} (${(order.amount - (order.discount_amount ?? 0)).toFixed(2)} € payés) ?\n\nMotif (visible dans Stripe + DB):`,
+      `Rembourser la commande de ${order.prenom} ${order.nom} (${totalPaid.toFixed(2)} € payés) ?\n\nMotif (visible dans Stripe + DB):`,
       ""
     );
     if (reason === null) return; // cancel
@@ -243,26 +245,31 @@ function toCsv(orders: Order[]): string {
     "Niyyah",
     "Statut",
     "Methode",
+    "Quantite",
     "Montant (EUR)",
     "Stripe Session",
     "Video envoyee",
     "ID",
   ];
-  const rows = orders.map((o) => [
-    o.created_at,
-    o.prenom,
-    o.nom,
-    o.email,
-    o.telephone,
-    INTENTION_LABEL[o.intention] || o.intention,
-    o.niyyah,
-    STATUS_LABEL[o.payment_status] || o.payment_status,
-    METHOD_LABEL[o.payment_method] || o.payment_method,
-    (o.amount - (o.discount_amount ?? 0)).toFixed(2),
-    o.stripe_session_id || "",
-    o.video_sent ? "Oui" : "Non",
-    o.id,
-  ]);
+  const rows = orders.map((o) => {
+    const q = o.quantity ?? 1;
+    return [
+      o.created_at,
+      o.prenom,
+      o.nom,
+      o.email,
+      o.telephone,
+      INTENTION_LABEL[o.intention] || o.intention,
+      o.niyyah,
+      STATUS_LABEL[o.payment_status] || o.payment_status,
+      METHOD_LABEL[o.payment_method] || o.payment_method,
+      String(q),
+      (o.amount * q - (o.discount_amount ?? 0)).toFixed(2),
+      o.stripe_session_id || "",
+      o.video_sent ? "Oui" : "Non",
+      o.id,
+    ];
+  });
   const escape = (v: string) => {
     const s = String(v ?? "");
     if (s.includes(",") || s.includes('"') || s.includes("\n")) {
@@ -412,20 +419,35 @@ export default function OrdersTable({ orders }: { orders: Order[] }) {
                     {METHOD_LABEL[o.payment_method] || o.payment_method}
                   </td>
                   <td className="px-4 py-3 text-right whitespace-nowrap">
-                    {(o.discount_amount ?? 0) > 0 ? (
-                      <span className="flex items-baseline justify-end gap-1.5">
-                        <span className="text-text-muted-light line-through text-xs font-normal">
-                          {o.amount.toFixed(2)}€
-                        </span>
-                        <span className="font-bold text-emerald">
-                          {(o.amount - (o.discount_amount ?? 0)).toFixed(2)} €
-                        </span>
-                      </span>
-                    ) : (
-                      <span className="font-bold text-text-primary">
-                        {o.amount.toFixed(2)} €
-                      </span>
-                    )}
+                    {(() => {
+                      const q = o.quantity ?? 1;
+                      const gross = o.amount * q;
+                      const discount = o.discount_amount ?? 0;
+                      const net = gross - discount;
+                      return (
+                        <div className="inline-flex flex-col items-end leading-tight">
+                          {discount > 0 ? (
+                            <span className="flex items-baseline gap-1.5">
+                              <span className="text-text-muted-light line-through text-xs font-normal">
+                                {gross.toFixed(2)}€
+                              </span>
+                              <span className="font-bold text-emerald">
+                                {net.toFixed(2)} €
+                              </span>
+                            </span>
+                          ) : (
+                            <span className="font-bold text-text-primary">
+                              {net.toFixed(2)} €
+                            </span>
+                          )}
+                          {q > 1 && (
+                            <span className="text-[10px] text-text-muted-light mt-0.5">
+                              {q} × {o.amount.toFixed(0)}€
+                            </span>
+                          )}
+                        </div>
+                      );
+                    })()}
                   </td>
                   <td className="px-4 py-3 text-right whitespace-nowrap">
                     <RelanceButton order={o} />

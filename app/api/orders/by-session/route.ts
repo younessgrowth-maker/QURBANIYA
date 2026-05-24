@@ -35,7 +35,7 @@ export async function GET(req: NextRequest) {
     const { data, error } = await supabase
       .from("orders")
       .select(
-        "id, prenom, email, niyyah, intention, amount, payment_status, payment_method, created_at, referral_code, discount_amount"
+        "id, prenom, email, niyyah, intention, amount, quantity, sacrifices, payment_status, payment_method, created_at, referral_code, discount_amount"
       )
       .eq("stripe_session_id", sessionId)
       .eq("id", orderId)
@@ -51,7 +51,7 @@ export async function GET(req: NextRequest) {
   // mais on permet d'afficher le statut de paiement + récap minimal.
   const base = supabase
     .from("orders")
-    .select("id, niyyah, intention, amount, payment_status, payment_method, created_at, discount_amount");
+    .select("id, niyyah, intention, amount, quantity, sacrifices, payment_status, payment_method, created_at, discount_amount");
 
   const { data, error } = await (sessionId
     ? base.eq("stripe_session_id", sessionId)

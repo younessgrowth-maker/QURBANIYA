@@ -92,12 +92,14 @@ export default async function AdminDashboardPage() {
   const pending = orders.filter((o) => o.payment_status === "pending");
   const failed = orders.filter((o) => o.payment_status === "failed");
 
-  // `orders.amount` est le prix tarif (140€). On retire `discount_amount`
+  // `orders.amount` est le prix UNITAIRE tarif (140€). Le total facial d'une
+  // commande = amount × quantity (migration 0018). On retire `discount_amount`
   // pour avoir le CA réellement encaissé via Stripe (après codes promo et
   // parrainage). Pas de division par 100 — la conversion cents↔euros se
   // fait côté Stripe.
   const revenueEuros = paid.reduce(
-    (sum, o) => sum + (o.amount - (o.discount_amount ?? 0)),
+    (sum, o) =>
+      sum + (o.amount * (o.quantity ?? 1) - (o.discount_amount ?? 0)),
     0
   );
   const aov = paid.length > 0 ? revenueEuros / paid.length : 0;

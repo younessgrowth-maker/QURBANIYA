@@ -121,15 +121,26 @@ export async function POST(req: NextRequest) {
         const session = event.data.object;
 
         // ─── Calcul du discount réel à partir du montant payé Stripe ───
-        // Notre DB stocke `amount = 140€` (le prix tarif) au moment de la
-        // création de l'order. Le client peut avoir appliqué un code promo
-        // Stripe (allow_promotion_codes=true) ou un coupon parrainage, ce
-        // qui réduit le `session.amount_total`. On synchronise `discount_amount`
-        // avec la réalité Stripe pour que /confirmation + email affichent
-        // le bon montant payé.
+        // Notre DB stocke `amount = 140€` (le prix unitaire tarif) au moment de
+        // la création de l'order. Le total facial = `amount × quantity`. Le
+        // client peut avoir appliqué un code promo Stripe (allow_promotion_codes)
+        // ou un coupon parrainage, ce qui réduit `session.amount_total`. On
+        // synchronise `discount_amount` avec la réalité Stripe pour que
+        // /confirmation + email affichent le bon montant payé.
+        //
+        // On lit `quantity` depuis session.metadata (set au create) plutôt que
+        // depuis la DB, parce que la commande n'est pas encore fetched à ce
+        // stade. Fallback 1 si métadata absente (commandes pre-0018).
+        const qtyFromMeta = parseInt(
+          session.metadata?.quantity ?? "1",
+          10
+        );
+        const qty = Number.isFinite(qtyFromMeta) && qtyFromMeta >= 1
+          ? qtyFromMeta
+          : 1;
         const amountTotalCents = session.amount_total ?? 0;
         const amountPaidEuros = Math.round(amountTotalCents / 100);
-        const calculatedDiscount = Math.max(0, 140 - amountPaidEuros);
+        const calculatedDiscount = Math.max(0, 140 * qty - amountPaidEuros);
 
         // Conditional update : on ne passe à 'paid' que si la commande est
         // encore 'pending'. Si elle est déjà 'paid' (race condition entre
@@ -159,22 +170,24 @@ export async function POST(req: NextRequest) {
         }
 
         // Multi-moutons : décrémente N slots (quantity de la commande, défaut 1).
-        // Fallback sur decrement_slots(year) si la nouvelle RPC n'existe pas
-        // encore en prod (migration 0018 pas appliquée) pour éviter le panic.
-        const qty = (order as { quantity?: number }).quantity ?? 1;
+        // On préfère lire depuis la DB (source de vérité après insert) mais on
+        // fallback sur la métadata si le champ n'existe pas (migration 0018
+        // pas appliquée).
+        const dbQty =
+          (order as { quantity?: number }).quantity ?? qty;
         let rpcError: { message: string } | null = null;
         const { error: rpcByError } = await supabase.rpc("decrement_slots_by", {
           target_year: CURRENT_YEAR,
-          n: qty,
+          n: dbQty,
         });
         if (rpcByError) {
           // Si decrement_slots_by n'existe pas (migration pas appliquée),
-          // on retombe sur l'ancienne, appelée qty fois.
+          // on retombe sur l'ancienne, appelée dbQty fois.
           console.warn(
             "decrement_slots_by failed, falling back to decrement_slots × qty:",
             rpcByError.message
           );
-          for (let i = 0; i < qty; i++) {
+          for (let i = 0; i < dbQty; i++) {
             const { error: legacyErr } = await supabase.rpc("decrement_slots", {
               target_year: CURRENT_YEAR,
             });

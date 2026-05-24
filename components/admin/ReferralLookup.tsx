@@ -12,6 +12,7 @@ interface Filleul {
   telephone: string;
   payment_status: string;
   amount: number;
+  quantity: number;
   discount_amount: number;
   created_at: string;
 }
@@ -27,6 +28,7 @@ interface Candidate {
   referred_by_code: string | null;
   payment_status: string;
   amount: number;
+  quantity: number;
   discount_amount: number;
   created_at: string;
   filleuls: Filleul[];
@@ -252,7 +254,12 @@ function CandidateCard({ c }: { c: Candidate }) {
                         </span>
                       </td>
                       <td className="px-2 py-1 text-right font-semibold text-text-primary whitespace-nowrap">
-                        {(f.amount - (f.discount_amount ?? 0)).toFixed(2)}€
+                        {(f.amount * (f.quantity ?? 1) - (f.discount_amount ?? 0)).toFixed(2)}€
+                        {(f.quantity ?? 1) > 1 && (
+                          <span className="ml-1 text-[10px] text-text-muted-light font-normal">
+                            ({f.quantity}×)
+                          </span>
+                        )}
                       </td>
                       <td className="px-2 py-1 text-right text-emerald whitespace-nowrap">
                         {f.discount_amount > 0 ? `−${f.discount_amount.toFixed(2)}€` : "—"}
