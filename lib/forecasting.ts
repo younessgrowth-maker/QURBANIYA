@@ -281,9 +281,18 @@ export function buildForecast(input: ForecastInput): ForecastResult {
     0,
     Math.round((aidDate.getTime() - now.getTime()) / 86_400_000)
   );
-  // Si Aïd dans le passé, pas de forecast
+  // soFarToday = ce qui a déjà été observé aujourd'hui (jour partiel).
+  // On l'extrait avant le Monte Carlo car il est utilisé pour calculer
+  // "additional" sans double-comptage avec observedTotal.
+  const todayBucket = input.current.find((b) => b.daysBeforeAid === todayDba);
+  const soFarToday = todayBucket?.count ?? 0;
+
+  // Fenêtre future : on inclut aujourd'hui (todayDba) afin que la courbe
+  // de prédiction reflète bien la JOURNÉE COMPLÈTE attendue aujourd'hui
+  // — pas le partiel observé jusqu'à maintenant. Le dashboard filtrera le
+  // bucket "today" de l'historique pour éviter le dip visuel.
   const futureDays: { date: string; daysBeforeAid: number }[] = [];
-  for (let dba = todayDba + 1; dba <= 0; dba++) {
+  for (let dba = todayDba; dba <= 0; dba++) {
     const futureDate = new Date(aidDate);
     futureDate.setUTCDate(futureDate.getUTCDate() + dba);
     futureDays.push({
@@ -293,7 +302,7 @@ export function buildForecast(input: ForecastInput): ForecastResult {
     if (futureDays.length > 120) break;
   }
 
-  // Monte Carlo
+  // Monte Carlo unique pour TOUS les jours (aujourd'hui + futurs)
   const rng = makeRng(42);
   const perDaySamples: number[][] = futureDays.map(() => []);
   const totalSamples: number[] = new Array(simulations).fill(0);
@@ -303,12 +312,22 @@ export function buildForecast(input: ForecastInput): ForecastResult {
   for (let s = 0; s < simulations; s++) {
     let cumulative = 0;
     for (let i = 0; i < futureDays.length; i++) {
-      const shape = shapeFn(futureDays[i].daysBeforeAid);
+      const dba = futureDays[i].daysBeforeAid;
+      const shape = shapeFn(dba);
       const mean = baseline * shape * scale;
       const noisy = mean + normalRandom(rng) * sigma;
-      const v = Math.max(0, noisy);
-      perDaySamples[i].push(v);
-      cumulative += v;
+      const fullDaySample = Math.max(0, noisy);
+      perDaySamples[i].push(fullDaySample);
+
+      // Pour le total "additional" : aujourd'hui ne compte que pour son
+      // RESTE (soustraire ce qui est déjà dans observedTotal), les jours
+      // futurs comptent intégralement.
+      const contributionToAdditional =
+        dba === todayDba
+          ? Math.max(0, fullDaySample - soFarToday)
+          : fullDaySample;
+      cumulative += contributionToAdditional;
+
       if (
         stockoutDay[s] === null &&
         cumulative >= input.stockRemaining &&
@@ -331,6 +350,8 @@ export function buildForecast(input: ForecastInput): ForecastResult {
     return sorted[idx];
   };
 
+  // Forecast array : tous les jours simulés (aujourd'hui inclus en
+  // valeur "journée complète attendue", pas en partiel).
   const forecast: ForecastPoint[] = futureDays.map((d, i) => ({
     date: d.date,
     daysBeforeAid: d.daysBeforeAid,
@@ -339,35 +360,15 @@ export function buildForecast(input: ForecastInput): ForecastResult {
     p90: percentile(perDaySamples[i], 90),
   }));
 
-  // ── Prédictions ciblées aujourd'hui & demain ───────────────────────────
-  // Aujourd'hui : on simule la journée complète, on soustrait ce qui a
-  // déjà été observé pour estimer le restant. Demain : journée complète.
-  const sampleDay = (dba: number): number[] => {
-    const shape = shapeFn(dba);
-    const mean = baseline * shape * scale;
-    const samples: number[] = [];
-    for (let s = 0; s < simulations; s++) {
-      const v = Math.max(0, mean + normalRandom(rng) * sigma);
-      samples.push(v);
-    }
-    return samples;
-  };
-
+  // ── Prédictions ciblées aujourd'hui & demain (extraites du même MC) ──
   let todayPrediction: ForecastResult["today"] = null;
-  if (todayDba <= 0) {
-    const todayDate = new Date(aidDate);
-    todayDate.setUTCDate(todayDate.getUTCDate() + todayDba);
-    const todayDateKey = dateKeyUtc(todayDate);
-    const todayBucket = input.current.find(
-      (b) => b.daysBeforeAid === todayDba
-    );
-    const soFarToday = todayBucket?.count ?? 0;
-    const todaySamples = sampleDay(todayDba);
+  if (todayDba <= 0 && futureDays.length > 0 && futureDays[0].daysBeforeAid === todayDba) {
+    const todaySamples = perDaySamples[0];
     const remainingSamples = todaySamples.map((v) =>
       Math.max(0, v - soFarToday)
     );
     todayPrediction = {
-      date: todayDateKey,
+      date: futureDays[0].date,
       daysBeforeAid: todayDba,
       soFar: soFarToday,
       expectedTotal: {
@@ -388,12 +389,13 @@ export function buildForecast(input: ForecastInput): ForecastResult {
 
   let tomorrowPrediction: ForecastResult["tomorrow"] = null;
   const tomorrowDba = todayDba + 1;
-  if (tomorrowDba <= 0) {
-    const tomorrowDate = new Date(aidDate);
-    tomorrowDate.setUTCDate(tomorrowDate.getUTCDate() + tomorrowDba);
-    const tomorrowSamples = sampleDay(tomorrowDba);
+  const tomorrowIdx = futureDays.findIndex(
+    (d) => d.daysBeforeAid === tomorrowDba
+  );
+  if (tomorrowIdx >= 0) {
+    const tomorrowSamples = perDaySamples[tomorrowIdx];
     tomorrowPrediction = {
-      date: dateKeyUtc(tomorrowDate),
+      date: futureDays[tomorrowIdx].date,
       daysBeforeAid: tomorrowDba,
       expected: {
         p10: percentile(tomorrowSamples, 10),
@@ -422,10 +424,14 @@ export function buildForecast(input: ForecastInput): ForecastResult {
     expectedStockoutDateKey = futureDays[idx]?.date ?? null;
   }
 
-  const last7 = historyAll.slice(-7);
+  // Vélocité récente : on exclut aujourd'hui (jour partiel par
+  // construction) pour ne comparer que des jours complets.
+  const completeRecent = historyAll
+    .filter((h) => h.daysBeforeAid !== todayDba)
+    .slice(-7);
   const velocityRecent =
-    last7.length > 0
-      ? last7.reduce((a, b) => a + b.count, 0) / last7.length
+    completeRecent.length > 0
+      ? completeRecent.reduce((a, b) => a + b.count, 0) / completeRecent.length
       : 0;
   const velocityProjected =
     futureDays.length > 0 ? additionalP50 / futureDays.length : 0;
