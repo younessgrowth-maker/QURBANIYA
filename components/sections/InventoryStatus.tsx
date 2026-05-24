@@ -17,6 +17,7 @@ interface InventoryStatusProps {
 // Comportement:
 // - inventaire indisponible (Supabase down ou pas configuré) → null
 // - is_open = false → null (les commandes sont fermées)
+// - remaining <= 0 → bandeau "Complet → liste d'attente" pointant /commander
 // - remaining > 75 places → null (pas d'urgence à afficher)
 // - remaining ≤ 75 → bandeau visible, intensité visuelle selon le seuil
 export default async function InventoryStatus({
@@ -26,6 +27,56 @@ export default async function InventoryStatus({
 }: InventoryStatusProps) {
   const inv = await getInventory(CURRENT_YEAR);
   if (!inv || !inv.isOpen) return null;
+
+  // Sold-out : on garde un bandeau visible mais on bascule sur "Complet,
+  // liste d'attente" plutôt que "Plus que 0 place" qui sonnait cassé.
+  // Le CTA renvoie vers /commander où SoldOutPanel prend le relais.
+  if (inv.remaining <= 0) {
+    if (variant === "compact") {
+      return (
+        <div
+          className={cn(
+            "inline-flex items-center gap-2 px-3 py-1.5 rounded-full border text-xs font-bold font-inter bg-urgency/10 border-urgency/30 text-urgency",
+            className
+          )}
+          aria-live="polite"
+        >
+          <Package size={12} />
+          Complet — liste d&apos;attente
+        </div>
+      );
+    }
+    return (
+      <div
+        className={cn(
+          "max-w-3xl mx-auto rounded-xl border-2 px-5 py-4 flex items-center justify-between gap-4 flex-wrap bg-urgency/10 border-urgency/30 text-urgency",
+          className
+        )}
+        aria-live="polite"
+      >
+        <div className="flex items-center gap-3">
+          <Package size={20} className="flex-shrink-0" />
+          <div>
+            <p className="font-bold text-sm md:text-base">
+              Réservations complètes pour l&apos;Aïd al-Adha 2026
+            </p>
+            <p className="text-xs opacity-80 font-inter mt-0.5">
+              Inscrivez-vous sur la liste d&apos;attente — une place peut se libérer
+            </p>
+          </div>
+        </div>
+        {showCta && (
+          <Link
+            href="/commander"
+            className="inline-flex items-center gap-1.5 text-white font-bold uppercase text-xs md:text-sm px-4 py-2 rounded-lg hover:opacity-90 transition-opacity flex-shrink-0 bg-urgency"
+          >
+            Liste d&apos;attente <ArrowRight size={14} />
+          </Link>
+        )}
+      </div>
+    );
+  }
+
   if (inv.remaining > 75) return null;
 
   const isCritical = inv.remaining <= 20;
