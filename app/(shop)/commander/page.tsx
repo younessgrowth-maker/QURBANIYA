@@ -171,11 +171,6 @@ export default async function CommanderPage() {
             <SoldOutPanel />
           ) : open ? (
             <>
-              {/* Trust strip : 3 avis vérifiés au-dessus du tunnel — preuve
-                  sociale immédiate pour le trafic chaud J-3/J-2. Null si
-                  moins de 3 avis disponibles. */}
-              <CommanderTrustStrip />
-
               {/* 2-col layout */}
               <div className="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-8 lg:gap-12 items-start">
               {/* Form */}
@@ -303,6 +298,14 @@ export default async function CommanderPage() {
               D&apos;autres questions ? Consultez notre <Link href="/faq" className="text-gold hover:underline font-semibold">FAQ complète</Link> ou notre <Link href="/blog/sacrifice-aid-en-ligne-comment-ca-marche" className="text-gold hover:underline font-semibold">guide « comment ça marche »</Link>.
             </div>
           </section>
+
+          {/* Avis vérifiés en bas de page — preuve sociale en fin de parcours,
+              une fois que le visiteur a parcouru le form + FAQ. */}
+          {open && !isFull && (
+            <section className="mt-16" aria-label="Avis vérifiés de nos clients">
+              <CommanderTrustStrip />
+            </section>
+          )}
         </div>
       </main>
     </>
