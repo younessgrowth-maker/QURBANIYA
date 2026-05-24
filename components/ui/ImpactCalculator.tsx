@@ -25,9 +25,9 @@ export default function ImpactCalculator() {
     <section className="bg-bg-primary section-padding" id="calculateur">
       <div className="max-w-3xl mx-auto">
         <SectionTitle
-          title="CALCULEZ VOTRE IMPACT"
-          accent="IMPACT"
-          subtitle="Choisissez le nombre de moutons et voyez votre impact concret."
+          title="DES FAMILLES QUI VONT SOURIRE GRÂCE À VOUS"
+          accent="GRÂCE À VOUS"
+          subtitle="À Madagascar, ce sacrifice est souvent l'unique vrai repas de l'année pour ces familles. Voyez ce que votre intention change concrètement."
         />
 
         {/* Quantity selector */}
@@ -64,7 +64,11 @@ export default function ImpactCalculator() {
             >
               {meals}
             </motion.span>
-            <span className="text-sm text-text-muted">repas distribués</span>
+            <span className="text-sm text-text-muted leading-snug block mt-1">
+              personnes qui rompent
+              <br />
+              leur jeûne avec du vrai mouton
+            </span>
           </motion.div>
 
           <motion.div
@@ -83,7 +87,11 @@ export default function ImpactCalculator() {
             >
               {families}
             </motion.span>
-            <span className="text-sm text-text-muted">familles nourries</span>
+            <span className="text-sm text-text-muted leading-snug block mt-1">
+              familles qui célèbrent
+              <br />
+              l&apos;Aïd dignement
+            </span>
           </motion.div>
 
           <motion.div
@@ -102,9 +110,25 @@ export default function ImpactCalculator() {
             >
               {totalPrice}€
             </motion.span>
-            <span className="text-sm text-text-muted">soit {savings}€ de moins qu&apos;en France</span>
+            <span className="text-sm text-text-muted leading-snug block mt-1">
+              soit {savings}€ de moins
+              <br />
+              qu&apos;en France
+            </span>
           </motion.div>
         </div>
+
+        {/* Citation émotionnelle */}
+        <motion.blockquote
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.2 }}
+          className="text-center text-sm md:text-base text-text-muted italic max-w-xl mx-auto mb-8 leading-relaxed"
+        >
+          « Pour ces familles, ce n&apos;est pas un repas comme un autre.
+          C&apos;est la viande qui manque toute l&apos;année, partagée le
+          jour où elle compte le plus. »
+        </motion.blockquote>
 
         {/* CTA */}
         <div className="text-center">
