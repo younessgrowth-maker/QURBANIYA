@@ -133,7 +133,12 @@ export async function POST(req: NextRequest) {
                 quantity === 1
                   ? "Sacrifice Mouton — Qurbaniya"
                   : `Sacrifice ${quantity} Moutons — Qurbaniya`,
-              description: `Sacrifice au nom de ${data.niyyah} · Aïd el-Kébir 2026`,
+              description:
+                quantity === 1
+                  ? `Sacrifice au nom de ${data.sacrifices[0]?.niyyah ?? ""} · Aïd el-Kébir 2026`
+                  : `${quantity} sacrifices · Aïd el-Kébir 2026 · noms : ${data.sacrifices
+                      .map((s) => s.niyyah)
+                      .join(", ")}`,
             },
             unit_amount: PRICE_MOUTON,
           },
@@ -152,8 +157,10 @@ export async function POST(req: NextRequest) {
         prenom: data.prenom,
         nom: data.nom,
         telephone: data.telephone || "",
-        intention: data.intention,
-        niyyah: data.niyyah,
+        // On garde intention/niyyah top-level (1er sacrifice) en métadata
+        // pour faciliter la lecture rapide dans le dashboard Stripe.
+        intention: data.sacrifices[0]?.intention ?? "pour_moi",
+        niyyah: data.sacrifices[0]?.niyyah ?? "",
         // Quantité (visible dans le dashboard Stripe + lue par le webhook
         // pour décrémenter l'inventaire de N slots).
         quantity: String(quantity),
@@ -172,9 +179,13 @@ export async function POST(req: NextRequest) {
       nom: data.nom,
       email: data.email,
       telephone: data.telephone || "",
-      intention: data.intention,
-      niyyah: data.niyyah,
-      quantity, // multi-moutons : nombre de moutons sur cette commande
+      // Top-level miroir : 1er sacrifice. /admin et /admin/analytics
+      // continuent à fonctionner sans changement (lecture simple).
+      // La liste complète est dans la colonne sacrifices (jsonb).
+      intention: data.sacrifices[0]?.intention ?? "pour_moi",
+      niyyah: data.sacrifices[0]?.niyyah ?? "",
+      sacrifices: data.sacrifices,
+      quantity,
       payment_status: "pending",
       payment_method: "stripe",
       stripe_session_id: session.id,

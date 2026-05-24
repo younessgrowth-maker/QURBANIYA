@@ -126,13 +126,14 @@ export default function OrderForm() {
     handleSubmit,
     watch,
     setValue,
+    getValues,
     formState: { errors, isSubmitting },
   } = useForm<OrderFormValues>({
     resolver: zodResolver(orderSchema),
     defaultValues: {
       payment_method: "stripe",
-      intention: "pour_moi",
       quantity: 1,
+      sacrifices: [{ niyyah: "", intention: "pour_moi" }],
       is_gift: false,
       notify_recipient: false,
       referred_by_code: "",
@@ -140,12 +141,36 @@ export default function OrderForm() {
     mode: "onSubmit",
   });
 
-  const intention = watch("intention");
   const quantity = watch("quantity") ?? 1;
+  const sacrifices = watch("sacrifices") ?? [];
   const isGift = watch("is_gift");
   const notifyRecipient = watch("notify_recipient");
   const referralCode = watch("referred_by_code") || "";
   const email = watch("email") || "";
+
+  // Synchronise la longueur du tableau `sacrifices` avec `quantity`.
+  // Sans ça, si l'utilisateur passe de 3 → 1 puis revient à 3, les
+  // valeurs précédentes sont perdues. On préserve donc les saisies
+  // existantes et on ne fait que tronquer/étendre.
+  useEffect(() => {
+    const current = getValues("sacrifices") ?? [];
+    if (current.length === quantity) return;
+    if (current.length < quantity) {
+      const toAdd = quantity - current.length;
+      const extended = [
+        ...current,
+        ...Array.from({ length: toAdd }, () => ({
+          niyyah: "",
+          intention: "pour_moi" as const,
+        })),
+      ];
+      setValue("sacrifices", extended, { shouldValidate: false });
+    } else {
+      setValue("sacrifices", current.slice(0, quantity), {
+        shouldValidate: false,
+      });
+    }
+  }, [quantity, getValues, setValue]);
 
   // Auto-fill depuis le cookie posé par le middleware (?ref=XXX)
   useEffect(() => {
@@ -200,7 +225,8 @@ export default function OrderForm() {
     try {
       track("order_submitted", {
         payment_method: data.payment_method,
-        intention: data.intention,
+        quantity: data.quantity,
+        intention: data.sacrifices?.[0]?.intention,
         is_gift: data.is_gift,
       });
       // Attribution affilié : on lit le cookie qrb_aff au moment du submit
@@ -273,195 +299,154 @@ export default function OrderForm() {
         </div>
       </div>
 
-      {/* ── Packs (multi-moutons avec suggestions visuelles) ── */}
+      {/* ── Nombre de sacrifices (selector sobre) ── */}
       <div>
         <h3 className="text-lg font-bold text-text-primary uppercase tracking-wide mb-2">
-          Pour qui voulez-vous sacrifier&nbsp;?
+          Nombre de sacrifices
         </h3>
-        <p className="text-sm text-text-muted mb-5">
-          Un sacrifice par personne du foyer (épouse, parents, enfants) est
-          encouragé en islam. Vous pouvez aussi ajouter un sacrifice en sadaqa
-          pour des familles dans le besoin à Madagascar.
+        <p className="text-sm text-text-muted mb-4 leading-relaxed">
+          Un sacrifice par adulte du foyer est traditionnellement encouragé. Vous
+          pourrez préciser une intention différente pour chaque sacrifice
+          ci-dessous.
         </p>
         {errors.quantity && (
           <p className="text-urgency text-sm mb-3">{errors.quantity.message}</p>
         )}
 
-        {/* Packs grid : 2x2 mobile, 4 cols desktop */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
-          {[
-            {
-              qty: 1,
-              title: "Pour moi",
-              subtitle: "1 sacrifice",
-              hint: "Le sacrifice obligatoire",
-              badge: null as string | null,
-            },
-            {
-              qty: 2,
-              title: "Moi + famille",
-              subtitle: "2 sacrifices",
-              hint: "Un pour moi, un pour mes proches",
-              badge: "Le + populaire",
-            },
-            {
-              qty: 3,
-              title: "Moi + parents",
-              subtitle: "3 sacrifices",
-              hint: "Couvre 3 générations",
-              badge: null,
-            },
-            {
-              qty: 5,
-              title: "Pack tribu",
-              subtitle: "5 sacrifices",
-              hint: "Maximum d'impact",
-              badge: "Maximum baraka",
-            },
-          ].map((pack) => {
-            const selected = quantity === pack.qty;
-            return (
-              <button
-                key={pack.qty}
-                type="button"
-                onClick={() =>
-                  setValue("quantity", pack.qty, { shouldValidate: true })
-                }
-                className={`relative text-left rounded-xl p-4 transition-all duration-200 ${
-                  selected
-                    ? "bg-primary text-white shadow-glow-primary scale-[1.02] border-2 border-primary"
-                    : "bg-white border-2 border-gray-200 text-text-primary hover:border-primary/40 hover:shadow-soft"
-                }`}
-                aria-pressed={selected}
-              >
-                {pack.badge && (
-                  <span
-                    className={`absolute -top-2 left-3 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
-                      selected
-                        ? "bg-white text-primary"
-                        : "bg-gold text-white"
-                    }`}
-                  >
-                    {pack.badge}
-                  </span>
-                )}
-                <div className="text-2xl mb-1 leading-none" aria-hidden>
-                  {"🐑".repeat(Math.min(pack.qty, 3))}
-                  {pack.qty > 3 && (
-                    <span
-                      className={`text-base font-bold align-middle ml-0.5 ${
-                        selected ? "text-white" : "text-text-muted"
-                      }`}
-                    >
-                      ×{pack.qty}
-                    </span>
-                  )}
-                </div>
-                <div className="font-bold text-sm leading-tight mb-0.5">
-                  {pack.title}
-                </div>
-                <div
-                  className={`text-[11px] mb-2 leading-tight ${
-                    selected ? "text-white/85" : "text-text-muted"
-                  }`}
-                >
-                  {pack.hint}
-                </div>
-                <div className="flex items-baseline gap-1">
-                  <span className="text-lg font-black tabular-nums">
-                    {pack.qty * 140}€
-                  </span>
-                  {pack.qty > 1 && (
-                    <span
-                      className={`text-[10px] ${
-                        selected ? "text-white/70" : "text-text-muted-light"
-                      }`}
-                    >
-                      ({pack.qty}×140€)
-                    </span>
-                  )}
-                </div>
-              </button>
-            );
-          })}
-        </div>
-
-        {/* Custom quantité : visible mais discrète */}
-        <details className="text-sm">
-          <summary className="cursor-pointer text-text-muted hover:text-text-primary transition-colors inline-flex items-center gap-1.5">
-            <span className="text-xs">↳</span>
-            <span>Autre quantité (4 moutons)</span>
-          </summary>
-          <div className="mt-3 flex items-center gap-2">
-            {[1, 2, 3, 4, 5].map((q) => (
-              <button
-                key={q}
-                type="button"
-                onClick={() =>
-                  setValue("quantity", q, { shouldValidate: true })
-                }
-                className={`flex-1 h-12 rounded-lg font-bold text-sm transition-all duration-200 ${
-                  quantity === q
-                    ? "bg-primary text-white"
-                    : "bg-white border border-gray-200 text-text-primary hover:border-primary/40"
-                }`}
-                aria-label={`${q} mouton${q > 1 ? "s" : ""}`}
-              >
-                {q}
-              </button>
-            ))}
-          </div>
-        </details>
-
-        {/* Hint si multi-moutons */}
-        {quantity > 1 && (
-          <p className="text-xs text-text-muted-light mt-3 leading-snug">
-            ✓ Vous recevrez <strong>{quantity}</strong> vidéo
-            {quantity > 1 ? "s" : ""} de sacrifice par WhatsApp le jour J, au
-            même nom (« {watch("niyyah") || "à indiquer"} »). Pour des noms
-            différents,{" "}
-            <a
-              href={`https://wa.me/33744798883?text=${encodeURIComponent("Bonjour, je souhaite réserver plusieurs sacrifices avec des noms différents")}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-emerald font-semibold underline underline-offset-2"
+        <div className="flex items-center gap-2 mb-3">
+          {[1, 2, 3, 4, 5].map((q) => (
+            <button
+              key={q}
+              type="button"
+              onClick={() => setValue("quantity", q, { shouldValidate: true })}
+              className={`flex-1 h-14 rounded-xl font-bold text-base transition-all duration-200 ${
+                quantity === q
+                  ? "bg-primary text-white shadow-glow-primary scale-[1.02]"
+                  : "bg-white border-2 border-gray-200 text-text-primary hover:border-primary/40"
+              }`}
+              aria-label={`${q} sacrifice${q > 1 ? "s" : ""}`}
             >
-              contactez-nous
-            </a>
-            .
-          </p>
-        )}
+              {q}
+            </button>
+          ))}
+        </div>
+
+        <p className="text-xs text-text-muted-light leading-snug">
+          Au-delà de 5,{" "}
+          <a
+            href={`https://wa.me/33744798883?text=${encodeURIComponent("Bonjour, je souhaite réserver plus de 5 sacrifices")}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-emerald font-semibold underline underline-offset-2"
+          >
+            contactez-nous sur WhatsApp
+          </a>
+          .
+        </p>
       </div>
 
-      {/* ── Intention ── */}
-      <div>
-        <h3 className="text-lg font-bold text-text-primary uppercase tracking-wide mb-5">
-          Intention du sacrifice
-        </h3>
-        {errors.intention && <p className="text-urgency text-sm mb-3">{errors.intention.message}</p>}
-        <div className="space-y-3">
-          <RadioCard
-            label="Pour moi"
-            icon={User}
-            selected={intention === "pour_moi"}
-            onSelect={() => setValue("intention", "pour_moi")}
-          />
-          <RadioCard
-            label="Pour ma famille"
-            icon={Users}
-            description="Épouse, parents, enfants..."
-            selected={intention === "famille"}
-            onSelect={() => setValue("intention", "famille")}
-          />
-          <RadioCard
-            label="En sadaqa"
-            icon={Heart}
-            description="Pour un proche décédé ou vivant"
-            selected={intention === "sadaqa"}
-            onSelect={() => setValue("intention", "sadaqa")}
-          />
-        </div>
-      </div>
+      {/* ── Blocs dynamiques : 1 par sacrifice ── */}
+      {Array.from({ length: quantity }).map((_, idx) => {
+        const ordinal =
+          idx === 0
+            ? "1er"
+            : `${idx + 1}e`;
+        const blockIntention = sacrifices[idx]?.intention ?? "pour_moi";
+        const intentionError = (
+          errors.sacrifices as
+            | { [key: number]: { intention?: { message?: string } } | undefined }
+            | undefined
+        )?.[idx]?.intention?.message;
+        const niyyahError = (
+          errors.sacrifices as
+            | { [key: number]: { niyyah?: { message?: string } } | undefined }
+            | undefined
+        )?.[idx]?.niyyah?.message;
+
+        return (
+          <div
+            key={idx}
+            className="border-l-2 border-gold/40 pl-5 ml-1 space-y-5"
+          >
+            <h3 className="text-lg font-bold text-text-primary uppercase tracking-wide">
+              {quantity > 1 ? `Votre ${ordinal} sacrifice` : "Votre sacrifice"}
+            </h3>
+
+            {/* Intention */}
+            <div>
+              <p className="text-sm font-semibold text-text-muted mb-3">
+                Intention
+              </p>
+              {intentionError && (
+                <p className="text-urgency text-sm mb-3">{intentionError}</p>
+              )}
+              <div className="space-y-2">
+                <RadioCard
+                  label="Pour moi"
+                  icon={User}
+                  selected={blockIntention === "pour_moi"}
+                  onSelect={() =>
+                    setValue(`sacrifices.${idx}.intention`, "pour_moi", {
+                      shouldValidate: true,
+                    })
+                  }
+                />
+                <RadioCard
+                  label="Pour ma famille"
+                  icon={Users}
+                  description="Épouse, parents, enfants..."
+                  selected={blockIntention === "famille"}
+                  onSelect={() =>
+                    setValue(`sacrifices.${idx}.intention`, "famille", {
+                      shouldValidate: true,
+                    })
+                  }
+                />
+                <RadioCard
+                  label="En sadaqa"
+                  icon={Heart}
+                  description="Pour un proche décédé ou vivant"
+                  selected={blockIntention === "sadaqa"}
+                  onSelect={() =>
+                    setValue(`sacrifices.${idx}.intention`, "sadaqa", {
+                      shouldValidate: true,
+                    })
+                  }
+                />
+              </div>
+            </div>
+
+            {/* Niyyah */}
+            <Field
+              label={
+                blockIntention === "famille"
+                  ? "Nom de famille pour ce sacrifice"
+                  : blockIntention === "sadaqa"
+                  ? "Prénom du bénéficiaire"
+                  : "Prénom pour ce sacrifice"
+              }
+              error={niyyahError}
+              hint={
+                blockIntention === "famille"
+                  ? "Ce nom de famille sera mentionné lors du sacrifice"
+                  : "Ce prénom sera mentionné lors du sacrifice"
+              }
+            >
+              <input
+                {...register(`sacrifices.${idx}.niyyah`)}
+                className={inputClass}
+                placeholder={
+                  blockIntention === "famille"
+                    ? "Ex : Famille Mrabet"
+                    : blockIntention === "sadaqa"
+                    ? "Prénom du proche / défunt"
+                    : "Votre prénom"
+                }
+              />
+            </Field>
+          </div>
+        );
+      })}
 
       {/* ── Mode cadeau ── */}
       <div>
@@ -529,40 +514,6 @@ export default function OrderForm() {
             )}
           </motion.div>
         )}
-      </div>
-
-      {/* ── Niyyah ── */}
-      <div>
-        <h3 className="text-lg font-bold text-text-primary uppercase tracking-wide mb-2">
-          Niyyah <span className="text-text-muted font-normal normal-case text-sm">(intention)</span>
-        </h3>
-        <p className="text-text-muted-light text-sm mb-4">
-          {intention === "famille"
-            ? "Ce nom de famille sera mentionné lors du sacrifice."
-            : "Ce prénom sera mentionné lors du sacrifice."}
-        </p>
-        <Field
-          label={
-            intention === "famille"
-              ? "Nom de famille pour le sacrifice"
-              : intention === "sadaqa"
-              ? "Prénom du bénéficiaire"
-              : "Prénom pour le sacrifice"
-          }
-          error={errors.niyyah?.message}
-        >
-          <input
-            {...register("niyyah")}
-            className={inputClass}
-            placeholder={
-              intention === "famille"
-                ? "Ex : Famille Mrabet"
-                : intention === "sadaqa"
-                ? "Prénom du proche / défunt"
-                : "Ton prénom"
-            }
-          />
-        </Field>
       </div>
 
       {/* ── Code parrain ── */}
