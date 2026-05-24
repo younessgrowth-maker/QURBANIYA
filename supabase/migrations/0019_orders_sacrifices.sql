@@ -27,14 +27,21 @@ create index if not exists orders_sacrifices_gin_idx
 
 -- Backfill : pour les commandes existantes, créer un sacrifices array à
 -- partir des colonnes niyyah/intention top-level, répété `quantity` fois.
-update public.orders
-   set sacrifices = (
-     select jsonb_agg(jsonb_build_object(
-       'niyyah', niyyah,
-       'intention', intention
-     ))
-     from generate_series(1, quantity)
-   )
- where sacrifices = '[]'::jsonb
-   and niyyah is not null
-   and intention is not null;
+--
+-- Postgres n'autorise pas jsonb_agg() directement dans le SET d'un UPDATE.
+-- On utilise donc UPDATE ... FROM LATERAL pour calculer le jsonb_agg par
+-- ligne dans une sous-requête correlée.
+update public.orders o
+   set sacrifices = sub.arr
+  from lateral (
+    select jsonb_agg(
+             jsonb_build_object(
+               'niyyah', o.niyyah,
+               'intention', o.intention
+             )
+           ) as arr
+      from generate_series(1, greatest(coalesce(o.quantity, 1), 1))
+  ) sub
+ where o.sacrifices = '[]'::jsonb
+   and o.niyyah is not null
+   and o.intention is not null;
