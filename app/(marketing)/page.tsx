@@ -2,6 +2,7 @@ import { ProductJsonLd, EventJsonLd, BreadcrumbJsonLd } from "@/components/seo/J
 import Hero from "@/components/sections/Hero";
 import StockGauge from "@/components/ui/StockGauge";
 import InventoryStatus from "@/components/sections/InventoryStatus";
+import ExtraPlacesBanner from "@/components/sections/ExtraPlacesBanner";
 import TrustBar from "@/components/ui/TrustBar";
 import ProblemSolution from "@/components/sections/ProblemSolution";
 import HowItWorks from "@/components/sections/HowItWorks";
@@ -36,6 +37,9 @@ export default function HomePage() {
       {/* 1. ACCROCHE — Emotion + CTA principal */}
       <Hero />
       <div className="bg-bg-primary section-padding !py-6 md:!py-8 px-4">
+        {/* Bandeau "+100 places exceptionnelles" — actif uniquement J-4 → J-0
+            tant qu'il reste du stock. Auto-supprimé après l'Aïd. */}
+        <ExtraPlacesBanner className="mb-4" />
         <InventoryStatus className="mb-6" />
         <StockGauge />
       </div>
