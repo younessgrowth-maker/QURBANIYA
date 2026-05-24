@@ -36,12 +36,23 @@ export async function POST(req: NextRequest) {
     // Fail-open si Supabase injoignable (inventory null) — on préfère accepter une
     // commande qu'on pourra gérer manuellement plutôt que bloquer tout le tunnel
     // sur un glitch Supabase.
+    const quantity = Math.max(1, Math.min(5, data.quantity ?? 1));
+
     const inventory = await getInventory(CURRENT_YEAR);
     if (inventory && (!inventory.isOpen || inventory.remaining <= 0)) {
       return NextResponse.json(
         {
           error: "Les réservations pour l'Aïd 2026 sont complètes. Contactez-nous pour être inscrit sur liste d'attente.",
           code: "inventory_full",
+        },
+        { status: 403 }
+      );
+    }
+    if (inventory && inventory.remaining < quantity) {
+      return NextResponse.json(
+        {
+          error: `Il ne reste que ${inventory.remaining} mouton(s) disponible(s). Vous avez demandé ${quantity}. Ajustez votre commande ou contactez-nous via WhatsApp.`,
+          code: "inventory_insufficient",
         },
         { status: 403 }
       );
@@ -118,12 +129,18 @@ export async function POST(req: NextRequest) {
           price_data: {
             currency: "eur",
             product_data: {
-              name: "Sacrifice Mouton — Qurbaniya",
+              name:
+                quantity === 1
+                  ? "Sacrifice Mouton — Qurbaniya"
+                  : `Sacrifice ${quantity} Moutons — Qurbaniya`,
               description: `Sacrifice au nom de ${data.niyyah} · Aïd el-Kébir 2026`,
             },
             unit_amount: PRICE_MOUTON,
           },
-          quantity: 1,
+          // Multi-moutons : Stripe multiplie unit_amount par quantity côté
+          // facturation. La somme totale chargée = PRICE_MOUTON × quantity
+          // − (discount éventuel sur la session).
+          quantity,
         },
       ],
       mode: "payment",
@@ -137,6 +154,9 @@ export async function POST(req: NextRequest) {
         telephone: data.telephone || "",
         intention: data.intention,
         niyyah: data.niyyah,
+        // Quantité (visible dans le dashboard Stripe + lue par le webhook
+        // pour décrémenter l'inventaire de N slots).
+        quantity: String(quantity),
         // Mode cadeau (visible dans le dashboard Stripe)
         is_gift: isGift ? "1" : "0",
         ...(recipientName ? { recipient_name: recipientName } : {}),
@@ -154,9 +174,12 @@ export async function POST(req: NextRequest) {
       telephone: data.telephone || "",
       intention: data.intention,
       niyyah: data.niyyah,
+      quantity, // multi-moutons : nombre de moutons sur cette commande
       payment_status: "pending",
       payment_method: "stripe",
       stripe_session_id: session.id,
+      // amount reste le PRIX UNITAIRE (140€). Le total payé = amount ×
+      // quantity − discount_amount, lu cohérence /admin et /admin/analytics.
       amount: PRICE_AMOUNT,
       is_gift: isGift,
       recipient_name: recipientName,

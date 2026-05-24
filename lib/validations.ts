@@ -17,6 +17,16 @@ export const orderSchema = z
       message: "Veuillez choisir une intention",
     }),
     niyyah: z.string().min(2, "Veuillez indiquer le nom pour le sacrifice"),
+    // ─── Quantité (nombre de moutons) ───
+    // Borné 1-5 côté UI et schema (cf. supabase migration 0018). Si le
+    // client veut + de 5 moutons (rare), il commande en plusieurs fois.
+    // Pas de .default() ici — la valeur par défaut vient de defaultValues
+    // react-hook-form (cf. note plus bas sur cadeau).
+    quantity: z
+      .number()
+      .int()
+      .min(1, "Au moins 1 mouton requis")
+      .max(5, "Maximum 5 moutons par commande — contactez-nous via WhatsApp pour davantage"),
     payment_method: z.enum(["stripe"]),
     // ─── Mode cadeau ───
     // Note: pas de .default() ici — react-hook-form fournit les valeurs par

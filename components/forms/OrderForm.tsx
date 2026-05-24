@@ -132,6 +132,7 @@ export default function OrderForm() {
     defaultValues: {
       payment_method: "stripe",
       intention: "pour_moi",
+      quantity: 1,
       is_gift: false,
       notify_recipient: false,
       referred_by_code: "",
@@ -140,6 +141,7 @@ export default function OrderForm() {
   });
 
   const intention = watch("intention");
+  const quantity = watch("quantity") ?? 1;
   const isGift = watch("is_gift");
   const notifyRecipient = watch("notify_recipient");
   const referralCode = watch("referred_by_code") || "";
@@ -269,6 +271,52 @@ export default function OrderForm() {
             <input {...register("telephone")} type="tel" className={inputClass} placeholder="+33 6 12 34 56 78" />
           </Field>
         </div>
+      </div>
+
+      {/* ── Nombre de moutons (multi-moutons) ── */}
+      <div>
+        <h3 className="text-lg font-bold text-text-primary uppercase tracking-wide mb-2">
+          Nombre de moutons
+        </h3>
+        <p className="text-sm text-text-muted mb-4">
+          Une seule commande pour vous, votre famille et vos proches. Au-delà de 5,{" "}
+          <a
+            href={`https://wa.me/33744798883?text=${encodeURIComponent("Bonjour, je souhaite réserver plus de 5 moutons")}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-emerald font-semibold underline underline-offset-2"
+          >
+            contactez-nous sur WhatsApp
+          </a>
+          .
+        </p>
+        {errors.quantity && (
+          <p className="text-urgency text-sm mb-3">{errors.quantity.message}</p>
+        )}
+        <div className="flex items-center gap-2 mb-2">
+          {[1, 2, 3, 4, 5].map((q) => (
+            <button
+              key={q}
+              type="button"
+              onClick={() => setValue("quantity", q, { shouldValidate: true })}
+              className={`flex-1 h-14 rounded-xl font-bold text-base transition-all duration-200 ${
+                quantity === q
+                  ? "bg-primary text-white shadow-glow-primary scale-[1.03]"
+                  : "bg-white border-2 border-gray-200 text-text-primary hover:border-primary/40"
+              }`}
+              aria-label={`${q} mouton${q > 1 ? "s" : ""}`}
+            >
+              {q}
+            </button>
+          ))}
+        </div>
+        {quantity > 1 && (
+          <p className="text-xs text-text-muted-light mt-2">
+            Vous recevrez <strong>{quantity}</strong> vidéo
+            {quantity > 1 ? "s" : ""} de sacrifice par WhatsApp le jour J,
+            au même nom (« {watch("niyyah") || "à indiquer"} »).
+          </p>
+        )}
       </div>
 
       {/* ── Intention ── */}
@@ -507,15 +555,30 @@ export default function OrderForm() {
             </span>
           </div>
         </div>
-        {referralState.status === "valid" && (
-          <div className="mt-3 flex items-center justify-between p-3 rounded-lg bg-bg-secondary border border-gold/20">
-            <span className="text-sm text-text-muted">Total après réduction parrain</span>
-            <span className="font-bold text-text-primary">
-              <span className="text-text-muted-light line-through mr-2 font-normal">140€</span>
-              <span className="text-emerald">{140 - referralState.discountEur}€</span>
+        {/* Récapitulatif total — affiche prix unitaire × quantité − discount */}
+        <div className="mt-3 flex items-center justify-between p-3 rounded-lg bg-bg-secondary border border-gold/20">
+          <span className="text-sm text-text-muted">
+            {quantity > 1
+              ? `Total · ${quantity} moutons à 140€`
+              : "Total"}
+            {referralState.status === "valid" && (
+              <span className="text-text-muted-light">
+                {" "}
+                · −{referralState.discountEur}€ parrain
+              </span>
+            )}
+          </span>
+          <span className="font-bold text-text-primary text-lg tabular-nums">
+            {referralState.status === "valid" && (
+              <span className="text-text-muted-light line-through mr-2 font-normal text-sm">
+                {quantity * 140}€
+              </span>
+            )}
+            <span className={referralState.status === "valid" ? "text-emerald" : ""}>
+              {quantity * 140 - (referralState.status === "valid" ? referralState.discountEur : 0)}€
             </span>
-          </div>
-        )}
+          </span>
+        </div>
       </div>
 
       {/* ── Erreur serveur (inventaire plein, aid_closed, etc.) ── */}
@@ -560,9 +623,15 @@ export default function OrderForm() {
             </motion.div>
           ) : (
             <Button type="submit" size="lg" variant="primary" className="w-full" loading={isSubmitting}>
-              {referralState.status === "valid"
-                ? `FINALISER MA COMMANDE — ${140 - referralState.discountEur}€`
-                : "FINALISER MA COMMANDE — 140€"}
+              {(() => {
+                const baseTotal = quantity * 140;
+                const finalTotal =
+                  baseTotal -
+                  (referralState.status === "valid"
+                    ? referralState.discountEur
+                    : 0);
+                return `FINALISER MA COMMANDE — ${finalTotal}€`;
+              })()}
             </Button>
           )}
         </AnimatePresence>
