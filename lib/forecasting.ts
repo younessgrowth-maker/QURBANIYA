@@ -1,92 +1,70 @@
-// Prédiction de ventes Aïd-aware.
+// Prédiction de ventes Aïd-aware avec prior optionnel issu de l'année
+// précédente.
 //
-// Hypothèses du modèle :
+// Hypothèses :
 //  - Les ventes d'un produit de l'Aïd suivent une courbe d'accélération
-//    massive sur les 2-3 dernières semaines (effet "deadline religieuse").
-//  - On combine deux signaux :
-//      1) une baseline issue de la tendance récente (régression
-//         exponentielle pondérée sur les N derniers jours),
-//      2) un multiplicateur d'urgence f(daysUntilAid) calibré sur les
-//         observations marché e-commerce religieux (multiplier par 1×
-//         à >30 jours, ~2× à 14j, ~5× à 7j, ~10× à 3j, ~15× à 1j).
-//  - Si les données récentes montrent déjà une accélération mesurable,
-//    le modèle l'apprend (le multiplicateur d'urgence est ajusté pour
-//    minimiser l'erreur sur les K derniers jours observés).
-//  - Incertitude estimée via bootstrap (Monte Carlo) : on rééchantillonne
-//    les résidus historiques pour générer 1000 scénarios et on déduit
-//    les percentiles P10 / P50 / P90.
+//    massive sur les 2-3 dernières semaines.
+//  - Si on dispose d'un historique de l'an dernier aligné par jours avant
+//    l'Aïd, on l'utilise comme prior empirique (chaque "shape day" du
+//    forecast est ancré sur la trajectoire réelle observée l'an dernier).
+//  - À défaut, on retombe sur une courbe d'urgence calibrée empiriquement.
+//  - On apprend par moindres carrés un facteur global de calibration
+//    courant_année / an_dernier (ou facteur Aïd) sur les K derniers jours
+//    observés.
+//  - Incertitude par bootstrap Monte Carlo (1000 simulations, bruit gaussien
+//    sur résidus).
 
-import type { DailyBucket } from "@/lib/stripe-analytics";
+import type { AlignedBucket } from "@/lib/stripe-analytics";
 
 export type ForecastPoint = {
-  date: string; // YYYY-MM-DD
-  p10: number; // borne basse (intervalle 80%)
-  p50: number; // médiane prédite
-  p90: number; // borne haute
+  date: string;
+  daysBeforeAid: number; // négatif = avant Aïd
+  p10: number;
+  p50: number;
+  p90: number;
 };
 
 export type ForecastResult = {
-  // Série historique (count quotidien depuis daysBack)
-  history: { date: string; count: number; grossEur: number }[];
-  // Prédictions à partir de demain jusqu'à AID_DATE (inclus)
+  history: { date: string; daysBeforeAid: number; count: number; grossEur: number }[];
   forecast: ForecastPoint[];
-  // Totaux projetés
   projection: {
     additionalSalesP10: number;
     additionalSalesP50: number;
     additionalSalesP90: number;
     additionalRevenueP50Eur: number;
-    finalTotalSalesP50: number; // ventes observées + ventes prédites
+    finalTotalSalesP50: number;
     finalTotalRevenueP50Eur: number;
   };
-  // Stock-out
   stockout: {
-    expectedDate: string | null; // null si pas atteint dans la fenêtre
-    probability: number; // 0..1 : proba que le stock soit épuisé avant l'Aïd
+    expectedDate: string | null;
+    probability: number;
     remainingNow: number;
   };
-  // Pacing : où on en est vs un objectif (optionnel)
   pacing: {
     actualSoFar: number;
     projectedFinal: number;
     daysObserved: number;
     daysRemaining: number;
-    velocityRecent: number; // moyenne ventes/jour 7 derniers jours
-    velocityProjected: number; // moyenne ventes/jour à venir (P50)
-    accelerationFactor: number; // velocityProjected / max(velocityRecent, 0.1)
+    velocityRecent: number;
+    velocityProjected: number;
+    accelerationFactor: number;
   };
   diagnostics: {
     aovEur: number;
+    method: "prior-from-last-year" | "empirical-aid-curve";
     baselineDaily: number;
-    aidMultiplierLearned: number; // facteur global appris (1 = pas d'effet)
-    residualStdDev: number; // bruit observé
+    aidMultiplierLearned: number;
+    residualStdDev: number;
   };
 };
 
-// ── Helpers calendaires ──────────────────────────────────────────────────
-function dateKey(d: Date): string {
-  return d.toISOString().slice(0, 10);
-}
-
-function addDays(d: Date, n: number): Date {
-  const out = new Date(d);
-  out.setUTCDate(out.getUTCDate() + n);
-  return out;
-}
-
-function daysBetween(a: Date, b: Date): number {
-  return Math.round((b.getTime() - a.getTime()) / 86_400_000);
-}
-
-// ── Courbe d'urgence Aïd ─────────────────────────────────────────────────
-// Multiplicateur appliqué à la baseline en fonction du nombre de jours
-// restant avant l'Aïd. Calibration empirique e-commerce religieux,
-// remixable par fit (cf plus bas).
-function baseAidMultiplier(daysUntilAid: number): number {
-  if (daysUntilAid <= 0) return 0; // commandes fermées
-  if (daysUntilAid >= 60) return 1.0;
-  // Interpolation log-linéaire entre points connus.
-  // (jours_restants, multiplicateur)
+// ── Multiplicateur d'urgence empirique (fallback si pas de prior) ────────
+function baseAidMultiplier(daysBeforeAid: number): number {
+  // daysBeforeAid < 0 = avant Aïd (J-X)
+  // daysBeforeAid >= 0 = jour J ou après → 0 (ventes fermées)
+  if (daysBeforeAid >= 0) return 0;
+  const dua = -daysBeforeAid; // jours avant Aïd, positif
+  if (dua >= 60) return 1.0;
   const pts: [number, number][] = [
     [60, 1.0],
     [30, 1.4],
@@ -102,20 +80,46 @@ function baseAidMultiplier(daysUntilAid: number): number {
   for (let i = 0; i < pts.length - 1; i++) {
     const [d1, m1] = pts[i];
     const [d2, m2] = pts[i + 1];
-    if (daysUntilAid <= d1 && daysUntilAid >= d2) {
-      const t = (d1 - daysUntilAid) / (d1 - d2);
+    if (dua <= d1 && dua >= d2) {
+      const t = (d1 - dua) / (d1 - d2);
       return m1 + t * (m2 - m1);
     }
   }
   return 15.0;
 }
 
-// ── Régression : baseline lissée par EWMA ────────────────────────────────
-// Moyenne mobile exponentielle inverse à l'effet Aïd : on divise chaque
-// observation par son multiplicateur Aïd pour récupérer la "vraie"
-// vélocité de fond, puis on lisse. Ça évite que la baseline absorbe le pic.
+// ── Prior depuis l'an dernier ────────────────────────────────────────────
+// Construit une fonction qui donne la vélocité attendue pour un
+// daysBeforeAid donné, lissée par moyenne mobile 3j sur les données réelles.
+function makePriorFromLastYear(
+  lastYear: AlignedBucket[]
+): ((daysBeforeAid: number) => number) | null {
+  if (lastYear.length < 30) return null;
+  const map = new Map<number, number>();
+  for (const b of lastYear) {
+    map.set(b.daysBeforeAid, b.count);
+  }
+  // Lissage glissant 3j pour réduire bruit jour-à-jour
+  return (daysBeforeAid: number) => {
+    const window = [-1, 0, 1];
+    let sum = 0;
+    let n = 0;
+    for (const w of window) {
+      const v = map.get(daysBeforeAid + w);
+      if (v !== undefined) {
+        sum += v;
+        n += 1;
+      }
+    }
+    if (n === 0) return 0;
+    return sum / n;
+  };
+}
+
+// ── Baseline lissée (EWMA inverse de l'effet Aïd) ────────────────────────
 function computeBaseline(
-  series: { date: string; count: number; daysUntilAid: number }[],
+  series: { daysBeforeAid: number; count: number }[],
+  shapeFn: (daysBeforeAid: number) => number,
   halfLife: number = 14
 ): number {
   if (series.length === 0) return 0;
@@ -126,50 +130,45 @@ function computeBaseline(
   for (let i = 0; i < series.length; i++) {
     const age = lastIdx - i;
     const w = Math.exp(-lambda * age);
-    const mult = baseAidMultiplier(series[i].daysUntilAid);
-    if (mult <= 0) continue;
-    num += w * (series[i].count / mult);
+    const shape = shapeFn(series[i].daysBeforeAid);
+    if (shape <= 0) continue;
+    num += w * (series[i].count / shape);
     den += w;
   }
   return den > 0 ? num / den : 0;
 }
 
-// ── Fit du multiplicateur Aïd global ─────────────────────────────────────
-// Apprend un facteur de calibration globale appliqué au multiplicateur
-// de base, pour matcher les observations récentes. Borné [0.3, 4] pour
-// éviter d'amplifier le bruit sur petites séries.
-function fitAidMultiplier(
-  series: { date: string; count: number; daysUntilAid: number }[],
+function fitScale(
+  series: { daysBeforeAid: number; count: number }[],
+  shapeFn: (daysBeforeAid: number) => number,
   baseline: number
 ): number {
-  if (baseline <= 0 || series.length < 7) return 1.0;
-  // log-space least-squares sur les 21 derniers points significatifs.
+  if (baseline <= 0 || series.length < 5) return 1.0;
   const recent = series.slice(-21).filter((p) => p.count > 0);
-  if (recent.length < 4) return 1.0;
+  if (recent.length < 3) return 1.0;
   let sumLogRatio = 0;
   let n = 0;
   for (const p of recent) {
-    const expected = baseline * baseAidMultiplier(p.daysUntilAid);
+    const expected = baseline * shapeFn(p.daysBeforeAid);
     if (expected <= 0) continue;
     sumLogRatio += Math.log(p.count / expected);
     n += 1;
   }
   if (n === 0) return 1.0;
   const factor = Math.exp(sumLogRatio / n);
-  return Math.max(0.3, Math.min(4.0, factor));
+  return Math.max(0.2, Math.min(5.0, factor));
 }
 
-// ── Résidus & bruit ──────────────────────────────────────────────────────
 function computeResidualStdDev(
-  series: { count: number; daysUntilAid: number }[],
+  series: { daysBeforeAid: number; count: number }[],
+  shapeFn: (daysBeforeAid: number) => number,
   baseline: number,
   factor: number
 ): number {
   if (series.length < 3) return Math.max(1, baseline * 0.5);
   const residuals: number[] = [];
   for (const p of series) {
-    const expected =
-      baseline * baseAidMultiplier(p.daysUntilAid) * factor;
+    const expected = baseline * shapeFn(p.daysBeforeAid) * factor;
     residuals.push(p.count - expected);
   }
   const mean = residuals.reduce((a, b) => a + b, 0) / residuals.length;
@@ -178,7 +177,7 @@ function computeResidualStdDev(
   return Math.sqrt(variance);
 }
 
-// ── PRNG seedé (Mulberry32) pour reproductibilité ────────────────────────
+// PRNG seedé
 function makeRng(seed: number) {
   let s = seed >>> 0;
   return () => {
@@ -190,20 +189,24 @@ function makeRng(seed: number) {
   };
 }
 
-// Box-Muller pour normales
 function normalRandom(rng: () => number): number {
   const u = 1 - rng();
   const v = rng();
   return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
 }
 
+function dateKeyUtc(d: Date): string {
+  return d.toISOString().slice(0, 10);
+}
+
 // ── API principale ───────────────────────────────────────────────────────
 export type ForecastInput = {
-  daily: DailyBucket[]; // historique (server-side, déjà filtré)
-  aidDate: Date;
+  current: AlignedBucket[]; // historique année en cours
+  previous?: AlignedBucket[]; // historique année précédente (prior optionnel)
+  aidDate: Date; // date Aïd année en cours
   now?: Date;
-  stockRemaining: number; // moutons encore disponibles
-  aovEurOverride?: number; // panier moyen, sinon dérivé
+  stockRemaining: number;
+  aovEurOverride?: number;
   simulations?: number;
 };
 
@@ -212,50 +215,69 @@ export function buildForecast(input: ForecastInput): ForecastResult {
   const aidDate = input.aidDate;
   const simulations = input.simulations ?? 1000;
 
-  // Série historique avec daysUntilAid au moment de chaque vente
-  const history = input.daily.map((b) => {
-    const d = new Date(b.date + "T12:00:00Z");
-    const dua = Math.max(0, daysBetween(d, aidDate));
-    return {
+  // Construction de la série historique aplatie (déjà alignée)
+  const historyAll = input.current
+    .filter((b) => b.date <= dateKeyUtc(now))
+    .map((b) => ({
       date: b.date,
+      daysBeforeAid: b.daysBeforeAid,
       count: b.count,
       grossEur: b.grossEur,
-      daysUntilAid: dua,
-    };
-  });
+    }));
+
+  // Filtrer la fenêtre [-90, 0] pour le fit (on ignore l'après-Aïd)
+  const fittable = historyAll.filter(
+    (h) => h.daysBeforeAid >= -90 && h.daysBeforeAid < 0
+  );
 
   const aovEur =
     input.aovEurOverride ??
     (() => {
-      const paidCount = history.reduce((a, b) => a + b.count, 0);
-      const paidEur = history.reduce((a, b) => a + b.grossEur, 0);
+      const paidCount = historyAll.reduce((a, b) => a + b.count, 0);
+      const paidEur = historyAll.reduce((a, b) => a + b.grossEur, 0);
       return paidCount > 0 ? paidEur / paidCount : 140;
     })();
 
-  const baseline = computeBaseline(history);
-  const aidFactor = fitAidMultiplier(history, baseline);
-  const sigma = computeResidualStdDev(history, baseline, aidFactor);
+  // Choix de la shape function
+  let method: "prior-from-last-year" | "empirical-aid-curve" =
+    "empirical-aid-curve";
+  let shapeFn: (dba: number) => number = baseAidMultiplier;
 
-  // Fenêtre de prédiction : de demain à aidDate inclus
-  const todayKey = dateKey(now);
-  let cursor = addDays(now, 1);
-  const futureDays: { date: string; daysUntilAid: number }[] = [];
-  while (cursor.getTime() <= aidDate.getTime() + 1000) {
-    const dk = dateKey(cursor);
-    if (dk === todayKey) {
-      cursor = addDays(cursor, 1);
-      continue;
+  const priorFn = input.previous ? makePriorFromLastYear(input.previous) : null;
+  if (priorFn) {
+    // Vérifier qu'on a une variance suffisante dans le prior pour s'en servir
+    const totalLastYear = (input.previous ?? []).reduce(
+      (a, b) => a + b.count,
+      0
+    );
+    if (totalLastYear >= 20) {
+      method = "prior-from-last-year";
+      shapeFn = priorFn;
     }
-    const dua = Math.max(0, daysBetween(cursor, aidDate));
-    futureDays.push({ date: dk, daysUntilAid: dua });
-    if (futureDays.length > 120) break; // garde-fou
-    cursor = addDays(cursor, 1);
   }
 
-  // ── Monte Carlo ──────────────────────────────────────────────────────
-  // On simule N scénarios. Pour chacun : pour chaque jour futur, tirer
-  // bruit ~ N(0, sigma), appliquer plancher 0. On enregistre par-jour
-  // les valeurs pour calculer percentiles, et on accumule pour le total.
+  const baseline = computeBaseline(fittable, shapeFn);
+  const scale = fitScale(fittable, shapeFn, baseline);
+  const sigma = computeResidualStdDev(fittable, shapeFn, baseline, scale);
+
+  // Fenêtre future : daysBeforeAid actuel + 1 → 0 (jour de l'Aïd inclus)
+  const todayDba = -Math.max(
+    0,
+    Math.round((aidDate.getTime() - now.getTime()) / 86_400_000)
+  );
+  // Si Aïd dans le passé, pas de forecast
+  const futureDays: { date: string; daysBeforeAid: number }[] = [];
+  for (let dba = todayDba + 1; dba <= 0; dba++) {
+    const futureDate = new Date(aidDate);
+    futureDate.setUTCDate(futureDate.getUTCDate() + dba);
+    futureDays.push({
+      date: dateKeyUtc(futureDate),
+      daysBeforeAid: dba,
+    });
+    if (futureDays.length > 120) break;
+  }
+
+  // Monte Carlo
   const rng = makeRng(42);
   const perDaySamples: number[][] = futureDays.map(() => []);
   const totalSamples: number[] = new Array(simulations).fill(0);
@@ -265,8 +287,8 @@ export function buildForecast(input: ForecastInput): ForecastResult {
   for (let s = 0; s < simulations; s++) {
     let cumulative = 0;
     for (let i = 0; i < futureDays.length; i++) {
-      const mean =
-        baseline * baseAidMultiplier(futureDays[i].daysUntilAid) * aidFactor;
+      const shape = shapeFn(futureDays[i].daysBeforeAid);
+      const mean = baseline * shape * scale;
       const noisy = mean + normalRandom(rng) * sigma;
       const v = Math.max(0, noisy);
       perDaySamples[i].push(v);
@@ -295,19 +317,18 @@ export function buildForecast(input: ForecastInput): ForecastResult {
 
   const forecast: ForecastPoint[] = futureDays.map((d, i) => ({
     date: d.date,
+    daysBeforeAid: d.daysBeforeAid,
     p10: percentile(perDaySamples[i], 10),
     p50: percentile(perDaySamples[i], 50),
     p90: percentile(perDaySamples[i], 90),
   }));
 
-  // Totaux
   const additionalP10 = percentile(totalSamples, 10);
   const additionalP50 = percentile(totalSamples, 50);
   const additionalP90 = percentile(totalSamples, 90);
-  const observedTotal = history.reduce((a, b) => a + b.count, 0);
-  const observedRevenue = history.reduce((a, b) => a + b.grossEur, 0);
+  const observedTotal = historyAll.reduce((a, b) => a + b.count, 0);
+  const observedRevenue = historyAll.reduce((a, b) => a + b.grossEur, 0);
 
-  // Stock-out
   const probStockout =
     stockoutBeforeAid.filter(Boolean).length / Math.max(1, simulations);
   let expectedStockoutDateKey: string | null = null;
@@ -315,14 +336,12 @@ export function buildForecast(input: ForecastInput): ForecastResult {
     (v): v is number => v !== null
   );
   if (stockoutDayCounts.length > 0) {
-    // Médiane des jours d'épuisement
     const medianIdx = percentile(stockoutDayCounts, 50);
     const idx = Math.min(futureDays.length - 1, Math.round(medianIdx));
     expectedStockoutDateKey = futureDays[idx]?.date ?? null;
   }
 
-  // Vélocités
-  const last7 = history.slice(-7);
+  const last7 = historyAll.slice(-7);
   const velocityRecent =
     last7.length > 0
       ? last7.reduce((a, b) => a + b.count, 0) / last7.length
@@ -331,11 +350,7 @@ export function buildForecast(input: ForecastInput): ForecastResult {
     futureDays.length > 0 ? additionalP50 / futureDays.length : 0;
 
   return {
-    history: history.map((h) => ({
-      date: h.date,
-      count: h.count,
-      grossEur: h.grossEur,
-    })),
+    history: historyAll,
     forecast,
     projection: {
       additionalSalesP10: Math.round(additionalP10),
@@ -355,7 +370,7 @@ export function buildForecast(input: ForecastInput): ForecastResult {
     pacing: {
       actualSoFar: observedTotal,
       projectedFinal: observedTotal + Math.round(additionalP50),
-      daysObserved: history.length,
+      daysObserved: historyAll.length,
       daysRemaining: futureDays.length,
       velocityRecent,
       velocityProjected,
@@ -368,8 +383,9 @@ export function buildForecast(input: ForecastInput): ForecastResult {
     },
     diagnostics: {
       aovEur,
+      method,
       baselineDaily: baseline,
-      aidMultiplierLearned: aidFactor,
+      aidMultiplierLearned: scale,
       residualStdDev: sigma,
     },
   };
