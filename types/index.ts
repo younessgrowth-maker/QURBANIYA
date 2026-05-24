@@ -48,6 +48,10 @@ export interface Order {
   aid_reminder_sent_at: string | null;
   // Multi-moutons par commande (migration 0018) : 1 à 5
   quantity: number;
+  // Multi-niyyahs/intentions par commande (migration 0019).
+  // Array de longueur = quantity. La 1re entrée miroir niyyah/intention
+  // top-level pour backward compat.
+  sacrifices: Array<{ niyyah: string; intention: Intention }>;
   created_at: string;
   updated_at: string;
 }

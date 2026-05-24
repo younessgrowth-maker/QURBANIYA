@@ -13,20 +13,31 @@ export const orderSchema = z
       .refine((val) => (val.match(/\d/g) ?? []).length >= 9, {
         message: "Numéro invalide (au moins 9 chiffres)",
       }),
-    intention: z.enum(["pour_moi", "famille", "sadaqa"], {
-      message: "Veuillez choisir une intention",
-    }),
-    niyyah: z.string().min(2, "Veuillez indiquer le nom pour le sacrifice"),
     // ─── Quantité (nombre de moutons) ───
-    // Borné 1-5 côté UI et schema (cf. supabase migration 0018). Si le
-    // client veut + de 5 moutons (rare), il commande en plusieurs fois.
-    // Pas de .default() ici — la valeur par défaut vient de defaultValues
-    // react-hook-form (cf. note plus bas sur cadeau).
+    // Borné 1-5 côté UI et schema (cf. supabase migration 0018).
     quantity: z
       .number()
       .int()
-      .min(1, "Au moins 1 mouton requis")
-      .max(5, "Maximum 5 moutons par commande — contactez-nous via WhatsApp pour davantage"),
+      .min(1, "Au moins 1 sacrifice requis")
+      .max(5, "Maximum 5 sacrifices par commande — contactez-nous via WhatsApp pour davantage"),
+    // ─── Sacrifices ─── (migration 0019)
+    // Array d'objets {niyyah, intention} de longueur = quantity. Permet à
+    // chaque mouton d'avoir sa propre intention et son nom (cas typique :
+    // 1 pour soi, 1 pour parents décédés, 1 en sadaqa).
+    sacrifices: z
+      .array(
+        z.object({
+          niyyah: z
+            .string()
+            .trim()
+            .min(2, "Indiquez le nom pour ce sacrifice"),
+          intention: z.enum(["pour_moi", "famille", "sadaqa"], {
+            message: "Veuillez choisir une intention",
+          }),
+        })
+      )
+      .min(1, "Au moins 1 sacrifice requis")
+      .max(5, "Maximum 5 sacrifices"),
     payment_method: z.enum(["stripe"]),
     // ─── Mode cadeau ───
     // Note: pas de .default() ici — react-hook-form fournit les valeurs par
@@ -72,6 +83,15 @@ export const orderSchema = z
       .or(z.literal("")),
   })
   .superRefine((data, ctx) => {
+    // sacrifices.length doit correspondre à quantity (sinon UI désynchronisée
+    // ou utilisateur trichant le payload côté client).
+    if (data.sacrifices.length !== data.quantity) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: `Vous avez choisi ${data.quantity} sacrifice(s) mais ${data.sacrifices.length} renseigné(s)`,
+        path: ["sacrifices"],
+      });
+    }
     // En mode cadeau, le nom du bénéficiaire est obligatoire.
     if (data.is_gift && !data.recipient_name?.trim()) {
       ctx.addIssue({

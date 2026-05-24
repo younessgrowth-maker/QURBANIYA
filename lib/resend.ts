@@ -223,13 +223,49 @@ export async function sendOrderConfirmation(order: Order) {
             <td style="color:#5C5347;font-size:14px;padding:6px 0;">Montant payé</td>
             <td style="color:#1B4332;font-size:14px;padding:6px 0;text-align:right;font-weight:bold;">${fmt(netAmount)}</td>
           </tr>
-          <tr>
-            <td style="color:#5C5347;font-size:14px;padding:6px 0;">Intention</td>
-            <td style="color:#1A1A18;font-size:14px;padding:6px 0;text-align:right;">${intentionLabel}</td>
-          </tr>
-          <tr>
-            <td style="color:#5C5347;font-size:14px;padding:6px 0;">Niyyah</td>
-            <td style="color:#B8860B;font-size:14px;padding:6px 0;text-align:right;font-weight:bold;font-family:Georgia,serif;font-style:italic;">${order.niyyah}</td>
+          ${(() => {
+            // Multi-sacrifices : afficher une ligne par sacrifice
+            // (intention + niyyah). Pour 1 mouton, format classique.
+            const sacrificesList =
+              Array.isArray(order.sacrifices) && order.sacrifices.length > 0
+                ? order.sacrifices
+                : [{ niyyah: order.niyyah, intention: order.intention }];
+            const intentionFr = (i: string) =>
+              i === "pour_moi"
+                ? "Pour vous-même"
+                : i === "famille"
+                ? "Pour votre famille"
+                : "En sadaqa";
+            if (sacrificesList.length === 1) {
+              return `
+                <tr>
+                  <td style="color:#5C5347;font-size:14px;padding:6px 0;">Intention</td>
+                  <td style="color:#1A1A18;font-size:14px;padding:6px 0;text-align:right;">${intentionLabel}</td>
+                </tr>
+                <tr>
+                  <td style="color:#5C5347;font-size:14px;padding:6px 0;">Niyyah</td>
+                  <td style="color:#B8860B;font-size:14px;padding:6px 0;text-align:right;font-weight:bold;font-family:Georgia,serif;font-style:italic;">${order.niyyah}</td>
+              `;
+            }
+            return sacrificesList
+              .map(
+                (s, i) => `
+                  <tr>
+                    <td style="color:#5C5347;font-size:14px;padding:6px 0;">${
+                      i === 0 ? "1er" : `${i + 1}e`
+                    } sacrifice</td>
+                    <td style="color:#1A1A18;font-size:14px;padding:6px 0;text-align:right;">
+                      <span style="color:#5C5347;">${intentionFr(s.intention)} · </span>
+                      <span style="color:#B8860B;font-family:Georgia,serif;font-style:italic;font-weight:bold;">${s.niyyah}</span>
+                    </td>
+                  </tr>
+                `
+              )
+              .join("");
+          })()}
+          <tr style="display:none">
+            <td></td>
+            <td>
           </tr>
           ${order.is_gift && order.recipient_name ? `<tr>
             <td style="color:#5C5347;font-size:14px;padding:6px 0;">Offert à</td>
