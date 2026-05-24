@@ -1,26 +1,55 @@
-// Server-only — récupère et agrège les ventes réelles depuis Stripe.
-// Utilisé par /admin/analytics. Bypass la table `orders` Supabase
-// (qui dépend du webhook pas encore branché en prod) et tire directement
-// de l'API Stripe pour avoir la vérité du compte marchand.
+// Server-only — récupère et agrège les ventes réelles depuis Stripe,
+// avec comparaison année-sur-année alignée par jours avant l'Aïd.
+//
+// Architecture :
+//  - fetchStripeYear(year) → données d'une année (90j avant l'Aïd à +7j)
+//  - fetchYearOverYear() → 2025 + 2026 alignées par daysBeforeAid
+//  - fetchStripeAnalytics() → kept for backward compat (legacy /admin)
 
 import "server-only";
-import { unstable_cache } from "next/cache";
+import { unstable_cache, revalidateTag } from "next/cache";
 import { getStripe } from "@/lib/stripe";
 
-export type DailyBucket = {
-  date: string; // YYYY-MM-DD (Europe/Paris)
+// ── Dates des Aïds par année (Aïd al-Adha) ───────────────────────────────
+// Source : calendriers officiels. Année lunaire ≈ 354j → ~11j plus tôt chaque
+// année grégorienne. On garde les dates exactes ici, source unique.
+export const AID_DATES_BY_YEAR: Record<number, string> = {
+  2023: "2023-06-28",
+  2024: "2024-06-16",
+  2025: "2025-06-06",
+  2026: "2026-05-27",
+};
+
+export type AlignedBucket = {
+  daysBeforeAid: number; // -90 à 0 (0 = jour de l'Aïd)
+  date: string; // YYYY-MM-DD réelle de cette année
   count: number;
-  grossEur: number; // somme amount_total / 100
-  netEur: number; // amount - fees (via balance_transactions)
+  grossEur: number;
+  netEur: number;
   feesEur: number;
   refundsEur: number;
 };
 
-export type StripeAnalytics = {
-  fetchedAt: string; // ISO
-  rangeStart: string; // YYYY-MM-DD
-  rangeEnd: string; // YYYY-MM-DD (= aujourd'hui Paris)
-  daily: DailyBucket[]; // tri ascendant, un bucket par jour calendaire
+export type ConversionFunnel = {
+  sessionsTotal: number;
+  sessionsPaid: number;
+  sessionsExpired: number;
+  sessionsOpen: number;
+  rate: number; // paid / total
+};
+
+export type PromoCodeStat = {
+  code: string;
+  count: number;
+  totalDiscountEur: number;
+};
+
+export type YearStats = {
+  year: number;
+  aidDate: string; // YYYY-MM-DD
+  rangeStart: string;
+  rangeEnd: string;
+  daily: AlignedBucket[]; // aligné par daysBeforeAid (asc, de -90 vers 0)
   totals: {
     sessions: number;
     paidSessions: number;
@@ -30,14 +59,29 @@ export type StripeAnalytics = {
     refundsEur: number;
     refundsCount: number;
     disputesCount: number;
-    aovEur: number; // panier moyen brut sur paid sessions
+    aovEur: number;
   };
-  hourlyDistribution: { hour: number; count: number }[]; // 0..23
-  weekdayDistribution: { weekday: number; count: number }[]; // 0..6 (0 = lundi)
+  hourlyDistribution: { hour: number; count: number }[];
+  weekdayDistribution: { weekday: number; count: number }[];
   topCustomers: { email: string; count: number; grossEur: number }[];
+  topPromoCodes: PromoCodeStat[];
+  conversionFunnel: ConversionFunnel;
+  medianTimeToPaySec: number | null; // null si pas assez de data
+};
+
+export type YoYAnalytics = {
+  fetchedAt: string;
+  current: YearStats;
+  previous: YearStats | null;
+  yoy: {
+    salesGrowthPct: number | null;
+    revenueGrowthPct: number | null;
+    aovGrowthPct: number | null;
+    conversionGrowthPct: number | null;
+  };
   recentSessions: {
     id: string;
-    createdAt: string; // ISO
+    createdAt: string;
     email: string | null;
     amountEur: number;
     status: string;
@@ -46,9 +90,6 @@ export type StripeAnalytics = {
 };
 
 // ── Helpers timezone ─────────────────────────────────────────────────────
-// On veut grouper par jour calendaire Europe/Paris. Stripe renvoie des
-// timestamps UTC ; on convertit via Intl pour rester correct l'année entière
-// (heure d'été comprise).
 const PARIS_TZ = "Europe/Paris";
 
 const dateFormatter = new Intl.DateTimeFormat("fr-CA", {
@@ -65,7 +106,7 @@ const hourFormatter = new Intl.DateTimeFormat("en-GB", {
 });
 
 function parisDateKey(date: Date): string {
-  return dateFormatter.format(date); // YYYY-MM-DD
+  return dateFormatter.format(date);
 }
 
 function parisHour(date: Date): number {
@@ -74,7 +115,6 @@ function parisHour(date: Date): number {
 }
 
 function parisWeekday(date: Date): number {
-  // Lundi = 0 ... Dimanche = 6
   const wd = new Intl.DateTimeFormat("en-GB", {
     timeZone: PARIS_TZ,
     weekday: "short",
@@ -91,39 +131,33 @@ function parisWeekday(date: Date): number {
   return map[wd] ?? 0;
 }
 
-function enumerateDays(start: Date, end: Date): string[] {
-  const out: string[] = [];
-  const cursor = new Date(start);
-  cursor.setUTCHours(12, 0, 0, 0); // milieu de journée pour éviter sauts DST
-  while (cursor.getTime() <= end.getTime()) {
-    out.push(parisDateKey(cursor));
-    cursor.setUTCDate(cursor.getUTCDate() + 1);
-  }
-  return out;
+function daysBetween(a: Date, b: Date): number {
+  // Différence en jours calendaires (négatif si a > b).
+  const aMs = Date.UTC(a.getUTCFullYear(), a.getUTCMonth(), a.getUTCDate());
+  const bMs = Date.UTC(b.getUTCFullYear(), b.getUTCMonth(), b.getUTCDate());
+  return Math.round((bMs - aMs) / 86_400_000);
 }
 
-// ── Fetch paginé Stripe ──────────────────────────────────────────────────
-// `auto_paging` Stripe est dispo via .autoPagingEach. On l'utilise pour
-// récupérer toutes les pages sans gérer les cursors manuellement.
-
-async function fetchAllCheckoutSessions(sinceUnix: number) {
+// ── Fetch Stripe paginé sur fenêtre arbitraire ───────────────────────────
+async function fetchAllCheckoutSessions(fromUnix: number, toUnix: number) {
   const stripe = getStripe();
   const out: import("stripe").Stripe.Checkout.Session[] = [];
   for await (const s of stripe.checkout.sessions.list({
-    created: { gte: sinceUnix },
+    created: { gte: fromUnix, lte: toUnix },
     limit: 100,
+    expand: ["data.total_details"],
   })) {
     out.push(s);
-    if (out.length >= 5000) break; // garde-fou
+    if (out.length >= 5000) break;
   }
   return out;
 }
 
-async function fetchAllBalanceTransactions(sinceUnix: number) {
+async function fetchAllBalanceTransactions(fromUnix: number, toUnix: number) {
   const stripe = getStripe();
   const out: import("stripe").Stripe.BalanceTransaction[] = [];
   for await (const t of stripe.balanceTransactions.list({
-    created: { gte: sinceUnix },
+    created: { gte: fromUnix, lte: toUnix },
     limit: 100,
   })) {
     out.push(t);
@@ -132,11 +166,11 @@ async function fetchAllBalanceTransactions(sinceUnix: number) {
   return out;
 }
 
-async function fetchAllRefunds(sinceUnix: number) {
+async function fetchAllRefunds(fromUnix: number, toUnix: number) {
   const stripe = getStripe();
   const out: import("stripe").Stripe.Refund[] = [];
   for await (const r of stripe.refunds.list({
-    created: { gte: sinceUnix },
+    created: { gte: fromUnix, lte: toUnix },
     limit: 100,
   })) {
     out.push(r);
@@ -145,11 +179,14 @@ async function fetchAllRefunds(sinceUnix: number) {
   return out;
 }
 
-async function fetchDisputesCount(sinceUnix: number): Promise<number> {
+async function fetchDisputesCount(
+  fromUnix: number,
+  toUnix: number
+): Promise<number> {
   const stripe = getStripe();
   let n = 0;
   for await (const _d of stripe.disputes.list({
-    created: { gte: sinceUnix },
+    created: { gte: fromUnix, lte: toUnix },
     limit: 100,
   })) {
     void _d;
@@ -159,43 +196,54 @@ async function fetchDisputesCount(sinceUnix: number): Promise<number> {
   return n;
 }
 
-// ── Agrégation ───────────────────────────────────────────────────────────
+// ── Construction des stats d'une année alignée sur son Aïd ───────────────
+async function buildYearStats(
+  year: number,
+  options: { daysBefore: number; daysAfter: number }
+): Promise<YearStats | null> {
+  const aidStr = AID_DATES_BY_YEAR[year];
+  if (!aidStr) return null;
+  const aidDate = new Date(aidStr + "T12:00:00Z");
 
-async function buildAnalytics(daysBack: number): Promise<StripeAnalytics> {
+  const fromDate = new Date(aidDate);
+  fromDate.setUTCDate(fromDate.getUTCDate() - options.daysBefore);
+  const toDate = new Date(aidDate);
+  toDate.setUTCDate(toDate.getUTCDate() + options.daysAfter);
+
+  // Clamp la fenêtre actuelle au temps présent (inutile de fetch le futur).
   const now = new Date();
-  const since = new Date(now.getTime() - daysBack * 86_400_000);
-  const sinceUnix = Math.floor(since.getTime() / 1000);
+  const clampedTo = toDate.getTime() > now.getTime() ? now : toDate;
 
-  const [sessions, balanceTxs, refunds, disputesCount] = await Promise.all([
-    fetchAllCheckoutSessions(sinceUnix),
-    fetchAllBalanceTransactions(sinceUnix),
-    fetchAllRefunds(sinceUnix),
-    fetchDisputesCount(sinceUnix),
-  ]);
+  const fromUnix = Math.floor(fromDate.getTime() / 1000);
+  const toUnix = Math.floor(clampedTo.getTime() / 1000);
 
-  // Map paymentIntent → fees from balance_transactions
-  // Une charge a un balance_transaction avec fee/net (en centimes, devise compte).
-  const feesByPaymentIntent = new Map<string, { fee: number; net: number }>();
-  for (const tx of balanceTxs) {
-    if (tx.type !== "charge") continue;
-    const src = typeof tx.source === "string" ? tx.source : tx.source?.id;
-    if (!src) continue;
-    // On stocke par charge_id ; on résoudra via charge.payment_intent.
-    feesByPaymentIntent.set(src, { fee: tx.fee, net: tx.net });
+  if (toUnix <= fromUnix) {
+    // Aïd dans le futur sans data : retourner stats vides.
+    return emptyYearStats(year, aidStr, fromDate, clampedTo);
   }
 
-  // Pour mapper charge → payment_intent → checkout_session, on lit les
-  // sessions et on utilise payment_intent direct. Stripe expose
-  // session.payment_intent et session.amount_total. Pour les fees on
-  // utilise plutôt le total fees par jour via balance_transactions
-  // (type=charge), pour éviter d'avoir à fetch chaque charge.
+  const [sessions, balanceTxs, refunds, disputesCount] = await Promise.all([
+    fetchAllCheckoutSessions(fromUnix, toUnix),
+    fetchAllBalanceTransactions(fromUnix, toUnix),
+    fetchAllRefunds(fromUnix, toUnix),
+    fetchDisputesCount(fromUnix, toUnix),
+  ]);
 
-  // ── Buckets quotidiens ─────────────────────────────────────────────────
-  const dayKeys = enumerateDays(since, now);
-  const dailyMap = new Map<string, DailyBucket>();
-  for (const d of dayKeys) {
-    dailyMap.set(d, {
-      date: d,
+  // ── Construction des buckets alignés ─────────────────────────────────
+  const bucketsByDaysBefore = new Map<number, AlignedBucket>();
+  // Énumérer tous les jours possibles dans la fenêtre
+  for (
+    let d = -options.daysBefore;
+    d <= options.daysAfter;
+    d++
+  ) {
+    const dayDate = new Date(aidDate);
+    dayDate.setUTCDate(dayDate.getUTCDate() + d);
+    if (dayDate.getTime() > now.getTime() + 86_400_000) break;
+    const dk = parisDateKey(dayDate);
+    bucketsByDaysBefore.set(d, {
+      daysBeforeAid: d,
+      date: dk,
       count: 0,
       grossEur: 0,
       netEur: 0,
@@ -204,20 +252,36 @@ async function buildAnalytics(daysBack: number): Promise<StripeAnalytics> {
     });
   }
 
+  // Mapper date YYYY-MM-DD → daysBeforeAid
+  const dateToDaysBefore = new Map<string, number>();
+  bucketsByDaysBefore.forEach((b, dba) => {
+    dateToDaysBefore.set(b.date, dba);
+  });
+
   // Sessions
   const paidSessions = sessions.filter(
     (s) => s.payment_status === "paid" && (s.amount_total ?? 0) > 0
   );
+  const expiredSessions = sessions.filter(
+    (s) => s.status === "expired"
+  );
+  const openSessions = sessions.filter((s) => s.status === "open");
 
   const hourCounts = new Array(24).fill(0);
   const weekdayCounts = new Array(7).fill(0);
   const customerAgg = new Map<string, { count: number; grossEur: number }>();
+  const promoCodeAgg = new Map<
+    string,
+    { count: number; totalDiscountEur: number }
+  >();
+  const timesToPay: number[] = [];
 
   for (const s of paidSessions) {
     const created = new Date(s.created * 1000);
     const dk = parisDateKey(created);
-    const bucket = dailyMap.get(dk);
-    if (!bucket) continue;
+    const dba = dateToDaysBefore.get(dk);
+    if (dba === undefined) continue;
+    const bucket = bucketsByDaysBefore.get(dba)!;
     const amount = (s.amount_total ?? 0) / 100;
     bucket.count += 1;
     bucket.grossEur += amount;
@@ -231,14 +295,56 @@ async function buildAnalytics(daysBack: number): Promise<StripeAnalytics> {
     cust.count += 1;
     cust.grossEur += amount;
     customerAgg.set(email, cust);
+
+    // Promo codes : total_details.breakdown.discounts
+    const discounts = s.total_details?.breakdown?.discounts ?? [];
+    for (const d of discounts) {
+      // d.discount peut être expansé ou non. On essaie de récupérer un code.
+      const promoLike = d.discount as unknown as {
+        promotion_code?: string | { code?: string };
+        coupon?: { name?: string; id?: string };
+      };
+      let code: string | null = null;
+      if (typeof promoLike?.promotion_code === "string") {
+        code = promoLike.promotion_code;
+      } else if (
+        typeof promoLike?.promotion_code === "object" &&
+        promoLike.promotion_code?.code
+      ) {
+        code = promoLike.promotion_code.code;
+      } else if (promoLike?.coupon?.name) {
+        code = promoLike.coupon.name;
+      } else if (promoLike?.coupon?.id) {
+        code = promoLike.coupon.id;
+      }
+      if (code) {
+        const cur = promoCodeAgg.get(code) ?? {
+          count: 0,
+          totalDiscountEur: 0,
+        };
+        cur.count += 1;
+        cur.totalDiscountEur += (d.amount ?? 0) / 100;
+        promoCodeAgg.set(code, cur);
+      }
+    }
+
+    // Time-to-pay : utiliser session.expires_at - session.created ne donne pas
+    // ce qu'on veut. On approxime via payment_intent.created (mais on n'a pas
+    // ça direct sans expand coûteux). On utilise donc s.created (session
+    // ouverte) → s.created (toujours session) = 0. Pour avoir le vrai délai
+    // il faudrait fetch chaque PI. On laisse cette métrique à null pour
+    // l'instant si on ne peut pas la calculer fiablement.
+    void timesToPay;
   }
 
-  // Fees & net : on agrège balance_transactions par jour
+  // Fees & net
   for (const tx of balanceTxs) {
     if (tx.type !== "charge") continue;
     const created = new Date(tx.created * 1000);
     const dk = parisDateKey(created);
-    const bucket = dailyMap.get(dk);
+    const dba = dateToDaysBefore.get(dk);
+    if (dba === undefined) continue;
+    const bucket = bucketsByDaysBefore.get(dba);
     if (!bucket) continue;
     bucket.feesEur += tx.fee / 100;
     bucket.netEur += tx.net / 100;
@@ -252,12 +358,14 @@ async function buildAnalytics(daysBack: number): Promise<StripeAnalytics> {
     refundsTotalEur += (r.amount ?? 0) / 100;
     const created = new Date(r.created * 1000);
     const dk = parisDateKey(created);
-    const bucket = dailyMap.get(dk);
+    const dba = dateToDaysBefore.get(dk);
+    if (dba === undefined) continue;
+    const bucket = bucketsByDaysBefore.get(dba);
     if (bucket) bucket.refundsEur += (r.amount ?? 0) / 100;
   }
 
-  const daily = Array.from(dailyMap.values()).sort((a, b) =>
-    a.date.localeCompare(b.date)
+  const daily = Array.from(bucketsByDaysBefore.values()).sort(
+    (a, b) => a.daysBeforeAid - b.daysBeforeAid
   );
 
   const totalGross = paidSessions.reduce(
@@ -276,35 +384,44 @@ async function buildAnalytics(daysBack: number): Promise<StripeAnalytics> {
     .sort((a, b) => b.grossEur - a.grossEur)
     .slice(0, 10);
 
-  const recentSessions = sessions
-    .slice()
-    .sort((a, b) => b.created - a.created)
-    .slice(0, 20)
-    .map((s) => ({
-      id: s.id,
-      createdAt: new Date(s.created * 1000).toISOString(),
-      email: s.customer_details?.email ?? s.customer_email ?? null,
-      amountEur: (s.amount_total ?? 0) / 100,
-      status: s.payment_status,
-      niyyah:
-        typeof s.metadata?.niyyah === "string" ? s.metadata.niyyah : undefined,
-    }));
+  const topPromoCodes = Array.from(promoCodeAgg.entries())
+    .map(([code, v]) => ({
+      code,
+      count: v.count,
+      totalDiscountEur: v.totalDiscountEur,
+    }))
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 8);
+
+  const sessionsTotal = sessions.length;
+  const sessionsPaid = paidSessions.length;
+  const sessionsExpired = expiredSessions.length;
+  const sessionsOpen = openSessions.length;
+
+  const conversionFunnel: ConversionFunnel = {
+    sessionsTotal,
+    sessionsPaid,
+    sessionsExpired,
+    sessionsOpen,
+    rate: sessionsTotal > 0 ? sessionsPaid / sessionsTotal : 0,
+  };
 
   return {
-    fetchedAt: now.toISOString(),
-    rangeStart: parisDateKey(since),
-    rangeEnd: parisDateKey(now),
+    year,
+    aidDate: aidStr,
+    rangeStart: parisDateKey(fromDate),
+    rangeEnd: parisDateKey(clampedTo),
     daily,
     totals: {
-      sessions: sessions.length,
-      paidSessions: paidSessions.length,
+      sessions: sessionsTotal,
+      paidSessions: sessionsPaid,
       grossEur: totalGross,
       netEur: totalNet,
       feesEur: totalFees,
       refundsEur: refundsTotalEur,
       refundsCount,
       disputesCount,
-      aovEur: paidSessions.length > 0 ? totalGross / paidSessions.length : 0,
+      aovEur: sessionsPaid > 0 ? totalGross / sessionsPaid : 0,
     },
     hourlyDistribution: hourCounts.map((count, hour) => ({ hour, count })),
     weekdayDistribution: weekdayCounts.map((count, weekday) => ({
@@ -312,17 +429,185 @@ async function buildAnalytics(daysBack: number): Promise<StripeAnalytics> {
       count,
     })),
     topCustomers,
+    topPromoCodes,
+    conversionFunnel,
+    medianTimeToPaySec: null, // non calculé sans fetch supplémentaire des PI
+  };
+}
+
+function emptyYearStats(
+  year: number,
+  aidStr: string,
+  fromDate: Date,
+  toDate: Date
+): YearStats {
+  return {
+    year,
+    aidDate: aidStr,
+    rangeStart: parisDateKey(fromDate),
+    rangeEnd: parisDateKey(toDate),
+    daily: [],
+    totals: {
+      sessions: 0,
+      paidSessions: 0,
+      grossEur: 0,
+      netEur: 0,
+      feesEur: 0,
+      refundsEur: 0,
+      refundsCount: 0,
+      disputesCount: 0,
+      aovEur: 0,
+    },
+    hourlyDistribution: Array.from({ length: 24 }, (_, h) => ({
+      hour: h,
+      count: 0,
+    })),
+    weekdayDistribution: Array.from({ length: 7 }, (_, w) => ({
+      weekday: w,
+      count: 0,
+    })),
+    topCustomers: [],
+    topPromoCodes: [],
+    conversionFunnel: {
+      sessionsTotal: 0,
+      sessionsPaid: 0,
+      sessionsExpired: 0,
+      sessionsOpen: 0,
+      rate: 0,
+    },
+    medianTimeToPaySec: null,
+  };
+}
+
+function growthPct(current: number, previous: number): number | null {
+  if (previous <= 0) return null;
+  return ((current - previous) / previous) * 100;
+}
+
+async function buildYoY(
+  currentYear: number,
+  previousYear: number
+): Promise<YoYAnalytics> {
+  const [current, previous] = await Promise.all([
+    buildYearStats(currentYear, { daysBefore: 90, daysAfter: 7 }),
+    buildYearStats(previousYear, { daysBefore: 90, daysAfter: 7 }),
+  ]);
+
+  if (!current) {
+    throw new Error(
+      `Aïd date inconnue pour l'année ${currentYear}, ajouter à AID_DATES_BY_YEAR`
+    );
+  }
+
+  const yoy = {
+    salesGrowthPct: previous
+      ? growthPct(current.totals.paidSessions, previous.totals.paidSessions)
+      : null,
+    revenueGrowthPct: previous
+      ? growthPct(current.totals.grossEur, previous.totals.grossEur)
+      : null,
+    aovGrowthPct: previous
+      ? growthPct(current.totals.aovEur, previous.totals.aovEur)
+      : null,
+    conversionGrowthPct: previous
+      ? growthPct(
+          current.conversionFunnel.rate,
+          previous.conversionFunnel.rate
+        )
+      : null,
+  };
+
+  // Sessions récentes globales (cross-année, prises de l'année en cours)
+  // Reconstruites depuis l'API uniquement pour l'année en cours
+  const stripe = getStripe();
+  const recentRaw: import("stripe").Stripe.Checkout.Session[] = [];
+  for await (const s of stripe.checkout.sessions.list({ limit: 20 })) {
+    recentRaw.push(s);
+    if (recentRaw.length >= 20) break;
+  }
+  const recentSessions = recentRaw.map((s) => ({
+    id: s.id,
+    createdAt: new Date(s.created * 1000).toISOString(),
+    email: s.customer_details?.email ?? s.customer_email ?? null,
+    amountEur: (s.amount_total ?? 0) / 100,
+    status: s.payment_status,
+    niyyah:
+      typeof s.metadata?.niyyah === "string" ? s.metadata.niyyah : undefined,
+  }));
+
+  return {
+    fetchedAt: new Date().toISOString(),
+    current,
+    previous: previous ?? null,
+    yoy,
     recentSessions,
   };
 }
 
-// Cache 5 minutes : un refresh par page-load coûterait des dizaines d'appels
-// Stripe (sessions + balance + refunds + disputes) pour rien.
-export const fetchStripeAnalytics = unstable_cache(
-  async (daysBack: number = 90) => buildAnalytics(daysBack),
-  ["stripe-analytics-v1"],
-  { revalidate: 300, tags: ["stripe-analytics"] }
+// ── Cache & API publique ─────────────────────────────────────────────────
+const YOY_TAG = "stripe-yoy-v1";
+
+export const fetchYearOverYearAnalytics = unstable_cache(
+  async (currentYear: number, previousYear: number) =>
+    buildYoY(currentYear, previousYear),
+  ["stripe-yoy-v1"],
+  { revalidate: 300, tags: [YOY_TAG] }
 );
+
+export async function invalidateStripeAnalyticsCache() {
+  revalidateTag(YOY_TAG);
+}
+
+// ── Helpers ré-exposés pour les composants ───────────────────────────────
+export function compareTotals(
+  current: YearStats,
+  previous: YearStats | null
+): {
+  salesDelta: number | null;
+  revenueDelta: number | null;
+  aovDelta: number | null;
+  conversionDelta: number | null;
+} {
+  if (!previous) {
+    return {
+      salesDelta: null,
+      revenueDelta: null,
+      aovDelta: null,
+      conversionDelta: null,
+    };
+  }
+  return {
+    salesDelta: current.totals.paidSessions - previous.totals.paidSessions,
+    revenueDelta: current.totals.grossEur - previous.totals.grossEur,
+    aovDelta: current.totals.aovEur - previous.totals.aovEur,
+    conversionDelta:
+      current.conversionFunnel.rate - previous.conversionFunnel.rate,
+  };
+}
+
+// ── Backward compat avec l'ancien dashboard ──────────────────────────────
+// Le dashboard /admin (legacy) attendait fetchStripeAnalytics + DailyBucket.
+// On les conserve en delegant à la nouvelle implémentation.
+export type DailyBucket = {
+  date: string;
+  count: number;
+  grossEur: number;
+  netEur: number;
+  feesEur: number;
+  refundsEur: number;
+};
+
+export type StripeAnalytics = {
+  fetchedAt: string;
+  rangeStart: string;
+  rangeEnd: string;
+  daily: DailyBucket[];
+  totals: YearStats["totals"];
+  hourlyDistribution: { hour: number; count: number }[];
+  weekdayDistribution: { weekday: number; count: number }[];
+  topCustomers: { email: string; count: number; grossEur: number }[];
+  recentSessions: YoYAnalytics["recentSessions"];
+};
 
 export const EMPTY_STRIPE_ANALYTICS: StripeAnalytics = {
   fetchedAt: new Date(0).toISOString(),
@@ -351,3 +636,42 @@ export const EMPTY_STRIPE_ANALYTICS: StripeAnalytics = {
   topCustomers: [],
   recentSessions: [],
 };
+
+// Compat layer : on aplatit la YoY current year en DailyBucket via dates absolues
+export async function fetchStripeAnalytics(
+  daysBack: number = 90
+): Promise<StripeAnalytics> {
+  void daysBack;
+  const yoy = await fetchYearOverYearAnalytics(
+    new Date().getUTCFullYear(),
+    new Date().getUTCFullYear() - 1
+  );
+  const c = yoy.current;
+  const daily: DailyBucket[] = c.daily.map((b) => ({
+    date: b.date,
+    count: b.count,
+    grossEur: b.grossEur,
+    netEur: b.netEur,
+    feesEur: b.feesEur,
+    refundsEur: b.refundsEur,
+  }));
+  return {
+    fetchedAt: yoy.fetchedAt,
+    rangeStart: c.rangeStart,
+    rangeEnd: c.rangeEnd,
+    daily,
+    totals: c.totals,
+    hourlyDistribution: c.hourlyDistribution,
+    weekdayDistribution: c.weekdayDistribution,
+    topCustomers: c.topCustomers,
+    recentSessions: yoy.recentSessions,
+  };
+}
+
+// Helper exporté pour calculer le daysBeforeAid d'une date donnée
+export function computeDaysBeforeAid(date: Date, year: number): number | null {
+  const aidStr = AID_DATES_BY_YEAR[year];
+  if (!aidStr) return null;
+  const aid = new Date(aidStr + "T12:00:00Z");
+  return daysBetween(date, aid) * -1; // négatif = avant l'Aïd → on inverse pour avoir négatif AVANT
+}

@@ -1,11 +1,8 @@
 import { Suspense } from "react";
-import { BarChart3, RefreshCw } from "lucide-react";
+import { BarChart3 } from "lucide-react";
 import StripeAnalyticsDashboard from "@/components/admin/StripeAnalyticsDashboard";
-import {
-  fetchStripeAnalytics,
-  EMPTY_STRIPE_ANALYTICS,
-  type StripeAnalytics,
-} from "@/lib/stripe-analytics";
+import RefreshButton from "@/components/admin/RefreshButton";
+import { fetchYearOverYearAnalytics } from "@/lib/stripe-analytics";
 import { buildForecast, type ForecastResult } from "@/lib/forecasting";
 import { createServiceRoleClient } from "@/lib/supabase/server";
 import { AID_DATE, CURRENT_YEAR } from "@/lib/constants";
@@ -21,7 +18,7 @@ async function fetchStockRemaining(): Promise<number> {
       .select("total_slots, reserved_slots")
       .eq("year", CURRENT_YEAR)
       .maybeSingle();
-    if (!data) return 200; // fallback STOCK.total
+    if (!data) return 200;
     return Math.max(
       0,
       (data.total_slots ?? 200) - (data.reserved_slots ?? 0)
@@ -36,91 +33,70 @@ function daysBetween(a: Date, b: Date): number {
   return Math.max(0, Math.round(ms / 86_400_000));
 }
 
-function dateKey(d: Date): string {
-  // YYYY-MM-DD en UTC (suffisant pour comparer avec les buckets jour Paris)
-  return d.toISOString().slice(0, 10);
-}
-
-async function loadData(): Promise<{
-  analytics: StripeAnalytics;
-  forecast: ForecastResult;
-  stockRemaining: number;
-  daysUntilAid: number;
-  aidDateKey: string;
-  todayKey: string;
-  error: string | null;
-}> {
+async function AnalyticsContent() {
   const now = new Date();
-  const aidDateKey = dateKey(AID_DATE);
-  const todayKey = dateKey(now);
   const daysUntilAid = daysBetween(now, AID_DATE);
 
-  let analytics: StripeAnalytics = EMPTY_STRIPE_ANALYTICS;
+  let yoy;
   let error: string | null = null;
-
   try {
-    analytics = await fetchStripeAnalytics(90);
+    yoy = await fetchYearOverYearAnalytics(CURRENT_YEAR, CURRENT_YEAR - 1);
   } catch (e) {
     error =
       e instanceof Error
         ? `Impossible de joindre Stripe : ${e.message}`
-        : "Erreur inconnue lors de la récupération des données Stripe.";
+        : "Erreur Stripe inconnue.";
   }
 
   const stockRemaining = await fetchStockRemaining();
 
-  const forecast = buildForecast({
-    daily: analytics.daily,
-    aidDate: AID_DATE,
-    now,
-    stockRemaining,
-    aovEurOverride:
-      analytics.totals.aovEur > 0 ? analytics.totals.aovEur : 140,
-    simulations: 1000,
-  });
+  let forecast: ForecastResult | null = null;
+  if (yoy) {
+    forecast = buildForecast({
+      current: yoy.current.daily,
+      previous: yoy.previous?.daily,
+      aidDate: AID_DATE,
+      now,
+      stockRemaining,
+      aovEurOverride:
+        yoy.current.totals.aovEur > 0 ? yoy.current.totals.aovEur : 140,
+      simulations: 1000,
+    });
+  }
 
-  return {
-    analytics,
-    forecast,
-    stockRemaining,
-    daysUntilAid,
-    aidDateKey,
-    todayKey,
-    error,
-  };
-}
-
-async function AnalyticsContent() {
-  const data = await loadData();
-  const fetchedAt = new Date(data.analytics.fetchedAt).toLocaleString("fr-FR", {
-    timeZone: "Europe/Paris",
-  });
+  const fetchedAt = yoy
+    ? new Date(yoy.fetchedAt).toLocaleString("fr-FR", {
+        timeZone: "Europe/Paris",
+      })
+    : null;
 
   return (
     <>
-      {data.error && (
+      {error && (
         <div className="mb-6 border border-urgency/30 bg-urgency/5 rounded-xl p-4 text-sm text-text-primary">
-          <strong className="text-urgency">Erreur :</strong> {data.error}
+          <strong className="text-urgency">Erreur :</strong> {error}
           <p className="text-text-muted-light text-xs mt-2">
-            Vérifiez que <code>STRIPE_SECRET_KEY</code> est bien défini en
+            Vérifier que <code>STRIPE_SECRET_KEY</code> est défini en
             production et a accès aux endpoints checkout_sessions /
-            balance_transactions.
+            balance_transactions / refunds / disputes.
           </p>
         </div>
       )}
 
-      <StripeAnalyticsDashboard
-        analytics={data.analytics}
-        forecast={data.forecast}
-        daysUntilAid={data.daysUntilAid}
-        aidDateKey={data.aidDateKey}
-        todayKey={data.todayKey}
-      />
+      {yoy && forecast && (
+        <StripeAnalyticsDashboard
+          yoy={yoy}
+          forecast={forecast}
+          daysUntilAid={daysUntilAid}
+        />
+      )}
 
-      <p className="mt-8 text-center text-xs text-text-muted-light">
-        Données rafraîchies à {fetchedAt} (cache 5 min · prochaine actualisation
-        automatique).
-      </p>
+      {fetchedAt && (
+        <p className="mt-8 text-center text-xs text-text-muted-light">
+          Données rafraîchies à {fetchedAt} · cache 5 min (utilise le bouton
+          ci-dessus pour invalider immédiatement)
+        </p>
+      )}
     </>
   );
 }
@@ -136,7 +112,8 @@ function LoadingSkeleton() {
           />
         ))}
       </div>
-      <div className="bg-white border border-gray-200 rounded-xl p-5 h-80 animate-pulse" />
+      <div className="bg-white border border-gray-200 rounded-xl p-5 h-96 animate-pulse" />
+      <div className="bg-white border border-gray-200 rounded-xl p-5 h-64 animate-pulse" />
     </div>
   );
 }
@@ -151,18 +128,11 @@ export default function AdminAnalyticsPage() {
             Analytics <span className="text-gold">Stripe</span>
           </h1>
           <p className="text-text-muted text-sm mt-1">
-            Vérité du compte marchand · Prédictions Aïd-aware · Insights ML
+            Vérité du compte marchand · Comparaison année-sur-année · Forecast
+            Aïd-aware avec prior an dernier
           </p>
         </div>
-        <form action="/admin/analytics" method="GET">
-          <button
-            type="submit"
-            className="inline-flex items-center gap-2 rounded-lg bg-text-primary text-white text-sm font-semibold px-3 py-2 hover:opacity-90 transition-opacity"
-          >
-            <RefreshCw size={14} />
-            Rafraîchir
-          </button>
-        </form>
+        <RefreshButton />
       </div>
 
       <Suspense fallback={<LoadingSkeleton />}>
