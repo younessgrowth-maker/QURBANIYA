@@ -163,9 +163,14 @@ export async function sendOrderConfirmation(order: Order) {
     order.intention === "pour_moi" ? "Pour vous-même" :
     order.intention === "famille" ? "Pour votre famille" : "En sadaqa";
 
-  // ─── Calcul du montant réellement payé (après code promo / parrainage) ───
+  // ─── Calcul du montant réellement payé ───
+  // order.amount = prix unitaire (140€). Pour les commandes multi-moutons
+  // (quantity > 1), le total brut = amount × quantity. Le discount éventuel
+  // s'applique sur la session entière.
+  const qty = order.quantity ?? 1;
   const discount = order.discount_amount ?? 0;
-  const netAmount = order.amount - discount;
+  const grossAmount = order.amount * qty;
+  const netAmount = grossAmount - discount;
   const fmt = (n: number) => `${n.toFixed(2).replace(".", ",")} €`;
 
   const html = emailLayout(`
@@ -198,10 +203,16 @@ export async function sendOrderConfirmation(order: Order) {
             <td style="color:#5C5347;font-size:14px;padding:6px 0;">Commande</td>
             <td style="color:#1A1A18;font-size:14px;padding:6px 0;text-align:right;font-weight:bold;font-family:monospace;">${ref}</td>
           </tr>
+          ${qty > 1 ? `
+          <tr>
+            <td style="color:#5C5347;font-size:14px;padding:6px 0;">Nombre de moutons</td>
+            <td style="color:#1A1A18;font-size:14px;padding:6px 0;text-align:right;font-weight:bold;">${qty} × ${fmt(order.amount)}</td>
+          </tr>
+          ` : ""}
           ${discount > 0 ? `
           <tr>
             <td style="color:#5C5347;font-size:14px;padding:6px 0;">Sous-total</td>
-            <td style="color:#5C5347;font-size:14px;padding:6px 0;text-align:right;text-decoration:line-through;">${fmt(order.amount)}</td>
+            <td style="color:#5C5347;font-size:14px;padding:6px 0;text-align:right;text-decoration:line-through;">${fmt(grossAmount)}</td>
           </tr>
           <tr>
             <td style="color:#5C5347;font-size:14px;padding:6px 0;">Réduction</td>

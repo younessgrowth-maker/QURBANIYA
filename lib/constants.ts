@@ -7,6 +7,11 @@ export const PRICE_AMOUNT = 140;
 export const PRICE_DISPLAY = "140€";
 export const PRICE_CENTS = 14000; // Stripe amount in cents
 
+// ─── Multi-moutons par commande ───
+// Le formulaire permet de commander 1 à 5 moutons en une transaction.
+// Au-delà : message demandant de contacter via WhatsApp.
+export const MAX_QUANTITY_PER_ORDER = 5;
+
 // ─── Historical stats (source of truth) ───
 export const STATS = {
   sacrificesCompleted: 300,

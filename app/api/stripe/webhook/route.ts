@@ -158,9 +158,32 @@ export async function POST(req: NextRequest) {
           return NextResponse.json({ received: true });
         }
 
-        const { error: rpcError } = await supabase.rpc("decrement_slots", {
+        // Multi-moutons : décrémente N slots (quantity de la commande, défaut 1).
+        // Fallback sur decrement_slots(year) si la nouvelle RPC n'existe pas
+        // encore en prod (migration 0018 pas appliquée) pour éviter le panic.
+        const qty = (order as { quantity?: number }).quantity ?? 1;
+        let rpcError: { message: string } | null = null;
+        const { error: rpcByError } = await supabase.rpc("decrement_slots_by", {
           target_year: CURRENT_YEAR,
+          n: qty,
         });
+        if (rpcByError) {
+          // Si decrement_slots_by n'existe pas (migration pas appliquée),
+          // on retombe sur l'ancienne, appelée qty fois.
+          console.warn(
+            "decrement_slots_by failed, falling back to decrement_slots × qty:",
+            rpcByError.message
+          );
+          for (let i = 0; i < qty; i++) {
+            const { error: legacyErr } = await supabase.rpc("decrement_slots", {
+              target_year: CURRENT_YEAR,
+            });
+            if (legacyErr) {
+              rpcError = legacyErr;
+              break;
+            }
+          }
+        }
         if (rpcError) {
           console.error("Inventory decrement failed:", rpcError);
         }

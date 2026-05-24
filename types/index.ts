@@ -46,6 +46,8 @@ export interface Order {
   whatsapp_broadcast_sent_at: string | null;
   // Rappel J-7 (migration 0016)
   aid_reminder_sent_at: string | null;
+  // Multi-moutons par commande (migration 0018) : 1 à 5
+  quantity: number;
   created_at: string;
   updated_at: string;
 }

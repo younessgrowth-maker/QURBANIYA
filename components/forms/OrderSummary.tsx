@@ -13,7 +13,8 @@ export default function OrderSummary() {
         Votre commande
       </h3>
 
-      {/* Line item */}
+      {/* Line item — prix unitaire (le total final dynamique avec quantité
+          et discount éventuel est affiché dans le formulaire). */}
       <div className="border-t border-gray-200 py-4">
         <div className="flex items-start justify-between">
           <div>
@@ -22,14 +23,10 @@ export default function OrderSummary() {
           </div>
           <span className="text-text-primary font-semibold">140,00€</span>
         </div>
-      </div>
-
-      {/* Total */}
-      <div className="border-t border-gray-200 py-4">
-        <div className="flex items-center justify-between">
-          <span className="text-text-primary font-bold text-lg uppercase">Total</span>
-          <span className="text-gold font-black text-2xl">140,00€</span>
-        </div>
+        <p className="text-text-muted-light text-[11px] mt-2">
+          Prix unitaire · Le total selon le nombre de moutons s&apos;affiche
+          dans le formulaire.
+        </p>
       </div>
 
       {/* Inclusions */}
