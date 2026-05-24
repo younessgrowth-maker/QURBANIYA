@@ -361,10 +361,16 @@ export default function StripeAnalyticsDashboard({
           </span>
         </div>
         <SalesForecastChart
-          current={current.daily.map((b) => ({
-            daysBeforeAid: b.daysBeforeAid,
-            count: b.count,
-          }))}
+          current={current.daily
+            // On exclut le bucket "aujourd'hui" de l'historique : il est
+            // partiel par construction (la journée n'est pas finie). Le
+            // forecast prend le relais à partir de today avec la valeur
+            // "journée complète attendue", ce qui évite le dip visuel.
+            .filter((b) => b.daysBeforeAid !== -daysUntilAid)
+            .map((b) => ({
+              daysBeforeAid: b.daysBeforeAid,
+              count: b.count,
+            }))}
           previous={previous?.daily.map((b) => ({
             daysBeforeAid: b.daysBeforeAid,
             count: b.count,

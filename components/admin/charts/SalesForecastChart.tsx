@@ -82,28 +82,78 @@ export default function SalesForecastChart({
       })
       .join(" ");
 
-  const forecastLinePath = (key: "p10" | "p50" | "p90") =>
-    forecast
+  // Pour la continuité visuelle entre l'historique et le forecast,
+  // on préfixe la ligne forecast par le dernier point d'historique
+  // (valeur observée = même pour toutes les bornes p10/p50/p90).
+  const sortedCurrentForBridge = current
+    .slice()
+    .sort((a, b) => a.daysBeforeAid - b.daysBeforeAid);
+  const bridgePoint =
+    sortedCurrentForBridge.length > 0
+      ? sortedCurrentForBridge[sortedCurrentForBridge.length - 1]
+      : null;
+
+  const forecastLinePath = (key: "p10" | "p50" | "p90") => {
+    const sorted = forecast
       .slice()
-      .sort((a, b) => a.daysBeforeAid - b.daysBeforeAid)
+      .sort((a, b) => a.daysBeforeAid - b.daysBeforeAid);
+    type ForecastLikePoint = {
+      daysBeforeAid: number;
+      p10: number;
+      p50: number;
+      p90: number;
+    };
+    const withBridge: ForecastLikePoint[] = bridgePoint
+      ? [
+          {
+            daysBeforeAid: bridgePoint.daysBeforeAid,
+            p10: bridgePoint.count,
+            p50: bridgePoint.count,
+            p90: bridgePoint.count,
+          },
+          ...sorted,
+        ]
+      : sorted;
+    return withBridge
       .map((p, i) => {
         const x = xScale(p.daysBeforeAid);
         const y = yScale(p[key]);
         return `${i === 0 ? "M" : "L"} ${x.toFixed(1)} ${y.toFixed(1)}`;
       })
       .join(" ");
+  };
 
   const bandPath = (() => {
     if (forecast.length === 0) return "";
     const sorted = forecast.slice().sort((a, b) => a.daysBeforeAid - b.daysBeforeAid);
-    const top = sorted
+    type ForecastLikePoint = {
+      daysBeforeAid: number;
+      p10: number;
+      p50: number;
+      p90: number;
+    };
+    // La bande de confiance démarre aussi depuis le dernier point
+    // historique (valeur unique, p10 = p50 = p90 = count observé) pour
+    // que la zone soit ancrée à la courbe et ne semble pas "flotter".
+    const points: ForecastLikePoint[] = bridgePoint
+      ? [
+          {
+            daysBeforeAid: bridgePoint.daysBeforeAid,
+            p10: bridgePoint.count,
+            p50: bridgePoint.count,
+            p90: bridgePoint.count,
+          },
+          ...sorted,
+        ]
+      : sorted;
+    const top = points
       .map((p, i) => {
         const x = xScale(p.daysBeforeAid);
         const y = yScale(p.p90);
         return `${i === 0 ? "M" : "L"} ${x.toFixed(1)} ${y.toFixed(1)}`;
       })
       .join(" ");
-    const bottom = sorted
+    const bottom = points
       .slice()
       .reverse()
       .map((p) => {
