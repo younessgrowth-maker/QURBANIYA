@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Sparkles, ArrowRight } from "lucide-react";
-import { AID_DATE, CURRENT_YEAR, isOrderingOpen } from "@/lib/constants";
+import { AID_DATE, CURRENT_YEAR, ORDER_CUTOFF_DATE, isOrderingOpen } from "@/lib/constants";
 import { getInventory } from "@/lib/supabase/queries";
 import { cn } from "@/lib/utils";
 
@@ -34,12 +34,12 @@ export default async function ExtraPlacesBanner({ className }: ExtraPlacesBanner
   if (!inv || !inv.isOpen) return null;
   if (inv.remaining <= 0) return null;
 
-  // Compte à rebours simple : on calque sur la fenêtre de cut-off (la veille
-  // de l'Aïd à 23h59 — cf. messages site et FAQ).
-  const cutoff = new Date(AID_DATE);
-  cutoff.setDate(cutoff.getDate() - 1);
-  cutoff.setHours(23, 59, 0, 0);
-  const hoursToCutoff = Math.max(0, Math.ceil((cutoff.getTime() - now.getTime()) / (1000 * 60 * 60)));
+  // Compte à rebours simple : on calque sur ORDER_CUTOFF_DATE (27 mai 03h00
+  // depuis le push J-3, cf. constants.ts).
+  const hoursToCutoff = Math.max(
+    0,
+    Math.ceil((ORDER_CUTOFF_DATE.getTime() - now.getTime()) / (1000 * 60 * 60))
+  );
 
   return (
     <div

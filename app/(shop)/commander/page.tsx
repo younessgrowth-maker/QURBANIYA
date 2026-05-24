@@ -83,7 +83,7 @@ function CommanderFaqJsonLd() {
         name: "Jusqu'à quand puis-je commander pour l'Aïd 2026 ?",
         acceptedAnswer: {
           "@type": "Answer",
-          text: "Les commandes sont ouvertes jusqu'à épuisement du stock, et au plus tard le 26 mai 2026 (veille de l'Aïd) à minuit. Cependant, nous recommandons de réserver le plus tôt possible : chaque année, les places s'épuisent rapidement à l'approche de l'Aïd.",
+          text: "Les commandes sont ouvertes jusqu'à épuisement du stock, et au plus tard la nuit du 26 au 27 mai 2026 à 3h du matin (quelques heures avant le sacrifice de l'Aïd). Cependant, nous recommandons de réserver le plus tôt possible : chaque année, les places s'épuisent rapidement à l'approche de l'Aïd.",
         },
       },
       {
@@ -284,7 +284,7 @@ export default async function CommanderPage() {
                   <span className="text-gold text-xl group-open:rotate-45 transition-transform">+</span>
                 </summary>
                 <p className="mt-3 text-text-muted leading-relaxed text-sm">
-                  Les commandes sont ouvertes jusqu&apos;à épuisement du stock, et au plus tard le <strong className="text-text-primary">26 mai 2026 à minuit</strong> (veille de l&apos;Aïd). Cependant, nous recommandons de réserver le plus tôt possible : chaque année, les places s&apos;épuisent rapidement à l&apos;approche de l&apos;Aïd.
+                  Les commandes sont ouvertes jusqu&apos;à épuisement du stock, et au plus tard <strong className="text-text-primary">la nuit du 26 au 27 mai 2026 à 3h du matin</strong> (quelques heures avant le sacrifice de l&apos;Aïd). Cependant, nous recommandons de réserver le plus tôt possible : chaque année, les places s&apos;épuisent rapidement à l&apos;approche de l&apos;Aïd.
                 </p>
               </details>
 

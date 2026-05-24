@@ -177,7 +177,7 @@ export default function CityLanding({ city }: { city: City }) {
                   <span className="text-gold text-xl group-open:rotate-45 transition-transform">+</span>
                 </summary>
                 <p className="mt-3 text-text-muted leading-relaxed text-sm">
-                  Au plus tard le <strong className="text-text-primary">26 mai 2026 à minuit</strong> (veille de l&apos;Aïd). Mais nous recommandons de réserver le plus tôt possible : chaque année, les places s&apos;épuisent dans la dernière semaine.
+                  Au plus tard <strong className="text-text-primary">la nuit du 26 au 27 mai 2026 à 3h du matin</strong> (quelques heures avant le sacrifice). Mais nous recommandons de réserver le plus tôt possible : chaque année, les places s&apos;épuisent dans la dernière semaine.
                 </p>
               </details>
 

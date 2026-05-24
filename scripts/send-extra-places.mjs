@@ -93,7 +93,7 @@ function emailLayoutClients(prenom, referralCode) {
   <tr><td style="padding:0 32px 8px 32px;">
     <h1 style="margin:0 0 16px 0;font-size:22px;color:#1F2937;line-height:1.3;">Salam ${prenom},</h1>
     <p style="margin:0 0 16px 0;font-size:15px;line-height:1.6;">Bonne nouvelle : notre fournisseur vient de nous libérer <strong>100 moutons supplémentaires</strong> pour l'Aïd 2026.</p>
-    <p style="margin:0 0 20px 0;font-size:15px;line-height:1.6;">Les réservations étaient complètes ce matin — elles ré-ouvrent pour <strong>48h seulement</strong>, jusqu'au 26 mai au soir.</p>
+    <p style="margin:0 0 20px 0;font-size:15px;line-height:1.6;">Les réservations étaient complètes ce matin — elles ré-ouvrent jusqu'au <strong>mercredi 27 mai 3h du matin</strong>, quelques heures avant le sacrifice.</p>
     <div style="background:#F7F3ED;border:1px solid #E5DFD3;border-radius:8px;padding:20px;margin:20px 0;">
       <p style="margin:0 0 12px 0;font-size:14px;line-height:1.6;">Si tu connais des proches qui attendaient pour réserver, partage-leur <strong>ton code parrain :</strong></p>
       <div style="text-align:center;font-size:28px;font-weight:bold;color:#B8860B;letter-spacing:3px;padding:8px 0;font-family:Menlo,Monaco,'Courier New',monospace;">${referralCode}</div>
@@ -117,7 +117,7 @@ function emailLayoutClients(prenom, referralCode) {
 
 Bonne nouvelle : notre fournisseur vient de nous libérer 100 moutons supplémentaires pour l'Aïd 2026.
 
-Les réservations étaient complètes ce matin — elles ré-ouvrent pour 48h seulement, jusqu'au 26 mai au soir.
+Les réservations étaient complètes ce matin — elles ré-ouvrent jusqu'au mercredi 27 mai 3h du matin, quelques heures avant le sacrifice.
 
 Si tu connais des proches qui attendaient pour réserver, partage-leur ton code parrain ${referralCode} :
 - -15 € pour eux sur leur commande

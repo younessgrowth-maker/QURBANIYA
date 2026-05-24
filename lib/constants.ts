@@ -22,11 +22,17 @@ export const AID_DATE = new Date("2026-05-27T06:00:00+01:00");
 export const AID_YEAR = "2026";
 export const CURRENT_YEAR = 2026;
 
+// Cut-off réel des commandes — date communiquée publiquement. Initialement
+// fixée à la veille de l'Aïd 23h59, étendue le 24 mai (J-3) à 03h00 le matin
+// de l'Aïd pour donner quelques heures supplémentaires aux clients tout en
+// laissant 3h au cheikh pour finaliser la liste avant le sacrifice (06h).
+export const ORDER_CUTOFF_DATE = new Date("2026-05-27T03:00:00+01:00");
+
 // Hard cutoff pour les commandes — on n'accepte plus aucun paiement à partir
-// du jour de l'Aïd 06:00 Paris. Avant ça, le sacrifice est sourcé et préparé.
-// Après ça, impossible de garantir l'exécution → on coupe l'API + l'UI.
+// du cut-off communiqué. Avant ça, le sacrifice est sourcé et préparé. Après,
+// impossible de garantir l'exécution → on coupe l'API + l'UI.
 export function isOrderingOpen(now: Date = new Date()): boolean {
-  return now.getTime() < AID_DATE.getTime();
+  return now.getTime() < ORDER_CUTOFF_DATE.getTime();
 }
 
 // ─── Contact ───

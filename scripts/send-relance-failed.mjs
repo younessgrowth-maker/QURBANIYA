@@ -67,7 +67,7 @@ function emailTemplate(prenom, daysAgo) {
   <tr><td style="padding:0 32px 8px 32px;">
     <h1 style="margin:0 0 16px 0;font-size:22px;color:#1F2937;line-height:1.3;">Salam ${prenom},</h1>
     <p style="margin:0 0 16px 0;font-size:15px;line-height:1.6;">J'ai vu que vous aviez commencé une réservation pour l'Aïd al-Adha 2026 <strong>${dayLabel}</strong>, sans la finaliser.</p>
-    <p style="margin:0 0 20px 0;font-size:15px;line-height:1.6;">Bonne nouvelle : notre fournisseur vient de nous libérer <strong>100 moutons supplémentaires</strong>. Il reste donc des places jusqu'au <strong>26 mai à minuit</strong> — c'est vraiment la dernière fenêtre.</p>
+    <p style="margin:0 0 20px 0;font-size:15px;line-height:1.6;">Bonne nouvelle : notre fournisseur vient de nous libérer <strong>100 moutons supplémentaires</strong>. Il reste donc des places jusqu'au <strong>mercredi 27 mai 3h du matin</strong>, quelques heures avant le sacrifice — c'est vraiment la dernière fenêtre.</p>
     <div style="background:#F7F3ED;border:1px solid #E5DFD3;border-radius:8px;padding:18px 20px;margin:18px 0;text-align:center;">
       <p style="margin:0;font-size:14px;line-height:1.7;">🐑 Sacrifice mercredi 27 mai<br>📹 Vidéo nominative WhatsApp<br><strong>140 € tout inclus</strong></p>
     </div>
@@ -85,7 +85,7 @@ function emailTemplate(prenom, daysAgo) {
 
 J'ai vu que vous aviez commencé une réservation pour l'Aïd al-Adha 2026 ${dayLabel}, sans la finaliser.
 
-Bonne nouvelle : notre fournisseur vient de nous libérer 100 moutons supplémentaires. Il reste donc des places jusqu'au 26 mai à minuit — c'est vraiment la dernière fenêtre.
+Bonne nouvelle : notre fournisseur vient de nous libérer 100 moutons supplémentaires. Il reste donc des places jusqu'au mercredi 27 mai 3h du matin, quelques heures avant le sacrifice — c'est vraiment la dernière fenêtre.
 
 🐑 Sacrifice mercredi 27 mai
 📹 Vidéo nominative WhatsApp
