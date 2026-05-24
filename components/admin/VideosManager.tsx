@@ -1,9 +1,9 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { CheckCircle2, Upload, Loader2, XCircle, Send, Video } from "lucide-react";
-import type { OrderWithNumber } from "@/app/admin/videos/page";
+import type { SacrificeRow } from "@/app/admin/videos/page";
 import type { Worker as TesseractWorker } from "tesseract.js";
 
 type Status =
@@ -15,15 +15,15 @@ type Status =
   | "sent"
   | "error";
 
-interface OrderState {
-  order: OrderWithNumber;
+interface RowState {
+  row: SacrificeRow;
   status: Status;
   message?: string;
-  ocrNumber?: number;
+  ocrLabel?: string;
 }
 
 interface VideosManagerProps {
-  initialOrders: OrderWithNumber[];
+  initialRows: SacrificeRow[];
 }
 
 // Extrait plusieurs frames de la vidéo (à 0.5s, 2s, 4s, 6s) pour donner
@@ -68,21 +68,37 @@ async function* extractFrames(file: File): AsyncGenerator<HTMLCanvasElement> {
   }
 }
 
-// Cherche un numéro type "N°42", "No 42" ou juste "42" seul sur une ligne
-// dans le texte OCR. Retourne null si pas trouvé.
-function parseNumber(text: string): number | null {
-  const withPrefix = text.match(/N[°o]\s*(\d{1,4})/i);
-  if (withPrefix) return parseInt(withPrefix[1], 10);
-  const lineMatch = text.match(/^\s*(\d{1,4})\s*$/m);
-  if (lineMatch) return parseInt(lineMatch[1], 10);
+// Cherche un label type "N°12", "N°12a", "No 42b" ou juste "12a" seul sur
+// une ligne. Retourne le label combiné lowercase (sans le N°) ou null.
+// Multi-mouton : le cheikh écrit "12a" / "12b" sur les vidéos d'une même
+// commande pour distinguer les sacrifices.
+function parseLabel(text: string): string | null {
+  // Forme "N°12a" ou "No 12 a" — espaces tolérés entre digit et lettre
+  const withPrefix = text.match(/N[°o]\s*(\d{1,4})\s*([a-z])?/i);
+  if (withPrefix) {
+    const digits = withPrefix[1];
+    const letter = withPrefix[2]?.toLowerCase() ?? "";
+    return `${digits}${letter}`;
+  }
+  // Forme "12a" seul sur une ligne
+  const lineMatch = text.match(/^\s*(\d{1,4})\s*([a-z])?\s*$/im);
+  if (lineMatch) {
+    const digits = lineMatch[1];
+    const letter = lineMatch[2]?.toLowerCase() ?? "";
+    return `${digits}${letter}`;
+  }
   return null;
 }
 
-export default function VideosManager({ initialOrders }: VideosManagerProps) {
-  const [orders, setOrders] = useState<OrderState[]>(() =>
-    initialOrders.map((o) => ({
-      order: o,
-      status: o.video_url ? (o.video_sent ? "sent" : "uploaded") : "idle",
+export default function VideosManager({ initialRows }: VideosManagerProps) {
+  const [rows, setRows] = useState<RowState[]>(() =>
+    initialRows.map((r) => ({
+      row: r,
+      status: r.videoSent
+        ? "sent"
+        : r.videoPath
+        ? "uploaded"
+        : "idle",
     }))
   );
   const [dragActive, setDragActive] = useState(false);
@@ -113,9 +129,25 @@ export default function VideosManager({ initialOrders }: VideosManagerProps) {
     };
   }, []);
 
-  const updateOrder = useCallback((orderNumber: number, patch: Partial<OrderState>) => {
-    setOrders((prev) =>
-      prev.map((s) => (s.order.order_number === orderNumber ? { ...s, ...patch } : s))
+  const updateRow = useCallback(
+    (combinedLabel: string, patch: Partial<RowState>) => {
+      setRows((prev) =>
+        prev.map((s) =>
+          s.row.combinedLabel === combinedLabel ? { ...s, ...patch } : s
+        )
+      );
+    },
+    []
+  );
+
+  // Marque toutes les rows d'une commande en "sent" après l'envoi groupé email.
+  const markOrderSent = useCallback((orderId: string, message?: string) => {
+    setRows((prev) =>
+      prev.map((s) =>
+        s.row.orderId === orderId
+          ? { ...s, status: "sent" as const, message }
+          : s
+      )
     );
   }, []);
 
@@ -126,7 +158,7 @@ export default function VideosManager({ initialOrders }: VideosManagerProps) {
         return;
       }
 
-      let detectedNumber: number | null = null;
+      let detectedLabel: string | null = null;
       try {
         // Multi-frame OCR : essaie plusieurs timestamps (0.5s, 2s, 4s, 6s, 8s)
         // et arrête au premier qui détecte un N°X. Safari fait parfois un
@@ -134,9 +166,9 @@ export default function VideosManager({ initialOrders }: VideosManagerProps) {
         for await (const canvas of extractFrames(file)) {
           if (!workerRef.current) break;
           const { data: { text } } = await workerRef.current.recognize(canvas);
-          const n = parseNumber(text);
-          if (n !== null) {
-            detectedNumber = n;
+          const label = parseLabel(text);
+          if (label !== null) {
+            detectedLabel = label;
             break;
           }
         }
@@ -144,20 +176,20 @@ export default function VideosManager({ initialOrders }: VideosManagerProps) {
         console.error("OCR failed for", file.name, err);
       }
 
-      if (detectedNumber === null) {
+      if (detectedLabel === null) {
         console.warn("No N°X detected in", file.name);
         return;
       }
 
-      const match = orders.find((s) => s.order.order_number === detectedNumber);
+      const match = rows.find((s) => s.row.combinedLabel === detectedLabel);
       if (!match) {
-        console.warn(`N°${detectedNumber} détecté mais aucune commande`);
+        console.warn(`N°${detectedLabel} détecté mais aucun sacrifice correspondant`);
         return;
       }
 
-      updateOrder(detectedNumber, {
+      updateRow(detectedLabel, {
         status: "uploading",
-        ocrNumber: detectedNumber,
+        ocrLabel: detectedLabel,
         message: "Upload en cours…",
       });
 
@@ -179,7 +211,11 @@ export default function VideosManager({ initialOrders }: VideosManagerProps) {
         const updateRes = await fetch("/api/admin/videos/update", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ order_id: match.order.id, video_path: path }),
+          body: JSON.stringify({
+            order_id: match.row.orderId,
+            sacrifice_index: match.row.sacrificeIndex,
+            video_path: path,
+          }),
         });
         if (!updateRes.ok) {
           const errBody = await updateRes.json().catch(() => ({}));
@@ -189,19 +225,19 @@ export default function VideosManager({ initialOrders }: VideosManagerProps) {
           );
         }
 
-        updateOrder(detectedNumber, {
+        updateRow(detectedLabel, {
           status: "uploaded",
           message: undefined,
         });
       } catch (err) {
         console.error("Upload pipeline failed:", err);
-        updateOrder(detectedNumber, {
+        updateRow(detectedLabel, {
           status: "error",
           message: err instanceof Error ? err.message : "upload failed",
         });
       }
     },
-    [orders, updateOrder]
+    [rows, updateRow]
   );
 
   const handleFiles = useCallback(
@@ -215,55 +251,103 @@ export default function VideosManager({ initialOrders }: VideosManagerProps) {
   );
 
   const sendEmail = useCallback(
-    async (order: OrderWithNumber) => {
-      updateOrder(order.order_number, { status: "sending", message: "Envoi en cours…" });
+    async (orderId: string) => {
+      // Marque toutes les rows de la commande en "sending" (l'envoi groupe
+      // tous les liens vidéos de la commande dans un seul email).
+      setRows((prev) =>
+        prev.map((s) =>
+          s.row.orderId === orderId
+            ? { ...s, status: "sending" as const, message: "Envoi en cours…" }
+            : s
+        )
+      );
       try {
         const res = await fetch("/api/admin/videos/send", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ order_id: order.id }),
+          body: JSON.stringify({ order_id: orderId }),
         });
-        const body = await res.json().catch(() => ({} as { error?: string; wa_sent?: boolean; wa_error?: string }));
+        const body = await res.json().catch(
+          () =>
+            ({} as { error?: string; wa_sent?: boolean; wa_error?: string })
+        );
         if (!res.ok) {
           throw new Error(body.error || "send failed");
         }
-        // L'email est forcément parti si on est ici (la route renvoie 500 sinon).
-        // Le WA est best-effort : on affiche le résultat dans le message.
         const waNote = body.wa_sent
           ? "Email ✓ WA ✓"
           : `Email ✓ WA ✗ ${body.wa_error ?? ""}`.trim();
-        updateOrder(order.order_number, { status: "sent", message: waNote });
+        markOrderSent(orderId, waNote);
       } catch (err) {
-        updateOrder(order.order_number, {
-          status: "error",
-          message: err instanceof Error ? err.message : "send failed",
-        });
+        const errMsg = err instanceof Error ? err.message : "send failed";
+        setRows((prev) =>
+          prev.map((s) =>
+            s.row.orderId === orderId
+              ? { ...s, status: "error" as const, message: errMsg }
+              : s
+          )
+        );
       }
     },
-    [updateOrder]
+    [markOrderSent]
   );
 
-  const stats = {
-    total: orders.length,
-    uploaded: orders.filter((s) => s.status === "uploaded" || s.status === "sent" || s.status === "sending").length,
-    sent: orders.filter((s) => s.status === "sent").length,
-  };
+  // Groupements pour les stats + déterminer si une commande est prête à envoyer.
+  const orderStats = useMemo(() => {
+    const byOrder = new Map<
+      string,
+      { total: number; uploaded: number; sent: number }
+    >();
+    for (const s of rows) {
+      const entry = byOrder.get(s.row.orderId) ?? {
+        total: 0,
+        uploaded: 0,
+        sent: 0,
+      };
+      entry.total += 1;
+      if (
+        s.status === "uploaded" ||
+        s.status === "sent" ||
+        s.status === "sending"
+      ) {
+        entry.uploaded += 1;
+      }
+      if (s.status === "sent") entry.sent += 1;
+      byOrder.set(s.row.orderId, entry);
+    }
+    return byOrder;
+  }, [rows]);
+
+  const stats = useMemo(() => {
+    const totalSacrifices = rows.length;
+    const uploadedSacrifices = rows.filter(
+      (s) =>
+        s.status === "uploaded" ||
+        s.status === "sent" ||
+        s.status === "sending"
+    ).length;
+    const ordersSent = Array.from(orderStats.values()).filter(
+      (o) => o.sent === o.total && o.total > 0
+    ).length;
+    const totalOrders = orderStats.size;
+    return { totalSacrifices, uploadedSacrifices, ordersSent, totalOrders };
+  }, [rows, orderStats]);
 
   return (
     <div className="space-y-6">
       {/* Stats bar */}
-      <div className="flex gap-3 text-sm">
+      <div className="flex gap-3 text-sm flex-wrap">
         <div className="px-3 py-2 rounded-lg bg-white border border-gray-200">
-          <span className="text-text-muted-light">Commandes payées :</span>{" "}
-          <strong className="text-text-primary">{stats.total}</strong>
+          <span className="text-text-muted-light">Sacrifices :</span>{" "}
+          <strong className="text-text-primary">{stats.totalSacrifices}</strong>
         </div>
         <div className="px-3 py-2 rounded-lg bg-white border border-gray-200">
           <span className="text-text-muted-light">Vidéos uploadées :</span>{" "}
-          <strong className="text-text-primary">{stats.uploaded} / {stats.total}</strong>
+          <strong className="text-text-primary">{stats.uploadedSacrifices} / {stats.totalSacrifices}</strong>
         </div>
         <div className="px-3 py-2 rounded-lg bg-white border border-gray-200">
-          <span className="text-text-muted-light">Emails envoyés :</span>{" "}
-          <strong className="text-text-primary">{stats.sent} / {stats.total}</strong>
+          <span className="text-text-muted-light">Commandes livrées :</span>{" "}
+          <strong className="text-text-primary">{stats.ordersSent} / {stats.totalOrders}</strong>
         </div>
         <div className="ml-auto px-3 py-2 rounded-lg bg-white border border-gray-200 text-xs">
           OCR :{" "}
@@ -296,7 +380,7 @@ export default function VideosManager({ initialOrders }: VideosManagerProps) {
           Glisse-dépose toutes les vidéos ici
         </p>
         <p className="text-text-muted text-sm mt-1">
-          ou clique pour parcourir — le matching N°X se fait automatiquement
+          ou clique pour parcourir — le matching N°X (ou N°Xa/Xb pour multi-moutons) se fait automatiquement
         </p>
         <input
           ref={fileInputRef}
@@ -308,12 +392,12 @@ export default function VideosManager({ initialOrders }: VideosManagerProps) {
         />
       </div>
 
-      {/* Orders list */}
+      {/* Rows list — 1 ligne par sacrifice */}
       <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
         <table className="w-full text-sm">
           <thead className="bg-gray-50 border-b border-gray-200">
             <tr className="text-left text-text-muted-light text-xs uppercase tracking-wider">
-              <th className="px-4 py-3 w-16">N°</th>
+              <th className="px-4 py-3 w-20">N°</th>
               <th className="px-4 py-3">Client</th>
               <th className="px-4 py-3">Niyyah</th>
               <th className="px-4 py-3 w-40">Vidéo</th>
@@ -321,37 +405,89 @@ export default function VideosManager({ initialOrders }: VideosManagerProps) {
             </tr>
           </thead>
           <tbody>
-            {orders.map((s) => (
-              <tr key={s.order.id} className="border-b border-gray-100 last:border-0">
-                <td className="px-4 py-3 font-bold text-gold">#{s.order.order_number}</td>
-                <td className="px-4 py-3">
-                  <div className="font-semibold text-text-primary">{s.order.full_name}</div>
-                  <div className="text-xs text-text-muted-light">{s.order.email}</div>
-                </td>
-                <td className="px-4 py-3 text-text-muted">{s.order.niyyah}</td>
-                <td className="px-4 py-3">
-                  <StatusBadge status={s.status} message={s.message} />
-                </td>
-                <td className="px-4 py-3 text-right">
-                  {(s.status === "uploaded" || s.status === "error") && s.order.video_url && (
-                    <button
-                      onClick={() => sendEmail(s.order)}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary text-white text-xs font-semibold hover:bg-primary/90 transition-colors"
-                    >
-                      <Send size={12} />
-                      Envoyer l&apos;email
-                    </button>
-                  )}
-                  {s.status === "sent" && (
-                    <span className="inline-flex items-center gap-1 text-emerald-600 text-xs font-semibold">
-                      <CheckCircle2 size={14} />
-                      Email envoyé
-                    </span>
-                  )}
-                </td>
-              </tr>
-            ))}
-            {orders.length === 0 && (
+            {rows.map((s, idx) => {
+              const orderEntry = orderStats.get(s.row.orderId);
+              const allUploadedForOrder =
+                !!orderEntry && orderEntry.uploaded === orderEntry.total;
+              const allSentForOrder =
+                !!orderEntry && orderEntry.sent === orderEntry.total;
+              // L'action "Envoyer l'email" n'apparaît que sur la PREMIÈRE row
+              // de la commande, pour éviter N boutons doublons.
+              const isFirstOfOrder =
+                idx === 0 || rows[idx - 1].row.orderId !== s.row.orderId;
+              const isLastOfOrder =
+                idx === rows.length - 1 ||
+                rows[idx + 1].row.orderId !== s.row.orderId;
+              return (
+                <tr
+                  key={s.row.combinedLabel}
+                  className={`border-gray-100 ${
+                    isLastOfOrder ? "border-b" : "border-b border-dashed"
+                  } last:border-0`}
+                >
+                  <td className="px-4 py-3 font-bold text-gold whitespace-nowrap">
+                    #{s.row.combinedLabel}
+                  </td>
+                  <td className="px-4 py-3">
+                    {isFirstOfOrder ? (
+                      <>
+                        <div className="font-semibold text-text-primary">
+                          {s.row.fullName}
+                          {s.row.quantity > 1 && (
+                            <span className="ml-2 text-[10px] font-bold text-gold uppercase tracking-wider">
+                              {s.row.quantity} sacrifices
+                            </span>
+                          )}
+                        </div>
+                        <div className="text-xs text-text-muted-light">{s.row.email}</div>
+                      </>
+                    ) : (
+                      <div className="text-xs text-text-muted-light italic">
+                        ↳ même commande
+                      </div>
+                    )}
+                  </td>
+                  <td className="px-4 py-3 text-text-muted">{s.row.niyyah}</td>
+                  <td className="px-4 py-3">
+                    <StatusBadge status={s.status} message={s.message} />
+                  </td>
+                  <td className="px-4 py-3 text-right">
+                    {isFirstOfOrder && allSentForOrder && (
+                      <span className="inline-flex items-center gap-1 text-emerald-600 text-xs font-semibold">
+                        <CheckCircle2 size={14} />
+                        Email envoyé
+                      </span>
+                    )}
+                    {isFirstOfOrder &&
+                      !allSentForOrder &&
+                      allUploadedForOrder && (
+                        <button
+                          onClick={() => sendEmail(s.row.orderId)}
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary text-white text-xs font-semibold hover:bg-primary/90 transition-colors"
+                        >
+                          <Send size={12} />
+                          Envoyer l&apos;email
+                          {s.row.quantity > 1 && (
+                            <span className="ml-1 opacity-80">
+                              ({s.row.quantity} vidéos)
+                            </span>
+                          )}
+                        </button>
+                      )}
+                    {isFirstOfOrder &&
+                      !allSentForOrder &&
+                      !allUploadedForOrder &&
+                      orderEntry &&
+                      orderEntry.total > 1 && (
+                        <span className="text-xs text-text-muted-light">
+                          {orderEntry.uploaded}/{orderEntry.total} vidéos
+                        </span>
+                      )}
+                  </td>
+                </tr>
+              );
+            })}
+            {rows.length === 0 && (
               <tr>
                 <td colSpan={5} className="px-4 py-8 text-center text-text-muted">
                   Aucune commande payée pour {new Date().getFullYear()}.

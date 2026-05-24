@@ -86,11 +86,20 @@ const styles = StyleSheet.create({
 
 type Intention = "pour_moi" | "famille" | "sadaqa";
 
-interface LabelOrder {
-  orderNumber: number;
+// Une étiquette = un sacrifice (et non plus une commande).
+// Pour une commande multi-mouton, on génère N étiquettes (une par sacrifice),
+// chacune avec son numéro composé : "12a", "12b" ... afin que le cheikh ne
+// confonde pas deux sacrifices distincts de la même commande.
+interface LabelItem {
+  // Label numérique imprimé en grand (ex: "12" ou "12a")
+  combinedLabel: string;
   fullName: string;
   niyyah: string;
   intention: Intention;
+  // Si > 1, on affiche aussi un sous-titre "Sacrifice 1 / 3" pour rappeler
+  // au cheikh qu'il y en a plusieurs pour cette commande.
+  totalForOrder: number;
+  positionInOrder: number; // 1-indexed pour l'affichage humain
 }
 
 function intentionBadgeLabel(intention: Intention): string | null {
@@ -100,7 +109,7 @@ function intentionBadgeLabel(intention: Intention): string | null {
 }
 
 interface LabelsPdfProps {
-  orders: LabelOrder[];
+  items: LabelItem[];
   logoUrl: string;
   year: number;
   hijriYear: number;
@@ -110,13 +119,15 @@ interface LabelsPdfProps {
 function ensureArabicFont() {}
 
 function Label({
-  orderNumber,
+  combinedLabel,
   fullName,
   niyyah,
   intention,
+  totalForOrder,
+  positionInOrder,
   logoUrl,
   hijriYear,
-}: LabelOrder & { logoUrl: string; hijriYear: number }) {
+}: LabelItem & { logoUrl: string; hijriYear: number }) {
   const badge = intentionBadgeLabel(intention);
   return (
     <View style={styles.label}>
@@ -129,13 +140,18 @@ function Label({
         {niyyah}
       </Text>
       <Text style={styles.name}>Commande : {fullName}</Text>
-      <Text style={styles.number}>N°{orderNumber}</Text>
+      {totalForOrder > 1 && (
+        <Text style={[styles.name, { color: "#B8860B", fontWeight: "bold" }]}>
+          Sacrifice {positionInOrder} / {totalForOrder}
+        </Text>
+      )}
+      <Text style={styles.number}>N°{combinedLabel}</Text>
     </View>
   );
 }
 
 export default function LabelsPdf({
-  orders,
+  items,
   logoUrl,
   hijriYear,
 }: LabelsPdfProps) {
@@ -143,13 +159,20 @@ export default function LabelsPdf({
 
   return (
     <Document>
-      {orders.map((order) => (
-        <Page key={order.orderNumber} size="A4" orientation="landscape" style={styles.page}>
+      {items.map((item) => (
+        <Page
+          key={item.combinedLabel}
+          size="A4"
+          orientation="landscape"
+          style={styles.page}
+        >
           <Label
-            orderNumber={order.orderNumber}
-            fullName={order.fullName}
-            niyyah={order.niyyah}
-            intention={order.intention}
+            combinedLabel={item.combinedLabel}
+            fullName={item.fullName}
+            niyyah={item.niyyah}
+            intention={item.intention}
+            totalForOrder={item.totalForOrder}
+            positionInOrder={item.positionInOrder}
             logoUrl={logoUrl}
             hijriYear={hijriYear}
           />

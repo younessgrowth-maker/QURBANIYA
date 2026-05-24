@@ -102,6 +102,33 @@ Taqabbal Allahou minna wa minkoum.
 — L'équipe Qurbaniya`;
 }
 
+/** Template multi-vidéos (commande multi-mouton). Liste les N sacrifices
+ *  avec leur niyyah respective et leur lien signé. */
+export function videoDeliveryMessageMulti(
+  prenom: string,
+  videos: Array<{ niyyah: string; url: string }>,
+): string {
+  const lines = videos
+    .map(
+      (v, i) =>
+        `🐑 Sacrifice ${i + 1} — au nom de *${v.niyyah}*
+👉 ${v.url}`
+    )
+    .join("\n\n");
+  return `Salam ${prenom} 🌙
+
+Aïd Moubarak ! Les ${videos.length} vidéos nominatives de vos sacrifices sont prêtes.
+
+${lines}
+
+Liens valides 90 jours — pensez à télécharger les vidéos pour les conserver.
+
+Qu'Allah accepte de vous et de votre famille.
+Taqabbal Allahou minna wa minkoum.
+
+— L'équipe Qurbaniya`;
+}
+
 /** Template du message d'annonce du programme parrainage. */
 export function referralLaunchMessage(prenom: string, code: string): string {
   return `Salam ${prenom} 🌙
