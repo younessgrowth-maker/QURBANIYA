@@ -10,6 +10,31 @@ import "server-only";
 import { unstable_cache, revalidateTag } from "next/cache";
 import { getStripe } from "@/lib/stripe";
 
+// ── Filtre des paiements de test ─────────────────────────────────────────
+// Emails à exclure systématiquement des stats (paiements de test, internes,
+// QA, etc.). Source : valeur par défaut + env var ANALYTICS_TEST_EMAILS
+// (CSV) pour ajout sans redéploiement.
+const DEFAULT_TEST_EMAILS = [
+  "yousse.fmrabet24@gmail.com",
+  "younessgrowth@gmail.com",
+];
+
+function getTestEmails(): Set<string> {
+  const env = process.env.ANALYTICS_TEST_EMAILS ?? "";
+  const extras = env
+    .split(",")
+    .map((e) => e.trim().toLowerCase())
+    .filter(Boolean);
+  return new Set(
+    [...DEFAULT_TEST_EMAILS.map((e) => e.toLowerCase()), ...extras]
+  );
+}
+
+function isTestEmail(email: string | null | undefined): boolean {
+  if (!email) return false;
+  return getTestEmails().has(email.toLowerCase());
+}
+
 // ── Dates des Aïds par année (Aïd al-Adha) ───────────────────────────────
 // Source : calendriers officiels. Année lunaire ≈ 354j → ~11j plus tôt chaque
 // année grégorienne. On garde les dates exactes ici, source unique.
@@ -277,12 +302,18 @@ async function buildYearStats(
 
   // ── Source de vérité : charges Stripe (couvre Shopify, Checkout,
   //    Payment Links, manuel — tout ce qui a généré un encaissement). ──
-  const paidCharges = charges.filter(
-    (c) =>
-      c.status === "succeeded" &&
-      c.captured === true &&
-      (c.amount ?? 0) > 0
-  );
+  // Filtre :
+  //  - status succeeded + captured (paiement effectif)
+  //  - amount > 0 (exclut les autorisations à 0€)
+  //  - email pas dans la blacklist de tests
+  const paidCharges = charges.filter((c) => {
+    if (c.status !== "succeeded") return false;
+    if (c.captured !== true) return false;
+    if ((c.amount ?? 0) <= 0) return false;
+    const email = c.billing_details?.email ?? c.receipt_email ?? null;
+    if (isTestEmail(email)) return false;
+    return true;
+  });
 
   const hourCounts = new Array(24).fill(0);
   const weekdayCounts = new Array(7).fill(0);
@@ -316,11 +347,16 @@ async function buildYearStats(
   // (les charges Shopify ne passent pas par Checkout donc n'ont pas de
   // notion de "session ouverte/expirée". Pour l'année actuelle qui
   // utilise notre Checkout, ces métriques restent pertinentes.)
-  const paidSessions = sessions.filter(
+  // On exclut les sessions de test (mêmes emails que la blacklist).
+  const realSessions = sessions.filter((s) => {
+    const email = s.customer_details?.email ?? s.customer_email ?? null;
+    return !isTestEmail(email);
+  });
+  const paidSessions = realSessions.filter(
     (s) => s.payment_status === "paid" && (s.amount_total ?? 0) > 0
   );
-  const expiredSessions = sessions.filter((s) => s.status === "expired");
-  const openSessions = sessions.filter((s) => s.status === "open");
+  const expiredSessions = realSessions.filter((s) => s.status === "expired");
+  const openSessions = realSessions.filter((s) => s.status === "open");
 
   const promoCodeAgg = new Map<
     string,
@@ -417,7 +453,7 @@ async function buildYearStats(
   // Funnel : ne s'applique qu'aux sessions Checkout (notre nouveau site).
   // Pour les charges venues d'ailleurs (Shopify 2025), pas de notion
   // "abandoned cart" disponible — on les compte juste comme payées.
-  const sessionsTotal = Math.max(sessions.length, paidCharges.length);
+  const sessionsTotal = Math.max(realSessions.length, paidCharges.length);
   const sessionsPaid = paidCharges.length;
   const sessionsExpired = expiredSessions.length;
   const sessionsOpen = openSessions.length;
@@ -543,22 +579,30 @@ async function buildYoY(
   };
 
   // Sessions récentes globales (cross-année, prises de l'année en cours)
-  // Reconstruites depuis l'API uniquement pour l'année en cours
+  // Reconstruites depuis l'API uniquement pour l'année en cours.
+  // On fetch 40 pour laisser de la marge après filtre tests, et on
+  // garde les 20 plus récentes non-test.
   const stripe = getStripe();
   const recentRaw: import("stripe").Stripe.Checkout.Session[] = [];
-  for await (const s of stripe.checkout.sessions.list({ limit: 20 })) {
+  for await (const s of stripe.checkout.sessions.list({ limit: 40 })) {
     recentRaw.push(s);
-    if (recentRaw.length >= 20) break;
+    if (recentRaw.length >= 40) break;
   }
-  const recentSessions = recentRaw.map((s) => ({
-    id: s.id,
-    createdAt: new Date(s.created * 1000).toISOString(),
-    email: s.customer_details?.email ?? s.customer_email ?? null,
-    amountEur: (s.amount_total ?? 0) / 100,
-    status: s.payment_status,
-    niyyah:
-      typeof s.metadata?.niyyah === "string" ? s.metadata.niyyah : undefined,
-  }));
+  const recentSessions = recentRaw
+    .filter((s) => {
+      const email = s.customer_details?.email ?? s.customer_email ?? null;
+      return !isTestEmail(email);
+    })
+    .slice(0, 20)
+    .map((s) => ({
+      id: s.id,
+      createdAt: new Date(s.created * 1000).toISOString(),
+      email: s.customer_details?.email ?? s.customer_email ?? null,
+      amountEur: (s.amount_total ?? 0) / 100,
+      status: s.payment_status,
+      niyyah:
+        typeof s.metadata?.niyyah === "string" ? s.metadata.niyyah : undefined,
+    }));
 
   return {
     fetchedAt: new Date().toISOString(),

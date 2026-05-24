@@ -224,7 +224,52 @@ export type ForecastInput = {
   stockRemaining: number;
   aovEurOverride?: number;
   simulations?: number;
+  // Distribution horaire des ventes (pour ajustement bayésien
+  // time-of-day sur la prédiction du jour partiel).
+  hourlyDistribution?: { hour: number; count: number }[];
 };
+
+// Helpers timezone Paris pour fractionOfDayDone
+function parisHour(d: Date): number {
+  const h = new Intl.DateTimeFormat("en-GB", {
+    timeZone: "Europe/Paris",
+    hour: "2-digit",
+    hour12: false,
+  }).format(d);
+  return parseInt(h, 10);
+}
+
+function parisMinute(d: Date): number {
+  const m = new Intl.DateTimeFormat("en-GB", {
+    timeZone: "Europe/Paris",
+    minute: "2-digit",
+  }).format(d);
+  return parseInt(m, 10);
+}
+
+// Fraction de la journée typique déjà accomplie au moment "now",
+// en se basant sur la distribution horaire historique des ventes.
+// Si pas de distribution dispo, fallback sur l'heure murale linéaire.
+function fractionOfDayDone(
+  now: Date,
+  hourlyDist: { hour: number; count: number }[]
+): number {
+  const currentHour = parisHour(now);
+  const currentMinute = parisMinute(now);
+  const total = hourlyDist.reduce((a, h) => a + h.count, 0);
+  if (total === 0) {
+    return (currentHour + currentMinute / 60) / 24;
+  }
+  let done = 0;
+  for (const { hour, count } of hourlyDist) {
+    if (hour < currentHour) {
+      done += count;
+    } else if (hour === currentHour) {
+      done += count * (currentMinute / 60);
+    }
+  }
+  return done / total;
+}
 
 export function buildForecast(input: ForecastInput): ForecastResult {
   const now = input.now ?? new Date();
@@ -302,9 +347,49 @@ export function buildForecast(input: ForecastInput): ForecastResult {
     if (futureDays.length > 120) break;
   }
 
-  // Monte Carlo unique pour TOUS les jours (aujourd'hui + futurs)
+  // ── Monte Carlo en 2 passes ─────────────────────────────────────────
+  // Pass 1 : on génère les échantillons "prior" pour chaque jour.
+  // Pass 2 : on applique une mise à jour bayésienne sur aujourd'hui
+  //          (en utilisant la distribution horaire pour conditionner sur
+  //          ce qu'on a observé jusqu'à maintenant), puis on calcule les
+  //          totaux cumulés et le stockout en injectant le today blended.
   const rng = makeRng(42);
   const perDaySamples: number[][] = futureDays.map(() => []);
+
+  for (let s = 0; s < simulations; s++) {
+    for (let i = 0; i < futureDays.length; i++) {
+      const dba = futureDays[i].daysBeforeAid;
+      const shape = shapeFn(dba);
+      const mean = baseline * shape * scale;
+      const noisy = mean + normalRandom(rng) * sigma;
+      perDaySamples[i].push(Math.max(0, noisy));
+    }
+  }
+
+  // Bayesian update sur aujourd'hui : si on est à 18h et qu'on n'a fait
+  // que 18 ventes (au lieu des ~35 attendus à cette heure), la vraie
+  // valeur finale du jour est probablement plus basse que le prior de
+  // 50. On blende prior + observation, pondérée par fractionOfDayDone.
+  const fractionDone = fractionOfDayDone(
+    now,
+    input.hourlyDistribution ?? []
+  );
+  const observedBasedFullDay =
+    fractionDone > 0.05 ? soFarToday / fractionDone : null;
+  // Plus la journée avance, plus on fait confiance à l'observation.
+  const blendWeight = Math.min(0.95, fractionDone);
+
+  const todayBlendedSamples: number[] =
+    futureDays.length > 0 && futureDays[0].daysBeforeAid === todayDba
+      ? perDaySamples[0].map((prior) => {
+          if (observedBasedFullDay === null) return prior;
+          const blended =
+            blendWeight * observedBasedFullDay + (1 - blendWeight) * prior;
+          // Garde-fou : ne peut pas être moins que ce qui a déjà été vendu.
+          return Math.max(soFarToday, blended);
+        })
+      : [];
+
   const totalSamples: number[] = new Array(simulations).fill(0);
   const stockoutBeforeAid: boolean[] = new Array(simulations).fill(false);
   const stockoutDay: (number | null)[] = new Array(simulations).fill(null);
@@ -313,20 +398,15 @@ export function buildForecast(input: ForecastInput): ForecastResult {
     let cumulative = 0;
     for (let i = 0; i < futureDays.length; i++) {
       const dba = futureDays[i].daysBeforeAid;
-      const shape = shapeFn(dba);
-      const mean = baseline * shape * scale;
-      const noisy = mean + normalRandom(rng) * sigma;
-      const fullDaySample = Math.max(0, noisy);
-      perDaySamples[i].push(fullDaySample);
-
-      // Pour le total "additional" : aujourd'hui ne compte que pour son
-      // RESTE (soustraire ce qui est déjà dans observedTotal), les jours
-      // futurs comptent intégralement.
-      const contributionToAdditional =
-        dba === todayDba
-          ? Math.max(0, fullDaySample - soFarToday)
-          : fullDaySample;
-      cumulative += contributionToAdditional;
+      let contribution: number;
+      if (dba === todayDba) {
+        // Aujourd'hui : blended full day moins ce qui est déjà fait
+        // (le déjà-fait est dans observedTotal).
+        contribution = Math.max(0, todayBlendedSamples[s] - soFarToday);
+      } else {
+        contribution = perDaySamples[i][s];
+      }
+      cumulative += contribution;
 
       if (
         stockoutDay[s] === null &&
@@ -350,20 +430,28 @@ export function buildForecast(input: ForecastInput): ForecastResult {
     return sorted[idx];
   };
 
-  // Forecast array : tous les jours simulés (aujourd'hui inclus en
-  // valeur "journée complète attendue", pas en partiel).
-  const forecast: ForecastPoint[] = futureDays.map((d, i) => ({
-    date: d.date,
-    daysBeforeAid: d.daysBeforeAid,
-    p10: percentile(perDaySamples[i], 10),
-    p50: percentile(perDaySamples[i], 50),
-    p90: percentile(perDaySamples[i], 90),
-  }));
+  // Forecast array : tous les jours simulés. Aujourd'hui utilise les
+  // samples blended (prior + observation conditionné time-of-day).
+  const forecast: ForecastPoint[] = futureDays.map((d, i) => {
+    const samples =
+      d.daysBeforeAid === todayDba && todayBlendedSamples.length > 0
+        ? todayBlendedSamples
+        : perDaySamples[i];
+    return {
+      date: d.date,
+      daysBeforeAid: d.daysBeforeAid,
+      p10: percentile(samples, 10),
+      p50: percentile(samples, 50),
+      p90: percentile(samples, 90),
+    };
+  });
 
   // ── Prédictions ciblées aujourd'hui & demain (extraites du même MC) ──
   let todayPrediction: ForecastResult["today"] = null;
   if (todayDba <= 0 && futureDays.length > 0 && futureDays[0].daysBeforeAid === todayDba) {
-    const todaySamples = perDaySamples[0];
+    // Pour la card "aujourd'hui" : on utilise les samples blended pour
+    // expectedTotal afin que tout soit cohérent (chart, card, total).
+    const todaySamples = todayBlendedSamples;
     const remainingSamples = todaySamples.map((v) =>
       Math.max(0, v - soFarToday)
     );
