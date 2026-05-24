@@ -313,14 +313,16 @@ export default function OrderForm() {
           <p className="text-urgency text-sm mb-3">{errors.quantity.message}</p>
         )}
 
-        {/* Grid de cards : 2x2 mobile, 4 cols desktop. Sans badges
-            marketing — wording neutre et respectueux. */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+        {/* Grid de cards : 2x2 mobile, 4 cols desktop. Wording neutre et
+            respectueux. Une seule vignette informative \"Le plus populaire\"
+            sur l'offre 2 sacrifices — repere d'usage factuel, pas une
+            promesse religieuse. */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4 pt-2">
           {[
-            { qty: 1, title: "Un sacrifice", subtitle: "Pour vous-même" },
-            { qty: 2, title: "Deux sacrifices", subtitle: "Vous et un proche" },
-            { qty: 3, title: "Trois sacrifices", subtitle: "Vous et deux proches" },
-            { qty: 5, title: "Cinq sacrifices", subtitle: "Pour votre foyer" },
+            { qty: 1, title: "Un sacrifice", subtitle: "Pour vous-même", popular: false },
+            { qty: 2, title: "Deux sacrifices", subtitle: "Vous et un proche", popular: true },
+            { qty: 3, title: "Trois sacrifices", subtitle: "Vous et deux proches", popular: false },
+            { qty: 5, title: "Cinq sacrifices", subtitle: "Pour votre foyer", popular: false },
           ].map((pack) => {
             const selected = quantity === pack.qty;
             return (
@@ -330,13 +332,26 @@ export default function OrderForm() {
                 onClick={() =>
                   setValue("quantity", pack.qty, { shouldValidate: true })
                 }
-                className={`text-left rounded-xl p-4 transition-all duration-200 ${
+                className={`relative text-left rounded-xl p-4 transition-all duration-200 ${
                   selected
                     ? "bg-primary text-white shadow-glow-primary scale-[1.02] border-2 border-primary"
+                    : pack.popular
+                    ? "bg-white border-2 border-gold/50 text-text-primary hover:border-gold hover:shadow-soft"
                     : "bg-white border-2 border-gray-200 text-text-primary hover:border-primary/40 hover:shadow-soft"
                 }`}
                 aria-pressed={selected}
               >
+                {pack.popular && (
+                  <span
+                    className={`absolute -top-2.5 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-[0.08em] whitespace-nowrap shadow-sm ${
+                      selected
+                        ? "bg-white text-primary"
+                        : "bg-gold text-white"
+                    }`}
+                  >
+                    Le plus populaire
+                  </span>
+                )}
                 <div className="text-2xl mb-2 leading-none" aria-hidden>
                   {"🐑".repeat(Math.min(pack.qty, 3))}
                   {pack.qty > 3 && (
