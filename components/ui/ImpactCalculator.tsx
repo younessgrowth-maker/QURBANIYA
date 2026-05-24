@@ -11,7 +11,7 @@ import { MEALS_PER_SHEEP, FAMILIES_PER_SHEEP } from "@/lib/constants";
 const PRICE_PER_SHEEP = 140;
 const FRANCE_PRICE = 380;
 
-const quantities = [1, 2, 3, 5, 10];
+const quantities = [1, 2, 3, 5];
 
 export default function ImpactCalculator() {
   const [qty, setQty] = useState(1);
@@ -130,9 +130,9 @@ export default function ImpactCalculator() {
           jour où elle compte le plus. »
         </motion.blockquote>
 
-        {/* CTA */}
+        {/* CTA — passe la quantité choisie en query param pour pré-remplir le form */}
         <div className="text-center">
-          <Link href="/commander">
+          <Link href={qty > 1 ? `/commander?qty=${qty}` : "/commander"}>
             <Button size="lg" variant="secondary" className="uppercase glow-pulse">
               Réserver {qty > 1 ? `mes ${qty} moutons` : "mon mouton"} →
             </Button>

@@ -180,6 +180,20 @@ export default function OrderForm() {
     }
   }, [setValue]);
 
+  // Pré-remplissage `quantity` depuis l'URL (?qty=N) — propagation depuis
+  // l'ImpactCalculator de la home pour éviter à l'utilisateur de re-sélectionner
+  // le nombre de moutons qu'il vient juste de choisir. Borne 1-5 pour suivre le schema.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    const qtyParam = params.get("qty");
+    if (!qtyParam) return;
+    const parsed = parseInt(qtyParam, 10);
+    if (Number.isNaN(parsed) || parsed <= 1) return;
+    const bounded = Math.min(5, parsed);
+    setValue("quantity", bounded, { shouldValidate: false });
+  }, [setValue]);
+
 
   // Validation live du code parrain (debounce 400ms)
   useEffect(() => {

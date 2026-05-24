@@ -171,11 +171,6 @@ export default async function CommanderPage() {
             <SoldOutPanel />
           ) : open ? (
             <>
-              {/* Trust strip : 3 avis vérifiés au-dessus du tunnel — preuve
-                  sociale immédiate pour le trafic chaud J-3/J-2. Null si
-                  moins de 3 avis disponibles. */}
-              <CommanderTrustStrip />
-
               {/* 2-col layout */}
               <div className="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-8 lg:gap-12 items-start">
               {/* Form */}
@@ -229,6 +224,13 @@ export default async function CommanderPage() {
                 </p>
               </div>
             </div>
+          )}
+
+          {/* Avis vérifiés — preuve sociale après le tunnel, juste avant la FAQ. */}
+          {open && !isFull && (
+            <section className="mt-16" aria-label="Avis vérifiés de nos clients">
+              <CommanderTrustStrip />
+            </section>
           )}
 
           {/* SEO: contenu informatif + FAQ */}
