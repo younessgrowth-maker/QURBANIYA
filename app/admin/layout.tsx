@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { isAdminEmail } from "@/lib/admin";
-import { LayoutDashboard, Package, LogOut } from "lucide-react";
+import { LayoutDashboard, Package, LogOut, BarChart3 } from "lucide-react";
 
 export const metadata = {
   title: "Admin — Qurbaniya",
@@ -35,6 +35,10 @@ export default async function AdminLayout({ children }: { children: React.ReactN
             <nav className="hidden md:flex items-center gap-4 text-sm">
               <Link href="/admin" className="text-text-muted hover:text-text-primary transition-colors">
                 Dashboard
+              </Link>
+              <Link href="/admin/analytics" className="text-text-muted hover:text-text-primary transition-colors flex items-center gap-1">
+                <BarChart3 size={13} className="text-gold" />
+                Analytics
               </Link>
               <Link href="/admin/videos" className="text-text-muted hover:text-text-primary transition-colors">
                 Vidéos
