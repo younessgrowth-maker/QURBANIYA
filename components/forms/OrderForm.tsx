@@ -109,6 +109,13 @@ function RadioCard({ label, icon: Icon, description, selected, onSelect }: {
 
 export default function OrderForm() {
   const [submitSuccess, setSubmitSuccess] = useState(false);
+  // Erreur retournée par /api/orders (inventaire plein, aid_closed, validation
+  // serveur, etc.). Avant : silent fail — le spinner s'arrêtait sans message
+  // visible et l'utilisateur pensait que le site était cassé.
+  const [submitError, setSubmitError] = useState<{
+    code?: string;
+    message: string;
+  } | null>(null);
   const [referralState, setReferralState] = useState<ReferralState>({ status: "idle" });
   // Guard double-submit synchrone : react-hook-form's isSubmitting set le bouton
   // disabled très vite, mais un useRef évite toute fenêtre de race entre clic
@@ -187,6 +194,7 @@ export default function OrderForm() {
   async function onSubmit(data: OrderFormValues) {
     if (inFlightRef.current) return;
     inFlightRef.current = true;
+    setSubmitError(null);
     try {
       track("order_submitted", {
         payment_method: data.payment_method,
@@ -207,7 +215,7 @@ export default function OrderForm() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
-      const result = await res.json();
+      const result = await res.json().catch(() => ({}));
       if (result.checkout_url) {
         track("payment_started", { payment_method: data.payment_method });
         setSubmitSuccess(true);
@@ -217,10 +225,22 @@ export default function OrderForm() {
         }, 800);
       } else {
         // L'API a refusé (inventaire plein, aid_closed, validation, etc.).
-        // On relâche le verrou pour permettre à l'utilisateur de retenter.
+        // Avant : silent fail — l'utilisateur ne savait pas ce qui s'était
+        // passé. Maintenant on remonte le message serveur. Cas "inventory_full"
+        // = on encourage la liste d'attente sur /commander (rerender côté
+        // serveur basculera vers SoldOutPanel à la prochaine visite).
+        const message =
+          typeof result?.error === "string" && result.error.length > 0
+            ? result.error
+            : "Impossible de créer la commande pour le moment. Réessaie dans quelques instants ou contacte-nous.";
+        setSubmitError({ code: result?.code, message });
         inFlightRef.current = false;
       }
     } catch {
+      setSubmitError({
+        message:
+          "Erreur réseau pendant l'envoi. Vérifie ta connexion et réessaie.",
+      });
       inFlightRef.current = false;
     }
   }
@@ -497,6 +517,27 @@ export default function OrderForm() {
           </div>
         )}
       </div>
+
+      {/* ── Erreur serveur (inventaire plein, aid_closed, etc.) ── */}
+      {submitError && !submitSuccess && (
+        <div
+          role="alert"
+          aria-live="assertive"
+          className="rounded-card border-2 border-urgency/30 bg-urgency/5 p-4 text-sm"
+        >
+          <p className="font-bold text-urgency mb-1">
+            {submitError.code === "inventory_full"
+              ? "Réservations complètes"
+              : "Commande non enregistrée"}
+          </p>
+          <p className="text-text-primary leading-relaxed">{submitError.message}</p>
+          {submitError.code === "inventory_full" && (
+            <p className="text-text-muted text-xs mt-2">
+              Rechargez la page pour vous inscrire sur la liste d&apos;attente — nous vous prévenons dès qu&apos;une place se libère.
+            </p>
+          )}
+        </div>
+      )}
 
       {/* ── Submit ── */}
       <div>

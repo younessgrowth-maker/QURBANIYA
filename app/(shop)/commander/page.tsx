@@ -5,9 +5,15 @@ import Header from "@/components/layout/Header";
 import OrderForm from "@/components/forms/OrderForm";
 import OrderSummary from "@/components/forms/OrderSummary";
 import InventoryStatus from "@/components/sections/InventoryStatus";
+import SoldOutPanel from "@/components/sections/SoldOutPanel";
 import { ProductJsonLd, BreadcrumbJsonLd } from "@/components/seo/JsonLd";
 import Breadcrumb from "@/components/ui/Breadcrumb";
-import { isOrderingOpen, whatsappUrl } from "@/lib/constants";
+import { CURRENT_YEAR, isOrderingOpen, whatsappUrl } from "@/lib/constants";
+import { getInventory } from "@/lib/supabase/queries";
+
+// Revalidation courte pour que la bascule "complet" se propage rapidement
+// quand inventory.reserved_slots / is_open changent en base.
+export const revalidate = 30;
 
 export const metadata: Metadata = {
   title: "Réserver mon mouton pour l'Aïd al-Adha 2026 (27 mai) — 140€",
@@ -98,8 +104,15 @@ function CommanderFaqJsonLd() {
   );
 }
 
-export default function CommanderPage() {
+export default async function CommanderPage() {
   const open = isOrderingOpen();
+  // Inventory lecture côté serveur — détermine si on bascule en mode
+  // "Complet → liste d'attente" plutôt que d'afficher le formulaire.
+  // Fail-open : si Supabase est down, on garde le tunnel ouvert (l'API
+  // /api/orders refusera la commande si vraiment plein).
+  const inventory = open ? await getInventory(CURRENT_YEAR) : null;
+  const isFull =
+    !!inventory && (!inventory.isOpen || inventory.remaining <= 0);
 
   return (
     <>
@@ -116,12 +129,16 @@ export default function CommanderPage() {
             { label: "Commander mon sacrifice", },
           ]} />
           {/* Compteur de places dynamique (visible uniquement si stock < 75) */}
-          {open && <InventoryStatus className="mb-6" showCta={false} />}
+          {open && !isFull && <InventoryStatus className="mb-6" showCta={false} />}
 
           {/* Page header */}
           <div className="text-center mb-10">
             <h1 className="text-3xl md:text-4xl font-black uppercase mb-2">
-              {open ? (
+              {isFull ? (
+                <>
+                  RÉSERVATIONS <span className="text-gold">AÏD 2026 COMPLÈTES</span>
+                </>
+              ) : open ? (
                 <>
                   COMMANDER MON MOUTON <span className="text-gold">POUR L&apos;AÏD 2026</span>
                 </>
@@ -132,7 +149,11 @@ export default function CommanderPage() {
               )}
             </h1>
             <p className="text-text-muted">
-              {open ? (
+              {isFull ? (
+                <>
+                  Toutes les places sont prises. Une réservation peut se libérer — inscrivez-vous sur la liste d&apos;attente ci-dessous.
+                </>
+              ) : open ? (
                 <>
                   Sacrifice le <strong className="text-text-primary">mercredi 27 mai 2026</strong>. Vidéo nominative WhatsApp, viande aux nécessiteux. <strong className="text-text-primary">140€ tout inclus.</strong>
                 </>
@@ -144,7 +165,10 @@ export default function CommanderPage() {
             </p>
           </div>
 
-          {open ? (
+          {isFull ? (
+            /* Stock épuisé : panneau liste d'attente */
+            <SoldOutPanel />
+          ) : open ? (
             /* 2-col layout */
             <div className="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-8 lg:gap-12 items-start">
               {/* Form */}
