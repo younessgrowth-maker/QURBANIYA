@@ -226,6 +226,13 @@ export default async function CommanderPage() {
             </div>
           )}
 
+          {/* Avis vérifiés — preuve sociale après le tunnel, juste avant la FAQ. */}
+          {open && !isFull && (
+            <section className="mt-16" aria-label="Avis vérifiés de nos clients">
+              <CommanderTrustStrip />
+            </section>
+          )}
+
           {/* SEO: contenu informatif + FAQ */}
           <section className="mt-16 max-w-3xl mx-auto" aria-labelledby="faq-commander">
             <h2 id="faq-commander" className="text-2xl md:text-3xl font-black mb-6 text-center">
@@ -298,14 +305,6 @@ export default async function CommanderPage() {
               D&apos;autres questions ? Consultez notre <Link href="/faq" className="text-gold hover:underline font-semibold">FAQ complète</Link> ou notre <Link href="/blog/sacrifice-aid-en-ligne-comment-ca-marche" className="text-gold hover:underline font-semibold">guide « comment ça marche »</Link>.
             </div>
           </section>
-
-          {/* Avis vérifiés en bas de page — preuve sociale en fin de parcours,
-              une fois que le visiteur a parcouru le form + FAQ. */}
-          {open && !isFull && (
-            <section className="mt-16" aria-label="Avis vérifiés de nos clients">
-              <CommanderTrustStrip />
-            </section>
-          )}
         </div>
       </main>
     </>
