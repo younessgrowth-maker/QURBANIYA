@@ -61,6 +61,9 @@ async function AnalyticsContent() {
       aovEurOverride:
         yoy.current.totals.aovEur > 0 ? yoy.current.totals.aovEur : 140,
       simulations: 1000,
+      // Distribution horaire pour l'ajustement bayésien time-of-day
+      // sur la prédiction du jour partiel (aujourd'hui).
+      hourlyDistribution: yoy.current.hourlyDistribution,
     });
   }
 

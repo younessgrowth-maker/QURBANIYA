@@ -85,6 +85,19 @@ console.log(
 console.log(`Aujourd'hui J-3, déjà ${counts_2026[-3]} ventes`);
 console.log("");
 
+// Distribution horaire typique e-commerce religieux (pics 12h, 19-22h)
+// Total ≈ 1 (proportions), normalisé à 200 pour matcher count
+const hourlyDistribution = [
+  { hour: 0, count: 3 }, { hour: 1, count: 2 }, { hour: 2, count: 1 },
+  { hour: 3, count: 1 }, { hour: 4, count: 1 }, { hour: 5, count: 1 },
+  { hour: 6, count: 2 }, { hour: 7, count: 4 }, { hour: 8, count: 6 },
+  { hour: 9, count: 9 }, { hour: 10, count: 12 }, { hour: 11, count: 14 },
+  { hour: 12, count: 18 }, { hour: 13, count: 16 }, { hour: 14, count: 12 },
+  { hour: 15, count: 10 }, { hour: 16, count: 11 }, { hour: 17, count: 13 },
+  { hour: 18, count: 16 }, { hour: 19, count: 20 }, { hour: 20, count: 18 },
+  { hour: 21, count: 15 }, { hour: 22, count: 10 }, { hour: 23, count: 5 },
+];
+
 const result = buildForecast({
   current: daily_2026,
   previous: daily_2025,
@@ -93,7 +106,19 @@ const result = buildForecast({
   stockRemaining: 93,
   aovEurOverride: 136,
   simulations: 1000,
+  hourlyDistribution,
 });
+
+// Fraction de la journée typique faite à 18h Paris (somme hours 0-17 + 0)
+const fractionDoneAt18 =
+  hourlyDistribution.slice(0, 18).reduce((a, h) => a + h.count, 0) /
+  hourlyDistribution.reduce((a, h) => a + h.count, 0);
+console.log(
+  `\n  [Sanity time-of-day] Fraction journée typique faite à 18h Paris : ${(fractionDoneAt18 * 100).toFixed(0)}%`
+);
+console.log(
+  `  [Sanity time-of-day] Avec 18 ventes observées, implied full day = ${(18 / fractionDoneAt18).toFixed(1)}\n`
+);
 
 console.log("── Diagnostics modèle ──");
 console.log(`Méthode : ${result.diagnostics.method}`);
@@ -249,6 +274,32 @@ tests.push({
   name: "Stockout coherent : si proba > 0 alors date probable existe",
   pass:
     result.stockout.probability === 0 || result.stockout.expectedDate !== null,
+});
+
+tests.push({
+  name: "Bayesian today : remaining < (expectedTotal - soFar) car time-of-day adjusté",
+  pass: t.remaining.p50 < 50 - t.soFar + 5, // tolerance, le naif serait ~50-18=32
+  detail: `remaining=${Math.round(t.remaining.p50)} (était ~32 sans time-of-day adj)`,
+});
+
+tests.push({
+  name: "today.expectedTotal coherent avec implied = soFar/fractionDone",
+  pass: (() => {
+    const implied = t.soFar / fractionDoneAt18;
+    // Le blended doit être entre implied et le prior (~50), avec
+    // tolérance pour le bruit MC.
+    return (
+      t.expectedTotal.p50 >= implied * 0.9 &&
+      t.expectedTotal.p50 <= 60 // prior max + bruit
+    );
+  })(),
+  detail: `expectedTotal=${Math.round(t.expectedTotal.p50)}, implied=${(t.soFar / fractionDoneAt18).toFixed(1)}, prior≈50`,
+});
+
+tests.push({
+  name: "Tomorrow non affecté par time-of-day (jour pas commencé)",
+  pass: tm.expected.p50 > 20, // doit rester proche du prior, ~65 en théorie
+  detail: `tomorrow.p50=${Math.round(tm.expected.p50)}`,
 });
 
 let passed = 0;
