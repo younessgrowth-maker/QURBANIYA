@@ -6,6 +6,7 @@ import OrderForm from "@/components/forms/OrderForm";
 import OrderSummary from "@/components/forms/OrderSummary";
 import InventoryStatus from "@/components/sections/InventoryStatus";
 import SoldOutPanel from "@/components/sections/SoldOutPanel";
+import CommanderTrustStrip from "@/components/sections/CommanderTrustStrip";
 import { ProductJsonLd, BreadcrumbJsonLd } from "@/components/seo/JsonLd";
 import Breadcrumb from "@/components/ui/Breadcrumb";
 import { CURRENT_YEAR, isOrderingOpen, whatsappUrl } from "@/lib/constants";
@@ -169,8 +170,14 @@ export default async function CommanderPage() {
             /* Stock épuisé : panneau liste d'attente */
             <SoldOutPanel />
           ) : open ? (
-            /* 2-col layout */
-            <div className="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-8 lg:gap-12 items-start">
+            <>
+              {/* Trust strip : 3 avis vérifiés au-dessus du tunnel — preuve
+                  sociale immédiate pour le trafic chaud J-3/J-2. Null si
+                  moins de 3 avis disponibles. */}
+              <CommanderTrustStrip />
+
+              {/* 2-col layout */}
+              <div className="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-8 lg:gap-12 items-start">
               {/* Form */}
               <div className="bg-white border border-gray-100/80 rounded-card p-6 md:p-8 shadow-soft">
                 <OrderForm />
@@ -186,6 +193,7 @@ export default async function CommanderPage() {
                 <OrderSummary />
               </div>
             </div>
+            </>
           ) : (
             /* État fermé : pas de formulaire, message + canaux contact */
             <div className="max-w-2xl mx-auto bg-white border border-gray-100/80 rounded-card p-8 md:p-12 shadow-soft text-center">
