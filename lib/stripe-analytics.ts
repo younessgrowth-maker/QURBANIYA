@@ -9,6 +9,7 @@
 import "server-only";
 import { unstable_cache, revalidateTag } from "next/cache";
 import { getStripe } from "@/lib/stripe";
+import { createServiceRoleClient } from "@/lib/supabase/server";
 
 // ── Filtre des paiements de test ─────────────────────────────────────────
 // Emails à exclure systématiquement des stats (paiements de test, internes,
@@ -224,6 +225,50 @@ async function fetchAllRefunds(fromUnix: number, toUnix: number) {
   return out;
 }
 
+// ── Supabase orders : source de vérité pour les ventes 2026+ ────────────
+// Le webhook Stripe insère/met à jour `orders` à chaque paiement, donc
+// cette table reflète exactement ce qu'on charge sur Stripe MINUS les
+// charges manuelles / tests directs / charges remboursées (qui sortent
+// du payment_status='paid'). C'est aussi la source utilisée par /admin,
+// donc cohérence garantie entre les 2 dashboards.
+
+type SupabaseOrder = {
+  id: string;
+  email: string;
+  prenom: string;
+  nom: string;
+  payment_status: "pending" | "paid" | "failed";
+  amount: number; // en EUROS (cf insert dans app/api/orders/route.ts)
+  discount_amount?: number; // en euros, 0 si pas de promo
+  intention: "pour_moi" | "famille" | "sadaqa";
+  created_at: string; // ISO timestamp
+};
+
+async function fetchSupabaseOrdersInWindow(
+  fromDate: Date,
+  toDate: Date
+): Promise<SupabaseOrder[]> {
+  try {
+    const supabase = createServiceRoleClient();
+    const { data, error } = await supabase
+      .from("orders")
+      .select(
+        "id, email, prenom, nom, payment_status, amount, discount_amount, intention, created_at"
+      )
+      .gte("created_at", fromDate.toISOString())
+      .lte("created_at", toDate.toISOString())
+      .order("created_at", { ascending: true });
+    if (error) {
+      console.error("[stripe-analytics] Supabase orders fetch error", error);
+      return [];
+    }
+    return (data ?? []) as SupabaseOrder[];
+  } catch (e) {
+    console.error("[stripe-analytics] Supabase unreachable", e);
+    return [];
+  }
+}
+
 async function fetchDisputesCount(
   fromUnix: number,
   toUnix: number
@@ -267,13 +312,26 @@ async function buildYearStats(
     return emptyYearStats(year, aidStr, fromDate, clampedTo);
   }
 
-  const [charges, sessions, balanceTxs, refunds, disputesCount] =
+  // Décision de la source de vérité pour le compte des ventes :
+  //  - Année 2026+ : Supabase orders (source partagée avec /admin →
+  //    cohérence garantie entre les 2 dashboards). Le webhook Stripe
+  //    insère exactement ce qu'on doit compter, et exclut les charges
+  //    remboursées (qui repassent en 'failed' ou restent 'paid' avec
+  //    un refund séparé — selon la logique webhook).
+  //  - Années antérieures (2025 = Shopify) : Stripe charges (pas de
+  //    données Supabase pour ces paiements).
+  const useSupabaseAsSource = year >= 2026;
+
+  const [charges, sessions, balanceTxs, refunds, disputesCount, supabaseOrders] =
     await Promise.all([
       fetchAllCharges(fromUnix, toUnix),
       fetchAllCheckoutSessions(fromUnix, toUnix),
       fetchAllBalanceTransactions(fromUnix, toUnix),
       fetchAllRefunds(fromUnix, toUnix),
       fetchDisputesCount(fromUnix, toUnix),
+      useSupabaseAsSource
+        ? fetchSupabaseOrdersInWindow(fromDate, clampedTo)
+        : Promise.resolve([] as SupabaseOrder[]),
     ]);
 
   // ── Construction des buckets alignés ─────────────────────────────────
@@ -300,47 +358,83 @@ async function buildYearStats(
     dateToDaysBefore.set(b.date, dba);
   });
 
-  // ── Source de vérité : charges Stripe (couvre Shopify, Checkout,
-  //    Payment Links, manuel — tout ce qui a généré un encaissement). ──
-  // Filtre :
-  //  - status succeeded + captured (paiement effectif)
-  //  - amount > 0 (exclut les autorisations à 0€)
-  //  - email pas dans la blacklist de tests
-  const paidCharges = charges.filter((c) => {
-    if (c.status !== "succeeded") return false;
-    if (c.captured !== true) return false;
-    if ((c.amount ?? 0) <= 0) return false;
-    const email = c.billing_details?.email ?? c.receipt_email ?? null;
-    if (isTestEmail(email)) return false;
-    return true;
-  });
-
   const hourCounts = new Array(24).fill(0);
   const weekdayCounts = new Array(7).fill(0);
   const customerAgg = new Map<string, { count: number; grossEur: number }>();
 
-  for (const c of paidCharges) {
-    const created = new Date(c.created * 1000);
-    const dk = parisDateKey(created);
-    const dba = dateToDaysBefore.get(dk);
-    if (dba === undefined) continue;
-    const bucket = bucketsByDaysBefore.get(dba)!;
-    const amount = (c.amount ?? 0) / 100;
-    bucket.count += 1;
-    bucket.grossEur += amount;
+  // Compte effectif des ventes payées (pour totals.paidSessions / aov).
+  // Calculé selon la source choisie ci-dessus.
+  let paidCountForTotals = 0;
+  let paidGrossForTotals = 0;
 
-    hourCounts[parisHour(created)] += 1;
-    weekdayCounts[parisWeekday(created)] += 1;
+  if (useSupabaseAsSource && supabaseOrders.length > 0) {
+    // ── Source Supabase ──
+    const paidOrders = supabaseOrders.filter(
+      (o) => o.payment_status === "paid" && !isTestEmail(o.email)
+    );
 
-    const email =
-      c.billing_details?.email ??
-      c.receipt_email ??
-      (typeof c.customer === "string" ? c.customer : c.customer?.id) ??
-      "(sans email)";
-    const cust = customerAgg.get(email) ?? { count: 0, grossEur: 0 };
-    cust.count += 1;
-    cust.grossEur += amount;
-    customerAgg.set(email, cust);
+    for (const o of paidOrders) {
+      const created = new Date(o.created_at);
+      const dk = parisDateKey(created);
+      const dba = dateToDaysBefore.get(dk);
+      if (dba === undefined) continue;
+      const bucket = bucketsByDaysBefore.get(dba)!;
+      // Charged amount = amount - discount (cohérent avec admin/page.tsx).
+      // amount est stocké en EUROS (140 = 140€), pas en cents.
+      const charged = o.amount - (o.discount_amount ?? 0);
+      bucket.count += 1;
+      bucket.grossEur += charged;
+
+      hourCounts[parisHour(created)] += 1;
+      weekdayCounts[parisWeekday(created)] += 1;
+
+      const email = o.email || "(sans email)";
+      const cust = customerAgg.get(email) ?? { count: 0, grossEur: 0 };
+      cust.count += 1;
+      cust.grossEur += charged;
+      customerAgg.set(email, cust);
+
+      paidCountForTotals += 1;
+      paidGrossForTotals += charged;
+    }
+  } else {
+    // ── Source Stripe charges (fallback / années antérieures) ──
+    const paidCharges = charges.filter((c) => {
+      if (c.status !== "succeeded") return false;
+      if (c.captured !== true) return false;
+      if ((c.amount ?? 0) <= 0) return false;
+      if (c.refunded === true) return false; // exclut les remboursés complets
+      const email = c.billing_details?.email ?? c.receipt_email ?? null;
+      if (isTestEmail(email)) return false;
+      return true;
+    });
+
+    for (const c of paidCharges) {
+      const created = new Date(c.created * 1000);
+      const dk = parisDateKey(created);
+      const dba = dateToDaysBefore.get(dk);
+      if (dba === undefined) continue;
+      const bucket = bucketsByDaysBefore.get(dba)!;
+      const amount = (c.amount ?? 0) / 100;
+      bucket.count += 1;
+      bucket.grossEur += amount;
+
+      hourCounts[parisHour(created)] += 1;
+      weekdayCounts[parisWeekday(created)] += 1;
+
+      const email =
+        c.billing_details?.email ??
+        c.receipt_email ??
+        (typeof c.customer === "string" ? c.customer : c.customer?.id) ??
+        "(sans email)";
+      const cust = customerAgg.get(email) ?? { count: 0, grossEur: 0 };
+      cust.count += 1;
+      cust.grossEur += amount;
+      customerAgg.set(email, cust);
+
+      paidCountForTotals += 1;
+      paidGrossForTotals += amount;
+    }
   }
 
   // ── Funnel + codes promo : depuis les sessions Checkout uniquement ──
@@ -425,10 +519,9 @@ async function buildYearStats(
     (a, b) => a.daysBeforeAid - b.daysBeforeAid
   );
 
-  const totalGross = paidCharges.reduce(
-    (sum, c) => sum + (c.amount ?? 0) / 100,
-    0
-  );
+  // Totaux : on utilise paidCountForTotals / paidGrossForTotals qui
+  // viennent de la source choisie (Supabase pour 2026+, Stripe sinon).
+  const totalGross = paidGrossForTotals;
   const totalFees = balanceTxs
     .filter((t) => t.type === "charge")
     .reduce((sum, t) => sum + t.fee / 100, 0);
@@ -451,10 +544,10 @@ async function buildYearStats(
     .slice(0, 8);
 
   // Funnel : ne s'applique qu'aux sessions Checkout (notre nouveau site).
-  // Pour les charges venues d'ailleurs (Shopify 2025), pas de notion
-  // "abandoned cart" disponible — on les compte juste comme payées.
-  const sessionsTotal = Math.max(realSessions.length, paidCharges.length);
-  const sessionsPaid = paidCharges.length;
+  // sessionsPaid utilise la source de vérité (Supabase ou Stripe) — pas
+  // les sessions Stripe, qui peuvent diverger légèrement.
+  const sessionsTotal = Math.max(realSessions.length, paidCountForTotals);
+  const sessionsPaid = paidCountForTotals;
   const sessionsExpired = expiredSessions.length;
   const sessionsOpen = openSessions.length;
 
@@ -474,7 +567,7 @@ async function buildYearStats(
     daily,
     totals: {
       sessions: sessionsTotal,
-      paidSessions: paidCharges.length,
+      paidSessions: paidCountForTotals,
       grossEur: totalGross,
       netEur: totalNet,
       feesEur: totalFees,
@@ -482,7 +575,7 @@ async function buildYearStats(
       refundsCount,
       disputesCount,
       aovEur:
-        paidCharges.length > 0 ? totalGross / paidCharges.length : 0,
+        paidCountForTotals > 0 ? totalGross / paidCountForTotals : 0,
     },
     hourlyDistribution: hourCounts.map((count, hour) => ({ hour, count })),
     weekdayDistribution: weekdayCounts.map((count, weekday) => ({
