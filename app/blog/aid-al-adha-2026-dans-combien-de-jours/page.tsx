@@ -86,7 +86,7 @@ function ArticleFaqJsonLd(daysLeft: number) {
         name: "Jusqu'à quand peut-on réserver un sacrifice pour l'Aïd 2026 ?",
         acceptedAnswer: {
           "@type": "Answer",
-          text: `Les réservations Qurbaniya pour l'Aïd 2026 ferment le 27 mai 2026 à 06h00 (heure de Paris). Il reste ${daysLeft} jour${daysLeft > 1 ? "s" : ""} pour réserver, mais les places sont limitées : nous recommandons de ne pas attendre.`,
+          text: `Les réservations Qurbaniya pour l'Aïd 2026 ferment le 27 mai 2026 à 03h00 (heure de Paris), quelques heures avant le sacrifice. Il reste ${daysLeft} jour${daysLeft > 1 ? "s" : ""} pour réserver, mais les places sont limitées : nous recommandons de ne pas attendre.`,
         },
       },
     ],

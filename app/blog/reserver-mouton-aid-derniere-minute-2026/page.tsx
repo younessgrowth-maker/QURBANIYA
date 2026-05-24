@@ -66,7 +66,7 @@ function ArticleFaqJsonLd() {
         name: "Peut-on encore réserver un mouton pour l'Aïd 2026 à quelques jours de la fête ?",
         acceptedAnswer: {
           "@type": "Answer",
-          text: "Oui, tant que des places sont disponibles. Chez Qurbaniya, les réservations restent ouvertes jusqu'au 27 mai 2026 à 06h00 (heure de Paris). Le sacrifice étant délégué à Madagascar, aucune contrainte logistique en France — la commande peut être validée en 2 minutes en ligne.",
+          text: "Oui, tant que des places sont disponibles. Chez Qurbaniya, les réservations restent ouvertes jusqu'au mercredi 27 mai 2026 à 03h00 (heure de Paris), soit quelques heures avant le sacrifice. Le sacrifice étant délégué à Madagascar, aucune contrainte logistique en France — la commande peut être validée en 2 minutes en ligne.",
         },
       },
       {
@@ -160,7 +160,7 @@ export default function ArticleDerniereMinute() {
               ⏳ Oui, c&apos;est encore possible
             </h2>
             <p className="text-text-muted leading-relaxed mb-4">
-              Contrairement à une idée reçue, réserver son mouton la dernière semaine — voire la veille — reste tout à fait possible <strong className="text-text-primary">tant qu&apos;il y a des places</strong>. Chez Qurbaniya, le compteur en temps réel sur la page d&apos;accueil indique le stock disponible. Les réservations ferment automatiquement le <strong className="text-text-primary">27 mai 2026 à 06h00</strong> (heure de Paris).
+              Contrairement à une idée reçue, réserver son mouton la dernière semaine — voire la nuit même qui précède l&apos;Aïd — reste tout à fait possible <strong className="text-text-primary">tant qu&apos;il y a des places</strong>. Chez Qurbaniya, le compteur en temps réel sur la page d&apos;accueil indique le stock disponible. Les réservations ferment automatiquement le <strong className="text-text-primary">27 mai 2026 à 03h00</strong> (heure de Paris), quelques heures avant le sacrifice.
             </p>
             <div className="bg-bg-secondary rounded-xl p-5 border-l-4 border-gold">
               <p className="text-text-muted leading-relaxed text-sm">

@@ -395,7 +395,7 @@ export default function ArticleJourArafat() {
               <li>✓ 140 € tout inclus</li>
               <li>✓ Sacrifice conforme à la Sounnah, supervisé par un cheikh</li>
               <li>✓ Vidéo nominative envoyée par WhatsApp + email</li>
-              <li>✓ Réservation ouverte jusqu&apos;au mardi 26 mai 23h59</li>
+              <li>✓ Réservation ouverte jusqu&apos;au mercredi 27 mai 3h du matin</li>
             </ul>
             <Link
               href="/commander"

@@ -101,7 +101,7 @@ function ArticleFaqJsonLd() {
         name: "À quelle date dois-je réserver pour la Tabaski 2026 ?",
         acceptedAnswer: {
           "@type": "Answer",
-          text: "Les réservations ferment le 27 mai 2026 à 06h00 (heure de Paris), jour de la Tabaski. Pour garantir votre sacrifice et la qualité du service, il est fortement recommandé de réserver au moins 7 à 15 jours à l'avance car les places sont limitées.",
+          text: "Les réservations ferment le 27 mai 2026 à 03h00 (heure de Paris), quelques heures avant le sacrifice du jour de la Tabaski. Pour garantir votre sacrifice et la qualité du service, il est fortement recommandé de réserver au moins 7 à 15 jours à l'avance car les places sont limitées.",
         },
       },
     ],
@@ -280,7 +280,7 @@ export default function ArticleTabaski() {
           <section>
             <h2 className="text-2xl font-bold text-text-primary mb-4">Avant quelle date faut-il réserver ?</h2>
             <p className="text-text-muted leading-relaxed mb-4">
-              Les réservations ferment automatiquement le <strong className="text-text-primary">27 mai 2026 à 06h00 (heure de Paris)</strong>, jour de la Tabaski. Mais ne tardez pas : les places sont limitées et partent rapidement à mesure que la fête approche. Nous recommandons de réserver au minimum 7 à 15 jours à l&apos;avance pour garantir votre sacrifice.
+              Les réservations ferment automatiquement le <strong className="text-text-primary">27 mai 2026 à 03h00 (heure de Paris)</strong>, quelques heures avant le sacrifice du jour de la Tabaski. Mais ne tardez pas : les places sont limitées et partent rapidement à mesure que la fête approche. Nous recommandons de réserver au minimum 7 à 15 jours à l&apos;avance pour garantir votre sacrifice.
             </p>
           </section>
 
