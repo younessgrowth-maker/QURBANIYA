@@ -299,39 +299,114 @@ export default function OrderForm() {
         </div>
       </div>
 
-      {/* ── Nombre de sacrifices (selector sobre) ── */}
+      {/* ── Nombre de sacrifices (cards visuelles sobres) ── */}
       <div>
         <h3 className="text-lg font-bold text-text-primary uppercase tracking-wide mb-2">
           Nombre de sacrifices
         </h3>
-        <p className="text-sm text-text-muted mb-4 leading-relaxed">
-          Un sacrifice par adulte du foyer est traditionnellement encouragé. Vous
-          pourrez préciser une intention différente pour chaque sacrifice
+        <p className="text-sm text-text-muted mb-5 leading-relaxed">
+          Un sacrifice par adulte du foyer est traditionnellement encouragé.
+          Vous pourrez préciser une intention différente pour chaque sacrifice
           ci-dessous.
         </p>
         {errors.quantity && (
           <p className="text-urgency text-sm mb-3">{errors.quantity.message}</p>
         )}
 
-        <div className="flex items-center gap-2 mb-3">
-          {[1, 2, 3, 4, 5].map((q) => (
-            <button
-              key={q}
-              type="button"
-              onClick={() => setValue("quantity", q, { shouldValidate: true })}
-              className={`flex-1 h-14 rounded-xl font-bold text-base transition-all duration-200 ${
-                quantity === q
-                  ? "bg-primary text-white shadow-glow-primary scale-[1.02]"
-                  : "bg-white border-2 border-gray-200 text-text-primary hover:border-primary/40"
-              }`}
-              aria-label={`${q} sacrifice${q > 1 ? "s" : ""}`}
-            >
-              {q}
-            </button>
-          ))}
+        {/* Grid de cards : 2x2 mobile, 4 cols desktop. Sans badges
+            marketing — wording neutre et respectueux. */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+          {[
+            { qty: 1, title: "Un sacrifice", subtitle: "Pour vous-même" },
+            { qty: 2, title: "Deux sacrifices", subtitle: "Vous et un proche" },
+            { qty: 3, title: "Trois sacrifices", subtitle: "Vous et deux proches" },
+            { qty: 5, title: "Cinq sacrifices", subtitle: "Pour votre foyer" },
+          ].map((pack) => {
+            const selected = quantity === pack.qty;
+            return (
+              <button
+                key={pack.qty}
+                type="button"
+                onClick={() =>
+                  setValue("quantity", pack.qty, { shouldValidate: true })
+                }
+                className={`text-left rounded-xl p-4 transition-all duration-200 ${
+                  selected
+                    ? "bg-primary text-white shadow-glow-primary scale-[1.02] border-2 border-primary"
+                    : "bg-white border-2 border-gray-200 text-text-primary hover:border-primary/40 hover:shadow-soft"
+                }`}
+                aria-pressed={selected}
+              >
+                <div className="text-2xl mb-2 leading-none" aria-hidden>
+                  {"🐑".repeat(Math.min(pack.qty, 3))}
+                  {pack.qty > 3 && (
+                    <span
+                      className={`text-sm font-bold align-middle ml-1 ${
+                        selected ? "text-white" : "text-text-muted"
+                      }`}
+                    >
+                      × {pack.qty}
+                    </span>
+                  )}
+                </div>
+                <div className="font-bold text-sm leading-tight">
+                  {pack.title}
+                </div>
+                <div
+                  className={`text-[11px] mt-0.5 leading-snug ${
+                    selected ? "text-white/85" : "text-text-muted"
+                  }`}
+                >
+                  {pack.subtitle}
+                </div>
+                <div className="mt-3 pt-2 border-t border-current/15">
+                  <span className="text-lg font-black tabular-nums">
+                    {pack.qty * 140}€
+                  </span>
+                  {pack.qty > 1 && (
+                    <span
+                      className={`text-[10px] ml-1.5 ${
+                        selected ? "text-white/70" : "text-text-muted-light"
+                      }`}
+                    >
+                      {pack.qty} × 140€
+                    </span>
+                  )}
+                </div>
+              </button>
+            );
+          })}
         </div>
 
-        <p className="text-xs text-text-muted-light leading-snug">
+        {/* Custom quantité (notamment 4 sacrifices) : disponible mais
+            discret pour ne pas surcharger la grille principale. */}
+        <details className="text-sm">
+          <summary className="cursor-pointer text-text-muted hover:text-text-primary transition-colors inline-flex items-center gap-1.5">
+            <span className="text-xs">↳</span>
+            <span>Autre quantité (notamment 4 sacrifices)</span>
+          </summary>
+          <div className="mt-3 flex items-center gap-2">
+            {[1, 2, 3, 4, 5].map((q) => (
+              <button
+                key={q}
+                type="button"
+                onClick={() =>
+                  setValue("quantity", q, { shouldValidate: true })
+                }
+                className={`flex-1 h-12 rounded-lg font-bold text-sm transition-all duration-200 ${
+                  quantity === q
+                    ? "bg-primary text-white"
+                    : "bg-white border border-gray-200 text-text-primary hover:border-primary/40"
+                }`}
+                aria-label={`${q} sacrifice${q > 1 ? "s" : ""}`}
+              >
+                {q}
+              </button>
+            ))}
+          </div>
+        </details>
+
+        <p className="text-xs text-text-muted-light mt-3 leading-snug">
           Au-delà de 5,{" "}
           <a
             href={`https://wa.me/33744798883?text=${encodeURIComponent("Bonjour, je souhaite réserver plus de 5 sacrifices")}`}
