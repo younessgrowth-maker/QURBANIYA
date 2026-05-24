@@ -333,7 +333,7 @@ export default function OrderForm() {
             promesse religieuse. */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4 pt-2">
           {[
-            { qty: 1, title: "Un sacrifice", subtitle: "Pour vous-même", popular: false },
+            { qty: 1, title: "Un sacrifice", subtitle: "Pour vous ou un proche", popular: false },
             { qty: 2, title: "Deux sacrifices", subtitle: "Vous et un proche", popular: true },
             { qty: 3, title: "Trois sacrifices", subtitle: "Vous et deux proches", popular: false },
             { qty: 5, title: "Cinq sacrifices", subtitle: "Pour votre foyer", popular: false },
