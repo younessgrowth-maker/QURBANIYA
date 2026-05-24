@@ -139,6 +139,26 @@ function daysBetween(a: Date, b: Date): number {
 }
 
 // ── Fetch Stripe paginé sur fenêtre arbitraire ───────────────────────────
+// On query `charges.list()` (et non `checkout.sessions.list()`) car les
+// charges sont la source de vérité unifiée pour TOUS les paiements
+// encaissés, quelle que soit leur origine : Stripe Checkout, Stripe
+// Payment Links, intégration Shopify (qui crée des PaymentIntents puis
+// Charges directement via API), paiements manuels, etc.
+// Les sessions Checkout sont conservées en parallèle pour le funnel de
+// conversion (uniquement pertinent pour le trafic du nouveau site).
+async function fetchAllCharges(fromUnix: number, toUnix: number) {
+  const stripe = getStripe();
+  const out: import("stripe").Stripe.Charge[] = [];
+  for await (const c of stripe.charges.list({
+    created: { gte: fromUnix, lte: toUnix },
+    limit: 100,
+  })) {
+    out.push(c);
+    if (out.length >= 10000) break;
+  }
+  return out;
+}
+
 async function fetchAllCheckoutSessions(fromUnix: number, toUnix: number) {
   const stripe = getStripe();
   const out: import("stripe").Stripe.Checkout.Session[] = [];
@@ -222,21 +242,18 @@ async function buildYearStats(
     return emptyYearStats(year, aidStr, fromDate, clampedTo);
   }
 
-  const [sessions, balanceTxs, refunds, disputesCount] = await Promise.all([
-    fetchAllCheckoutSessions(fromUnix, toUnix),
-    fetchAllBalanceTransactions(fromUnix, toUnix),
-    fetchAllRefunds(fromUnix, toUnix),
-    fetchDisputesCount(fromUnix, toUnix),
-  ]);
+  const [charges, sessions, balanceTxs, refunds, disputesCount] =
+    await Promise.all([
+      fetchAllCharges(fromUnix, toUnix),
+      fetchAllCheckoutSessions(fromUnix, toUnix),
+      fetchAllBalanceTransactions(fromUnix, toUnix),
+      fetchAllRefunds(fromUnix, toUnix),
+      fetchDisputesCount(fromUnix, toUnix),
+    ]);
 
   // ── Construction des buckets alignés ─────────────────────────────────
   const bucketsByDaysBefore = new Map<number, AlignedBucket>();
-  // Énumérer tous les jours possibles dans la fenêtre
-  for (
-    let d = -options.daysBefore;
-    d <= options.daysAfter;
-    d++
-  ) {
+  for (let d = -options.daysBefore; d <= options.daysAfter; d++) {
     const dayDate = new Date(aidDate);
     dayDate.setUTCDate(dayDate.getUTCDate() + d);
     if (dayDate.getTime() > now.getTime() + 86_400_000) break;
@@ -258,31 +275,26 @@ async function buildYearStats(
     dateToDaysBefore.set(b.date, dba);
   });
 
-  // Sessions
-  const paidSessions = sessions.filter(
-    (s) => s.payment_status === "paid" && (s.amount_total ?? 0) > 0
+  // ── Source de vérité : charges Stripe (couvre Shopify, Checkout,
+  //    Payment Links, manuel — tout ce qui a généré un encaissement). ──
+  const paidCharges = charges.filter(
+    (c) =>
+      c.status === "succeeded" &&
+      c.captured === true &&
+      (c.amount ?? 0) > 0
   );
-  const expiredSessions = sessions.filter(
-    (s) => s.status === "expired"
-  );
-  const openSessions = sessions.filter((s) => s.status === "open");
 
   const hourCounts = new Array(24).fill(0);
   const weekdayCounts = new Array(7).fill(0);
   const customerAgg = new Map<string, { count: number; grossEur: number }>();
-  const promoCodeAgg = new Map<
-    string,
-    { count: number; totalDiscountEur: number }
-  >();
-  const timesToPay: number[] = [];
 
-  for (const s of paidSessions) {
-    const created = new Date(s.created * 1000);
+  for (const c of paidCharges) {
+    const created = new Date(c.created * 1000);
     const dk = parisDateKey(created);
     const dba = dateToDaysBefore.get(dk);
     if (dba === undefined) continue;
     const bucket = bucketsByDaysBefore.get(dba)!;
-    const amount = (s.amount_total ?? 0) / 100;
+    const amount = (c.amount ?? 0) / 100;
     bucket.count += 1;
     bucket.grossEur += amount;
 
@@ -290,16 +302,33 @@ async function buildYearStats(
     weekdayCounts[parisWeekday(created)] += 1;
 
     const email =
-      s.customer_details?.email ?? s.customer_email ?? "(sans email)";
+      c.billing_details?.email ??
+      c.receipt_email ??
+      (typeof c.customer === "string" ? c.customer : c.customer?.id) ??
+      "(sans email)";
     const cust = customerAgg.get(email) ?? { count: 0, grossEur: 0 };
     cust.count += 1;
     cust.grossEur += amount;
     customerAgg.set(email, cust);
+  }
 
-    // Promo codes : total_details.breakdown.discounts
+  // ── Funnel + codes promo : depuis les sessions Checkout uniquement ──
+  // (les charges Shopify ne passent pas par Checkout donc n'ont pas de
+  // notion de "session ouverte/expirée". Pour l'année actuelle qui
+  // utilise notre Checkout, ces métriques restent pertinentes.)
+  const paidSessions = sessions.filter(
+    (s) => s.payment_status === "paid" && (s.amount_total ?? 0) > 0
+  );
+  const expiredSessions = sessions.filter((s) => s.status === "expired");
+  const openSessions = sessions.filter((s) => s.status === "open");
+
+  const promoCodeAgg = new Map<
+    string,
+    { count: number; totalDiscountEur: number }
+  >();
+  for (const s of paidSessions) {
     const discounts = s.total_details?.breakdown?.discounts ?? [];
     for (const d of discounts) {
-      // d.discount peut être expansé ou non. On essaie de récupérer un code.
       const promoLike = d.discount as unknown as {
         promotion_code?: string | { code?: string };
         coupon?: { name?: string; id?: string };
@@ -327,14 +356,6 @@ async function buildYearStats(
         promoCodeAgg.set(code, cur);
       }
     }
-
-    // Time-to-pay : utiliser session.expires_at - session.created ne donne pas
-    // ce qu'on veut. On approxime via payment_intent.created (mais on n'a pas
-    // ça direct sans expand coûteux). On utilise donc s.created (session
-    // ouverte) → s.created (toujours session) = 0. Pour avoir le vrai délai
-    // il faudrait fetch chaque PI. On laisse cette métrique à null pour
-    // l'instant si on ne peut pas la calculer fiablement.
-    void timesToPay;
   }
 
   // Fees & net
@@ -368,8 +389,8 @@ async function buildYearStats(
     (a, b) => a.daysBeforeAid - b.daysBeforeAid
   );
 
-  const totalGross = paidSessions.reduce(
-    (sum, s) => sum + (s.amount_total ?? 0) / 100,
+  const totalGross = paidCharges.reduce(
+    (sum, c) => sum + (c.amount ?? 0) / 100,
     0
   );
   const totalFees = balanceTxs
@@ -393,8 +414,11 @@ async function buildYearStats(
     .sort((a, b) => b.count - a.count)
     .slice(0, 8);
 
-  const sessionsTotal = sessions.length;
-  const sessionsPaid = paidSessions.length;
+  // Funnel : ne s'applique qu'aux sessions Checkout (notre nouveau site).
+  // Pour les charges venues d'ailleurs (Shopify 2025), pas de notion
+  // "abandoned cart" disponible — on les compte juste comme payées.
+  const sessionsTotal = Math.max(sessions.length, paidCharges.length);
+  const sessionsPaid = paidCharges.length;
   const sessionsExpired = expiredSessions.length;
   const sessionsOpen = openSessions.length;
 
@@ -414,14 +438,15 @@ async function buildYearStats(
     daily,
     totals: {
       sessions: sessionsTotal,
-      paidSessions: sessionsPaid,
+      paidSessions: paidCharges.length,
       grossEur: totalGross,
       netEur: totalNet,
       feesEur: totalFees,
       refundsEur: refundsTotalEur,
       refundsCount,
       disputesCount,
-      aovEur: sessionsPaid > 0 ? totalGross / sessionsPaid : 0,
+      aovEur:
+        paidCharges.length > 0 ? totalGross / paidCharges.length : 0,
     },
     hourlyDistribution: hourCounts.map((count, hour) => ({ hour, count })),
     weekdayDistribution: weekdayCounts.map((count, weekday) => ({
