@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { KpiCard } from "@/components/admin/KpiCard";
 import YoYKpiCard from "@/components/admin/YoYKpiCard";
+import TodayTomorrowForecast from "@/components/admin/TodayTomorrowForecast";
 import SalesForecastChart from "@/components/admin/charts/SalesForecastChart";
 import CumulativeChart from "@/components/admin/charts/CumulativeChart";
 import ConversionFunnelCard from "@/components/admin/charts/ConversionFunnelCard";
@@ -206,6 +207,25 @@ export default function StripeAnalyticsDashboard({
 
   return (
     <div className="space-y-8">
+      {/* ── Prédictions immédiates : aujourd'hui & demain ─────────── */}
+      {(forecast.today || forecast.tomorrow) && (
+        <div>
+          <div className="flex items-baseline justify-between mb-3">
+            <h2 className="text-lg font-bold text-text-primary flex items-center gap-2">
+              <Zap size={18} className="text-gold" />
+              Prédictions immédiates
+            </h2>
+            <span className="text-text-muted-light text-xs">
+              Médiane (P50) + intervalle 80% · même modèle Monte Carlo
+            </span>
+          </div>
+          <TodayTomorrowForecast
+            today={forecast.today}
+            tomorrow={forecast.tomorrow}
+          />
+        </div>
+      )}
+
       {/* ── KPI YoY : argent réel ─────────────────────────────────── */}
       <div>
         <div className="flex items-baseline justify-between mb-3">

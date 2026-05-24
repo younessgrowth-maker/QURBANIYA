@@ -27,6 +27,22 @@ export type ForecastPoint = {
 export type ForecastResult = {
   history: { date: string; daysBeforeAid: number; count: number; grossEur: number }[];
   forecast: ForecastPoint[];
+  // Prédiction ciblée pour aujourd'hui (conditionnée sur ce qui a déjà été vendu)
+  today: {
+    date: string;
+    daysBeforeAid: number;
+    soFar: number; // ventes déjà observées aujourd'hui
+    expectedTotal: { p10: number; p50: number; p90: number }; // total attendu sur la journée entière
+    remaining: { p10: number; p50: number; p90: number }; // restant à venir d'ici minuit
+    revenueRemainingP50Eur: number;
+  } | null;
+  // Prédiction pour demain
+  tomorrow: {
+    date: string;
+    daysBeforeAid: number;
+    expected: { p10: number; p50: number; p90: number };
+    revenueP50Eur: number;
+  } | null;
   projection: {
     additionalSalesP10: number;
     additionalSalesP50: number;
@@ -323,6 +339,71 @@ export function buildForecast(input: ForecastInput): ForecastResult {
     p90: percentile(perDaySamples[i], 90),
   }));
 
+  // ── Prédictions ciblées aujourd'hui & demain ───────────────────────────
+  // Aujourd'hui : on simule la journée complète, on soustrait ce qui a
+  // déjà été observé pour estimer le restant. Demain : journée complète.
+  const sampleDay = (dba: number): number[] => {
+    const shape = shapeFn(dba);
+    const mean = baseline * shape * scale;
+    const samples: number[] = [];
+    for (let s = 0; s < simulations; s++) {
+      const v = Math.max(0, mean + normalRandom(rng) * sigma);
+      samples.push(v);
+    }
+    return samples;
+  };
+
+  let todayPrediction: ForecastResult["today"] = null;
+  if (todayDba <= 0) {
+    const todayDate = new Date(aidDate);
+    todayDate.setUTCDate(todayDate.getUTCDate() + todayDba);
+    const todayDateKey = dateKeyUtc(todayDate);
+    const todayBucket = input.current.find(
+      (b) => b.daysBeforeAid === todayDba
+    );
+    const soFarToday = todayBucket?.count ?? 0;
+    const todaySamples = sampleDay(todayDba);
+    const remainingSamples = todaySamples.map((v) =>
+      Math.max(0, v - soFarToday)
+    );
+    todayPrediction = {
+      date: todayDateKey,
+      daysBeforeAid: todayDba,
+      soFar: soFarToday,
+      expectedTotal: {
+        p10: percentile(todaySamples, 10),
+        p50: percentile(todaySamples, 50),
+        p90: percentile(todaySamples, 90),
+      },
+      remaining: {
+        p10: percentile(remainingSamples, 10),
+        p50: percentile(remainingSamples, 50),
+        p90: percentile(remainingSamples, 90),
+      },
+      revenueRemainingP50Eur: Math.round(
+        percentile(remainingSamples, 50) * aovEur
+      ),
+    };
+  }
+
+  let tomorrowPrediction: ForecastResult["tomorrow"] = null;
+  const tomorrowDba = todayDba + 1;
+  if (tomorrowDba <= 0) {
+    const tomorrowDate = new Date(aidDate);
+    tomorrowDate.setUTCDate(tomorrowDate.getUTCDate() + tomorrowDba);
+    const tomorrowSamples = sampleDay(tomorrowDba);
+    tomorrowPrediction = {
+      date: dateKeyUtc(tomorrowDate),
+      daysBeforeAid: tomorrowDba,
+      expected: {
+        p10: percentile(tomorrowSamples, 10),
+        p50: percentile(tomorrowSamples, 50),
+        p90: percentile(tomorrowSamples, 90),
+      },
+      revenueP50Eur: Math.round(percentile(tomorrowSamples, 50) * aovEur),
+    };
+  }
+
   const additionalP10 = percentile(totalSamples, 10);
   const additionalP50 = percentile(totalSamples, 50);
   const additionalP90 = percentile(totalSamples, 90);
@@ -352,6 +433,8 @@ export function buildForecast(input: ForecastInput): ForecastResult {
   return {
     history: historyAll,
     forecast,
+    today: todayPrediction,
+    tomorrow: tomorrowPrediction,
     projection: {
       additionalSalesP10: Math.round(additionalP10),
       additionalSalesP50: Math.round(additionalP50),
