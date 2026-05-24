@@ -6,7 +6,7 @@ import Image from "next/image";
 import { Lock, Zap, ArrowDown, Shield } from "lucide-react";
 import Button from "@/components/ui/Button";
 import CountdownTimer from "@/components/ui/CountdownTimer";
-import VideoPlaceholder from "@/components/ui/VideoPlaceholder";
+import HeroGuarantees from "@/components/ui/HeroGuarantees";
 import { getUrgencyMessage } from "@/lib/constants";
 
 interface HeroProps {
@@ -146,11 +146,18 @@ export default function Hero({ aidDate = "Mai 2026" }: HeroProps) {
         </motion.div>
       </section>
 
-      {/* Video section */}
+      {/* Garanties iconiques (remplace l'ancien placeholder vidéo cheikh) */}
       <section className="bg-bg-primary section-padding !py-10 md:!py-14">
-        <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5 }}>
-          <VideoPlaceholder />
-        </motion.div>
+        <div className="max-w-3xl mx-auto px-4">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5 }}
+          >
+            <HeroGuarantees />
+          </motion.div>
+        </div>
       </section>
     </>
   );

@@ -77,18 +77,17 @@ export default async function InventoryStatus({
     );
   }
 
-  if (inv.remaining > 75) return null;
+  // Tant qu'on est en stock, on affiche le bandeau "quasi épuisé" (sans
+  // chiffre exact) à partir du moment où l'Aïd approche. On utilise
+  // remaining juste pour calibrer l'intensité visuelle, pas pour
+  // exposer un compteur que les visiteurs vérifieraient quotidiennement.
+  if (inv.remaining > 150) return null; // pas encore tendu, pas besoin
 
-  const isCritical = inv.remaining <= 20;
-  const isHigh = inv.remaining <= 50;
-
+  const isCritical = inv.remaining <= 50;
   const tone = isCritical
     ? "bg-urgency/10 border-urgency/30 text-urgency"
-    : isHigh
-      ? "bg-gold/10 border-gold/30 text-gold"
-      : "bg-emerald/10 border-emerald/30 text-emerald";
-
-  const ctaBg = isCritical ? "bg-urgency" : isHigh ? "bg-gold" : "bg-emerald";
+    : "bg-gold/10 border-gold/30 text-gold";
+  const ctaBg = isCritical ? "bg-urgency" : "bg-gold";
 
   if (variant === "compact") {
     return (
@@ -101,8 +100,7 @@ export default async function InventoryStatus({
         aria-live="polite"
       >
         <Package size={12} />
-        Plus que <strong className="text-base leading-none">{inv.remaining}</strong>
-        place{inv.remaining > 1 ? "s" : ""}
+        Stock quasi épuisé
       </div>
     );
   }
@@ -117,18 +115,18 @@ export default async function InventoryStatus({
       aria-live="polite"
     >
       <div className="flex items-center gap-3">
-        <Package size={20} className={cn("flex-shrink-0", isCritical && "animate-pulse")} />
+        <Package
+          size={20}
+          className={cn("flex-shrink-0", isCritical && "animate-pulse")}
+        />
         <div>
           <p className="font-bold text-sm md:text-base">
-            Plus que <span className="text-lg md:text-xl">{inv.remaining}</span> place
-            {inv.remaining > 1 ? "s" : ""} pour l&apos;Aïd al-Adha 2026
+            Stock quasi épuisé · Bientôt complet
           </p>
           <p className="text-xs opacity-80 font-inter mt-0.5">
             {isCritical
-              ? "Dernières places — réservez maintenant"
-              : isHigh
-                ? "Le stock baisse vite chaque jour"
-                : "Sécurisez votre sacrifice à temps"}
+              ? "Dernières réservations — ne tardez plus"
+              : "Les réservations se ferment dans les prochains jours"}
           </p>
         </div>
       </div>

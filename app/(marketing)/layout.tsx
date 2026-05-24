@@ -5,8 +5,10 @@ import FloatingCTA from "@/components/ui/FloatingCTA";
 import SocialProofToast from "@/components/ui/SocialProofToast";
 import WhatsAppButton from "@/components/ui/WhatsAppButton";
 import ExitIntentPopup from "@/components/ui/ExitIntentPopup";
+import MobileStickyCTA from "@/components/ui/MobileStickyCTA";
 import { createServiceRoleClient } from "@/lib/supabase/server";
 import { CURRENT_YEAR } from "@/lib/constants";
+import { fetchRecentActivities } from "@/lib/recent-activity";
 
 async function fetchInventorySnapshot(): Promise<{
   remaining: number;
@@ -33,7 +35,10 @@ export default async function MarketingLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const inventory = await fetchInventorySnapshot();
+  const [inventory, recentActivities] = await Promise.all([
+    fetchInventorySnapshot(),
+    fetchRecentActivities(8),
+  ]);
   return (
     <>
       <StickyTopBar inventory={inventory} />
@@ -41,9 +46,10 @@ export default async function MarketingLayout({
       <main>{children}</main>
       <Footer />
       <FloatingCTA />
-      <SocialProofToast />
+      <SocialProofToast recentActivities={recentActivities} />
       <WhatsAppButton />
       <ExitIntentPopup />
+      <MobileStickyCTA />
     </>
   );
 }

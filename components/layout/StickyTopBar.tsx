@@ -61,9 +61,16 @@ export default function StickyTopBar({ inventory }: Props) {
 
   const { remaining, total } = inventory;
   const reserved = Math.max(0, total - remaining);
-  const filledPct = total > 0 ? Math.min(100, (reserved / total) * 100) : 0;
+  // Note : on n'expose pas le nombre exact de places restantes (les
+  // visiteurs reviendraient quotidiennement vérifier au lieu de réserver).
+  // On affiche un message qualitatif + une barre toujours visuellement
+  // "quasi pleine" pour signaler la rareté sans donner d'info exploitable.
+  void reserved;
   const stockCritical = remaining <= 50;
   const stockLow = remaining <= 100;
+  // Barre toujours haute (92% min) pour transmettre l'urgence visuelle
+  // indépendamment du chiffre exact. 95% si critical, 92% sinon.
+  const displayedFillPct = stockCritical ? 96 : 92;
 
   // Format countdown
   const countdownDisplay =
@@ -109,42 +116,33 @@ export default function StickyTopBar({ inventory }: Props) {
             {/* Séparateur */}
             <span className="hidden md:block w-px h-6 bg-white/25" aria-hidden />
 
-            {/* ── Stock + barre de progression ─────────────────────── */}
+            {/* ── Message stock + barre visuelle ───────────────────── */}
             <div className="flex-1 min-w-0 flex items-center gap-3">
               <div className="flex-1 min-w-0">
-                <div className="flex items-baseline gap-2 mb-1">
-                  {stockCritical && (
-                    <AlertTriangle
-                      size={13}
-                      className="text-amber-200 flex-shrink-0"
-                    />
-                  )}
-                  <span className="text-xs md:text-sm font-semibold leading-tight truncate">
+                <div className="flex items-center gap-1.5 mb-1">
+                  <AlertTriangle
+                    size={13}
+                    className="text-amber-200 flex-shrink-0"
+                  />
+                  <span className="text-xs md:text-sm font-bold leading-tight truncate">
                     <span className="hidden sm:inline">
-                      Plus que{" "}
+                      Stock quasi épuisé
                     </span>
-                    <strong className="tabular-nums text-base md:text-base">
-                      {remaining}
-                    </strong>{" "}
-                    <span className="opacity-80">/ {total}</span>{" "}
-                    <span className="hidden sm:inline opacity-90">
-                      places restantes
+                    <span className="sm:hidden">Stock épuisé</span>
+                    <span className="opacity-80 font-normal hidden md:inline">
+                      {" "}
+                      · Bientôt complet
                     </span>
-                    <span className="sm:hidden opacity-90">places</span>
                   </span>
                 </div>
-                {/* Progress bar */}
+                {/* Barre d'urgence visuelle (pas une vraie jauge de stock) */}
                 <div
                   className="h-1.5 bg-white/20 rounded-full overflow-hidden"
-                  role="progressbar"
-                  aria-valuenow={Math.round(filledPct)}
-                  aria-valuemin={0}
-                  aria-valuemax={100}
-                  aria-label="Stock réservé"
+                  aria-hidden
                 >
                   <motion.div
                     initial={{ width: 0 }}
-                    animate={{ width: `${filledPct}%` }}
+                    animate={{ width: `${displayedFillPct}%` }}
                     transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
                     className={`h-full rounded-full ${
                       stockCritical

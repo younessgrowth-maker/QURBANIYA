@@ -43,34 +43,37 @@ export default function HomePage() {
         <InventoryStatus className="mb-6" />
         <StockGauge />
       </div>
+
+      {/* 2. ENGAGEMENT ÉMOTIONNEL — Impact concret sur les familles
+          Déplacé en haut de page : ancrage émotionnel précoce, fait sentir
+          au visiteur l'impact humain AVANT les arguments rationnels. */}
+      <Divider />
+      <ImpactCalculator />
+
       <TrustBar />
 
-      {/* 2. EMPATHIE — "On comprend votre situation" */}
+      {/* 3. EMPATHIE — "On comprend votre situation" */}
       <Divider />
       <ProblemSolution />
 
-      {/* 3. PROCESSUS — "C'est simple, 4 étapes" */}
+      {/* 4. PROCESSUS — "C'est simple, 4 étapes" */}
       <Divider />
       <HowItWorks />
 
-      {/* 4. AUTORITÉ — Le cheikh qui supervise */}
+      {/* 5. AUTORITÉ — Le cheikh qui supervise */}
       <Divider />
       <Sheikh />
 
-      {/* 4bis. PREUVE TERRAIN — Vidéo collaborateur Madagascar */}
+      {/* 5bis. PREUVE TERRAIN — Vidéo collaborateur Madagascar */}
       <Divider />
       <MadagascarVideo />
 
-      {/* 5. PREUVE SOCIALE — Témoignages clients */}
+      {/* 6. PREUVE SOCIALE — Témoignages clients */}
       <Divider />
       <Testimonials />
 
-      {/* 5bis. AVIS RÉELS — Hidden until 3+ approved reviews */}
+      {/* 6bis. AVIS RÉELS — Hidden until 3+ approved reviews */}
       <RealTestimonials />
-
-      {/* 6. ENGAGEMENT — Calculez votre impact (interactif) */}
-      <Divider />
-      <ImpactCalculator />
 
       {/* 7. OFFRE — Le prix, clair et net */}
       <Divider />
