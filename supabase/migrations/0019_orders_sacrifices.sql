@@ -25,23 +25,42 @@ comment on column public.orders.sacrifices is
 create index if not exists orders_sacrifices_gin_idx
   on public.orders using gin (sacrifices);
 
--- Backfill : pour les commandes existantes, créer un sacrifices array à
--- partir des colonnes niyyah/intention top-level, répété `quantity` fois.
+-- ─── Backfill ─────────────────────────────────────────────────────────────
+-- Pour les commandes existantes, créer un array `sacrifices` répété
+-- `quantity` fois à partir des colonnes niyyah/intention top-level.
 --
--- Postgres n'autorise pas jsonb_agg() directement dans le SET d'un UPDATE.
--- On utilise donc UPDATE ... FROM LATERAL pour calculer le jsonb_agg par
--- ligne dans une sous-requête correlée.
-update public.orders o
-   set sacrifices = sub.arr
-  from lateral (
-    select jsonb_agg(
-             jsonb_build_object(
-               'niyyah', o.niyyah,
-               'intention', o.intention
-             )
-           ) as arr
-      from generate_series(1, greatest(coalesce(o.quantity, 1), 1))
-  ) sub
- where o.sacrifices = '[]'::jsonb
-   and o.niyyah is not null
-   and o.intention is not null;
+-- Postgres interdit jsonb_agg() dans le SET d'un UPDATE direct, et la
+-- target table d'un UPDATE n'est pas accessible depuis un LATERAL. On
+-- évite ces deux contraintes avec un simple CASE sur quantity (borné
+-- 1-5 par le check de 0018).
+update public.orders
+   set sacrifices = case quantity
+     when 1 then jsonb_build_array(
+       jsonb_build_object('niyyah', niyyah, 'intention', intention)
+     )
+     when 2 then jsonb_build_array(
+       jsonb_build_object('niyyah', niyyah, 'intention', intention),
+       jsonb_build_object('niyyah', niyyah, 'intention', intention)
+     )
+     when 3 then jsonb_build_array(
+       jsonb_build_object('niyyah', niyyah, 'intention', intention),
+       jsonb_build_object('niyyah', niyyah, 'intention', intention),
+       jsonb_build_object('niyyah', niyyah, 'intention', intention)
+     )
+     when 4 then jsonb_build_array(
+       jsonb_build_object('niyyah', niyyah, 'intention', intention),
+       jsonb_build_object('niyyah', niyyah, 'intention', intention),
+       jsonb_build_object('niyyah', niyyah, 'intention', intention),
+       jsonb_build_object('niyyah', niyyah, 'intention', intention)
+     )
+     else jsonb_build_array(
+       jsonb_build_object('niyyah', niyyah, 'intention', intention),
+       jsonb_build_object('niyyah', niyyah, 'intention', intention),
+       jsonb_build_object('niyyah', niyyah, 'intention', intention),
+       jsonb_build_object('niyyah', niyyah, 'intention', intention),
+       jsonb_build_object('niyyah', niyyah, 'intention', intention)
+     )
+   end
+ where sacrifices = '[]'::jsonb
+   and niyyah is not null
+   and intention is not null;
