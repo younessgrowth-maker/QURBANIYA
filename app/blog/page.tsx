@@ -19,6 +19,15 @@ export const metadata: Metadata = {
 
 const articles = [
   {
+    slug: "jour-arafat-2026",
+    title: "🌙 Jour d'Arafat 2026 : mardi 26 mai · Jeûne, vertus, dou'as",
+    excerpt:
+      "Le 9 Dhoul Hijja 2026 tombe le mardi 26 mai. Tout sur le jeûne d'Arafat (expiation de 2 années de péchés), les vertus, dou'as recommandées et le lien avec l'Aïd al-Adha.",
+    date: "24 mai 2026",
+    readTime: "7 min",
+    category: "Guide religieux",
+  },
+  {
     slug: "aid-al-adha-2026-dans-combien-de-jours",
     title: "🌙 Aïd al-Adha 2026 dans combien de jours ?",
     excerpt:

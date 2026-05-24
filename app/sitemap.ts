@@ -5,6 +5,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
   const baseUrl = "https://qurbaniya.fr";
 
   const blogSlugs = [
+    "jour-arafat-2026",
     "date-aid-al-adha-2026",
     "sacrifice-aid-en-ligne-comment-ca-marche",
     "prix-mouton-france-2026",
