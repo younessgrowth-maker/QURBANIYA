@@ -273,48 +273,162 @@ export default function OrderForm() {
         </div>
       </div>
 
-      {/* ── Nombre de moutons (multi-moutons) ── */}
+      {/* ── Packs (multi-moutons avec suggestions visuelles) ── */}
       <div>
         <h3 className="text-lg font-bold text-text-primary uppercase tracking-wide mb-2">
-          Nombre de moutons
+          Pour qui voulez-vous sacrifier&nbsp;?
         </h3>
-        <p className="text-sm text-text-muted mb-4">
-          Une seule commande pour vous, votre famille et vos proches. Au-delà de 5,{" "}
-          <a
-            href={`https://wa.me/33744798883?text=${encodeURIComponent("Bonjour, je souhaite réserver plus de 5 moutons")}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-emerald font-semibold underline underline-offset-2"
-          >
-            contactez-nous sur WhatsApp
-          </a>
-          .
+        <p className="text-sm text-text-muted mb-5">
+          Un sacrifice par personne du foyer (épouse, parents, enfants) est
+          encouragé en islam. Vous pouvez aussi ajouter un sacrifice en sadaqa
+          pour des familles dans le besoin à Madagascar.
         </p>
         {errors.quantity && (
           <p className="text-urgency text-sm mb-3">{errors.quantity.message}</p>
         )}
-        <div className="flex items-center gap-2 mb-2">
-          {[1, 2, 3, 4, 5].map((q) => (
-            <button
-              key={q}
-              type="button"
-              onClick={() => setValue("quantity", q, { shouldValidate: true })}
-              className={`flex-1 h-14 rounded-xl font-bold text-base transition-all duration-200 ${
-                quantity === q
-                  ? "bg-primary text-white shadow-glow-primary scale-[1.03]"
-                  : "bg-white border-2 border-gray-200 text-text-primary hover:border-primary/40"
-              }`}
-              aria-label={`${q} mouton${q > 1 ? "s" : ""}`}
-            >
-              {q}
-            </button>
-          ))}
+
+        {/* Packs grid : 2x2 mobile, 4 cols desktop */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+          {[
+            {
+              qty: 1,
+              title: "Pour moi",
+              subtitle: "1 sacrifice",
+              hint: "Le sacrifice obligatoire",
+              badge: null as string | null,
+            },
+            {
+              qty: 2,
+              title: "Moi + famille",
+              subtitle: "2 sacrifices",
+              hint: "Un pour moi, un pour mes proches",
+              badge: "Le + populaire",
+            },
+            {
+              qty: 3,
+              title: "Moi + parents",
+              subtitle: "3 sacrifices",
+              hint: "Couvre 3 générations",
+              badge: null,
+            },
+            {
+              qty: 5,
+              title: "Pack tribu",
+              subtitle: "5 sacrifices",
+              hint: "Maximum d'impact",
+              badge: "Maximum baraka",
+            },
+          ].map((pack) => {
+            const selected = quantity === pack.qty;
+            return (
+              <button
+                key={pack.qty}
+                type="button"
+                onClick={() =>
+                  setValue("quantity", pack.qty, { shouldValidate: true })
+                }
+                className={`relative text-left rounded-xl p-4 transition-all duration-200 ${
+                  selected
+                    ? "bg-primary text-white shadow-glow-primary scale-[1.02] border-2 border-primary"
+                    : "bg-white border-2 border-gray-200 text-text-primary hover:border-primary/40 hover:shadow-soft"
+                }`}
+                aria-pressed={selected}
+              >
+                {pack.badge && (
+                  <span
+                    className={`absolute -top-2 left-3 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                      selected
+                        ? "bg-white text-primary"
+                        : "bg-gold text-white"
+                    }`}
+                  >
+                    {pack.badge}
+                  </span>
+                )}
+                <div className="text-2xl mb-1 leading-none" aria-hidden>
+                  {"🐑".repeat(Math.min(pack.qty, 3))}
+                  {pack.qty > 3 && (
+                    <span
+                      className={`text-base font-bold align-middle ml-0.5 ${
+                        selected ? "text-white" : "text-text-muted"
+                      }`}
+                    >
+                      ×{pack.qty}
+                    </span>
+                  )}
+                </div>
+                <div className="font-bold text-sm leading-tight mb-0.5">
+                  {pack.title}
+                </div>
+                <div
+                  className={`text-[11px] mb-2 leading-tight ${
+                    selected ? "text-white/85" : "text-text-muted"
+                  }`}
+                >
+                  {pack.hint}
+                </div>
+                <div className="flex items-baseline gap-1">
+                  <span className="text-lg font-black tabular-nums">
+                    {pack.qty * 140}€
+                  </span>
+                  {pack.qty > 1 && (
+                    <span
+                      className={`text-[10px] ${
+                        selected ? "text-white/70" : "text-text-muted-light"
+                      }`}
+                    >
+                      ({pack.qty}×140€)
+                    </span>
+                  )}
+                </div>
+              </button>
+            );
+          })}
         </div>
+
+        {/* Custom quantité : visible mais discrète */}
+        <details className="text-sm">
+          <summary className="cursor-pointer text-text-muted hover:text-text-primary transition-colors inline-flex items-center gap-1.5">
+            <span className="text-xs">↳</span>
+            <span>Autre quantité (4 moutons)</span>
+          </summary>
+          <div className="mt-3 flex items-center gap-2">
+            {[1, 2, 3, 4, 5].map((q) => (
+              <button
+                key={q}
+                type="button"
+                onClick={() =>
+                  setValue("quantity", q, { shouldValidate: true })
+                }
+                className={`flex-1 h-12 rounded-lg font-bold text-sm transition-all duration-200 ${
+                  quantity === q
+                    ? "bg-primary text-white"
+                    : "bg-white border border-gray-200 text-text-primary hover:border-primary/40"
+                }`}
+                aria-label={`${q} mouton${q > 1 ? "s" : ""}`}
+              >
+                {q}
+              </button>
+            ))}
+          </div>
+        </details>
+
+        {/* Hint si multi-moutons */}
         {quantity > 1 && (
-          <p className="text-xs text-text-muted-light mt-2">
-            Vous recevrez <strong>{quantity}</strong> vidéo
-            {quantity > 1 ? "s" : ""} de sacrifice par WhatsApp le jour J,
-            au même nom (« {watch("niyyah") || "à indiquer"} »).
+          <p className="text-xs text-text-muted-light mt-3 leading-snug">
+            ✓ Vous recevrez <strong>{quantity}</strong> vidéo
+            {quantity > 1 ? "s" : ""} de sacrifice par WhatsApp le jour J, au
+            même nom (« {watch("niyyah") || "à indiquer"} »). Pour des noms
+            différents,{" "}
+            <a
+              href={`https://wa.me/33744798883?text=${encodeURIComponent("Bonjour, je souhaite réserver plusieurs sacrifices avec des noms différents")}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-emerald font-semibold underline underline-offset-2"
+            >
+              contactez-nous
+            </a>
+            .
           </p>
         )}
       </div>
