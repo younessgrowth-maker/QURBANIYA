@@ -38,3 +38,6 @@ next-env.d.ts
 # Claude Code — fichiers perso non partagés
 CLAUDE.local.md
 .claude/settings.local.json
+
+# Logs broadcast scripts (idempotence locale, contient des emails clients)
+scripts/.logs/
