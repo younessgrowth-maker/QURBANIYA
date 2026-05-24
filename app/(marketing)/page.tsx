@@ -1,6 +1,5 @@
 import { ProductJsonLd, EventJsonLd, BreadcrumbJsonLd } from "@/components/seo/JsonLd";
 import Hero from "@/components/sections/Hero";
-import StockGauge from "@/components/ui/StockGauge";
 import TrustBar from "@/components/ui/TrustBar";
 import ProblemSolution from "@/components/sections/ProblemSolution";
 import HowItWorks from "@/components/sections/HowItWorks";
@@ -32,15 +31,12 @@ export default function HomePage() {
         { name: "Accueil", url: "https://qurbaniya.fr" },
         { name: "Sacrifice Aïd 2026", url: "https://qurbaniya.fr/commander" },
       ]} />
-      {/* 1. ACCROCHE — Emotion + CTA principal */}
+      {/* 1. ACCROCHE — Emotion + CTA principal
+           Le Hero inclut maintenant le trust strip horizontal compact
+           (countdown + 3 garanties + 1 trust stats) juste en dessous.
+           On a retiré : ExtraPlacesBanner (contradictoire), InventoryStatus
+           (doublon sticky bar), StockGauge (countdown deja dans le strip). */}
       <Hero />
-      <div className="bg-bg-primary section-padding !py-6 md:!py-8 px-4">
-        {/* Note : on a retiré l'ExtraPlacesBanner "+100 places" — message
-            contradictoire avec "stock quasi épuisé". On garde uniquement
-            la jauge calendaire (StockGauge), le message d'urgence stock
-            est porté par la sticky top bar. */}
-        <StockGauge />
-      </div>
 
       {/* 2. ENGAGEMENT ÉMOTIONNEL — Impact concret sur les familles
           Déplacé en haut de page : ancrage émotionnel précoce, fait sentir
