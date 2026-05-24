@@ -1,27 +1,46 @@
 import type { MetadataRoute } from "next";
 import { CITY_SLUGS } from "@/lib/cities";
+import { BLOG_ARTICLES_I18N, LOCALES, LOCALE_CONFIG } from "@/lib/i18n";
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const baseUrl = "https://qurbaniya.fr";
 
-  const blogSlugs = [
-    "jour-arafat-2026",
-    "date-aid-al-adha-2026",
-    "sacrifice-aid-en-ligne-comment-ca-marche",
-    "prix-mouton-france-2026",
-    "combien-coute-mouton-aid-2026-france",
-    "tabaski-2026-france",
-    "aid-al-adha-2026-dans-combien-de-jours",
-    "reserver-mouton-aid-derniere-minute-2026",
-  ];
-
-  const blogEntries = blogSlugs.map((slug) => ({
+  // ─── Articles blog FR (slugs canoniques) ───────────────────────────────
+  const blogFrEntries = Object.keys(BLOG_ARTICLES_I18N).map((slug) => ({
     url: `${baseUrl}/blog/${slug}`,
     lastModified: new Date(),
     changeFrequency: "monthly" as const,
     priority: 0.8,
   }));
 
+  // ─── Articles blog traduits (EN, AR, TR, ES) ───────────────────────────
+  const translatedLocales = LOCALES.filter((l) => l !== "fr");
+  const blogTranslatedEntries = translatedLocales.flatMap((locale) =>
+    Object.values(BLOG_ARTICLES_I18N).map((slugs) => ({
+      url: `${baseUrl}${LOCALE_CONFIG[locale].baseUrl}/blog/${slugs[locale]}`,
+      lastModified: new Date(),
+      changeFrequency: "monthly" as const,
+      priority: 0.75,
+    }))
+  );
+
+  // ─── Index blog par langue ─────────────────────────────────────────────
+  const blogIndexEntries = LOCALES.map((locale) => ({
+    url: `${baseUrl}${LOCALE_CONFIG[locale].baseUrl}/blog`,
+    lastModified: new Date(),
+    changeFrequency: "weekly" as const,
+    priority: 0.8,
+  }));
+
+  // ─── Homepages par langue ──────────────────────────────────────────────
+  const localeHomeEntries = translatedLocales.map((locale) => ({
+    url: `${baseUrl}${LOCALE_CONFIG[locale].baseUrl}`,
+    lastModified: new Date(),
+    changeFrequency: "weekly" as const,
+    priority: 0.7,
+  }));
+
+  // ─── Landing pages villes ──────────────────────────────────────────────
   const cityEntries = CITY_SLUGS.map((slug) => ({
     url: `${baseUrl}/mouton-aid-${slug}`,
     lastModified: new Date(),
@@ -42,57 +61,16 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: "weekly",
       priority: 0.9,
     },
-    {
-      url: `${baseUrl}/blog`,
-      lastModified: new Date(),
-      changeFrequency: "weekly",
-      priority: 0.8,
-    },
-    ...blogEntries,
+    ...blogIndexEntries,
+    ...blogFrEntries,
+    ...blogTranslatedEntries,
+    ...localeHomeEntries,
     ...cityEntries,
-    {
-      url: `${baseUrl}/en`,
-      lastModified: new Date(),
-      changeFrequency: "weekly",
-      priority: 0.7,
-    },
-    {
-      url: `${baseUrl}/ar`,
-      lastModified: new Date(),
-      changeFrequency: "weekly",
-      priority: 0.7,
-    },
-    {
-      url: `${baseUrl}/tr`,
-      lastModified: new Date(),
-      changeFrequency: "weekly",
-      priority: 0.7,
-    },
     {
       url: `${baseUrl}/faq`,
       lastModified: new Date(),
       changeFrequency: "monthly",
       priority: 0.7,
     },
-    // Pages légales temporairement désactivées (en attente RCS/SIRET).
-    // À réactiver une fois les infos juridiques complétées.
-    // {
-    //   url: `${baseUrl}/mentions-legales`,
-    //   lastModified: new Date(),
-    //   changeFrequency: "yearly",
-    //   priority: 0.3,
-    // },
-    // {
-    //   url: `${baseUrl}/cgv`,
-    //   lastModified: new Date(),
-    //   changeFrequency: "yearly",
-    //   priority: 0.3,
-    // },
-    // {
-    //   url: `${baseUrl}/confidentialite`,
-    //   lastModified: new Date(),
-    //   changeFrequency: "yearly",
-    //   priority: 0.3,
-    // },
   ];
 }
