@@ -1,9 +1,120 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Search, Download, Filter, RotateCcw, Loader2, Send } from "lucide-react";
+import { Search, Download, Filter, RotateCcw, Loader2, Send, Pencil, Check, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { Order } from "@/types";
+
+// ─── Inline editor pour le téléphone d'une commande ──────────────────────
+// Affiché à la place du téléphone dans le tableau admin. Clic sur le
+// téléphone (ou sur "—" si vide) → input éditable → Enter ou check
+// → PATCH /api/admin/orders/phone.
+//
+// Use case principal : à J-2/J-1 de l'Aïd, beaucoup de clients qui n'ont
+// pas mis leur téléphone à la commande répondent à l'email "envoie-nous
+// ton numéro" avec leur numéro. L'admin a juste à le coller ici.
+function PhoneInline({
+  order,
+  onUpdated,
+}: {
+  order: Order;
+  onUpdated: (telephone: string) => void;
+}) {
+  const [editing, setEditing] = useState(false);
+  const [value, setValue] = useState(order.telephone || "");
+  const [state, setState] = useState<"idle" | "saving" | "error">("idle");
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+  async function save() {
+    setState("saving");
+    setErrorMsg(null);
+    try {
+      const res = await fetch("/api/admin/orders/phone", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ order_id: order.id, telephone: value }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setState("error");
+        setErrorMsg(data.error || "Erreur");
+        return;
+      }
+      onUpdated(data.order.telephone ?? "");
+      setEditing(false);
+      setState("idle");
+    } catch {
+      setState("error");
+      setErrorMsg("Réseau indisponible");
+    }
+  }
+
+  function cancel() {
+    setValue(order.telephone || "");
+    setEditing(false);
+    setState("idle");
+    setErrorMsg(null);
+  }
+
+  if (!editing) {
+    return (
+      <button
+        type="button"
+        onClick={() => setEditing(true)}
+        title="Cliquer pour modifier le téléphone"
+        className="group inline-flex items-center gap-1 text-text-muted-light text-xs hover:text-gold transition-colors"
+      >
+        <span>{order.telephone || "— ajouter"}</span>
+        <Pencil size={10} className="opacity-0 group-hover:opacity-100 transition-opacity" />
+      </button>
+    );
+  }
+
+  return (
+    <div className="flex flex-col gap-1">
+      <div className="flex items-center gap-1">
+        <input
+          type="tel"
+          value={value}
+          onChange={(e) => setValue(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              save();
+            }
+            if (e.key === "Escape") {
+              e.preventDefault();
+              cancel();
+            }
+          }}
+          autoFocus
+          placeholder="+336XXXXXXXX"
+          className="px-2 py-0.5 border border-gold/40 rounded text-xs w-32 focus:outline-none focus:ring-1 focus:ring-gold"
+          disabled={state === "saving"}
+        />
+        <button
+          type="button"
+          onClick={save}
+          disabled={state === "saving"}
+          className="p-0.5 rounded text-emerald hover:bg-emerald/10 disabled:opacity-40"
+          title="Sauvegarder (Entrée)"
+        >
+          {state === "saving" ? <Loader2 size={12} className="animate-spin" /> : <Check size={12} />}
+        </button>
+        <button
+          type="button"
+          onClick={cancel}
+          disabled={state === "saving"}
+          className="p-0.5 rounded text-urgency hover:bg-urgency/10 disabled:opacity-40"
+          title="Annuler (Échap)"
+        >
+          <X size={12} />
+        </button>
+      </div>
+      {errorMsg && <span className="text-urgency text-xs">{errorMsg}</span>}
+    </div>
+  );
+}
 
 const STATUS_STYLES: Record<string, string> = {
   pending: "bg-yellow-400/10 text-yellow-700 border-yellow-400/30",
@@ -344,10 +455,26 @@ export default function OrdersTable({ orders }: { orders: Order[] }) {
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState<string>("all");
   const [method, setMethod] = useState<string>("all");
+  // Patch local des téléphones édités via PhoneInline. On stocke {orderId:
+  // newPhone} et on l'applique en surcouche des `orders` server-props pour
+  // que le tableau reflète l'édition sans recharger la page. Quand la
+  // page revalide (server side), ce state est reset (et l'edit confirmé
+  // est déjà persisté en BDD, donc rien à perdre).
+  const [phoneOverrides, setPhoneOverrides] = useState<Record<string, string>>({});
+
+  const ordersWithEdits = useMemo(
+    () =>
+      orders.map((o) =>
+        phoneOverrides[o.id] !== undefined
+          ? { ...o, telephone: phoneOverrides[o.id] }
+          : o,
+      ),
+    [orders, phoneOverrides],
+  );
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
-    return orders.filter((o) => {
+    return ordersWithEdits.filter((o) => {
       if (status !== "all" && o.payment_status !== status) return false;
       if (method !== "all" && o.payment_method !== method) return false;
       if (q) {
@@ -356,7 +483,7 @@ export default function OrdersTable({ orders }: { orders: Order[] }) {
       }
       return true;
     });
-  }, [orders, search, status, method]);
+  }, [ordersWithEdits, search, status, method]);
 
   function handleExport() {
     const csv = toCsv(filtered);
@@ -448,7 +575,12 @@ export default function OrdersTable({ orders }: { orders: Order[] }) {
                   </td>
                   <td className="px-4 py-3 hidden md:table-cell">
                     <div className="text-text-primary text-xs">{o.email}</div>
-                    <div className="text-text-muted-light text-xs">{o.telephone || "—"}</div>
+                    <PhoneInline
+                      order={o}
+                      onUpdated={(tel) =>
+                        setPhoneOverrides((prev) => ({ ...prev, [o.id]: tel }))
+                      }
+                    />
                   </td>
                   <td className="px-4 py-3 hidden lg:table-cell text-text-muted">
                     {INTENTION_LABEL[o.intention] || o.intention}
