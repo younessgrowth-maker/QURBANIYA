@@ -131,3 +131,62 @@ export function blogHreflangAlternates(canonicalSlug: string): Record<string, st
     "x-default": blogArticleUrl(canonicalSlug, "fr"),
   };
 }
+
+// ─── Mapping inverse : slug traduit → slug FR canonique ───────────────────
+// Pré-calculé une fois pour que translatePath() soit instantané.
+// Ex: "day-of-arafah-2026" → { canonical: "jour-arafat-2026", from: "en" }
+type ReverseMapEntry = { canonical: string; from: Locale };
+const REVERSE_SLUG_MAP: Record<string, ReverseMapEntry> = {};
+for (const [canonical, slugs] of Object.entries(BLOG_ARTICLES_I18N)) {
+  for (const locale of LOCALES) {
+    REVERSE_SLUG_MAP[slugs[locale]] = { canonical, from: locale };
+  }
+}
+
+// ─── Helper : traduit un chemin courant vers la même page en autre langue ─
+// Exemples :
+//   translatePath("/blog/jour-arafat-2026", "en") → "/en/blog/day-of-arafah-2026"
+//   translatePath("/en/blog/day-of-arafah-2026", "fr") → "/blog/jour-arafat-2026"
+//   translatePath("/blog", "tr") → "/tr/blog"
+//   translatePath("/commander", "en") → "/en" (pas de version /en/commander → fallback homepage)
+//   translatePath("/", "ar") → "/ar"
+//
+// Logique :
+//   1. Si on est sur "/" ou "/{lang}" exact → renvoie "/{target}"
+//   2. Si on est sur un index blog "/blog" ou "/{lang}/blog" → renvoie "/{target}/blog"
+//   3. Si on est sur un article blog (matched dans REVERSE_SLUG_MAP) → translate
+//   4. Sinon (page non traduite : /commander, /faq, /mouton-aid-paris…) →
+//      renvoie homepage langue cible "/" ou "/{target}" — c'est le fallback
+//      acceptable pour les pages qui n'existent que en français.
+export function translatePath(currentPath: string, targetLocale: Locale): string {
+  const targetPrefix = LOCALE_CONFIG[targetLocale].baseUrl;
+  const path = currentPath.split("?")[0].replace(/\/$/, "") || "/";
+
+  // 1. Homepage racine ou racine localisée
+  if (path === "/") return targetPrefix || "/";
+  for (const loc of LOCALES) {
+    if (path === LOCALE_CONFIG[loc].baseUrl) return targetPrefix || "/";
+  }
+
+  // 2. Index blog
+  if (path === "/blog") return `${targetPrefix}/blog`;
+  for (const loc of LOCALES) {
+    if (loc === "fr") continue;
+    if (path === `${LOCALE_CONFIG[loc].baseUrl}/blog`) return `${targetPrefix}/blog`;
+  }
+
+  // 3. Article blog (FR ou traduit) : extrait le slug puis remappe
+  const blogMatch = path.match(/^(\/[a-z]{2})?\/blog\/([^/]+)$/);
+  if (blogMatch) {
+    const slug = blogMatch[2];
+    const reverse = REVERSE_SLUG_MAP[slug];
+    if (reverse) {
+      const targetSlug = BLOG_ARTICLES_I18N[reverse.canonical][targetLocale];
+      return `${targetPrefix}/blog/${targetSlug}`;
+    }
+  }
+
+  // 4. Fallback : homepage de la langue cible (pour /commander, /faq, etc.
+  //    qui n'ont pas de version traduite à ce jour)
+  return targetPrefix || "/";
+}
