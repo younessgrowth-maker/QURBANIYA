@@ -148,10 +148,35 @@ export default function OrderForm() {
   const referralCode = watch("referred_by_code") || "";
   const email = watch("email") || "";
 
-  // Synchronise la longueur du tableau `sacrifices` avec `quantity`.
-  // Sans ça, si l'utilisateur passe de 3 → 1 puis revient à 3, les
-  // valeurs précédentes sont perdues. On préserve donc les saisies
-  // existantes et on ne fait que tronquer/étendre.
+  // Synchronise atomiquement quantity ET la longueur de `sacrifices`.
+  // Avant : un useEffect séparé étendait le tableau APRÈS le rendu de la
+  // nouvelle quantité. Pendant le rendu intermédiaire, `sacrifices[idx]`
+  // pour les nouveaux moutons était `undefined` ; le radio affichait
+  // "pour_moi" via le fallback `?? "pour_moi"` mais le state du form
+  // n'avait pas l'intention. Au submit, Zod échouait silencieusement
+  // (errors.sacrifices.N.intention) et l'utilisateur devait recliquer le
+  // radio pour vraiment poser la valeur — d'où le bug du "deuxième
+  // essai". On synchronise donc dans le même tick.
+  const setQuantity = (n: number) => {
+    const current = getValues("sacrifices") ?? [];
+    let next = current;
+    if (current.length < n) {
+      next = [
+        ...current,
+        ...Array.from({ length: n - current.length }, () => ({
+          niyyah: "",
+          intention: "pour_moi" as const,
+        })),
+      ];
+    } else if (current.length > n) {
+      next = current.slice(0, n);
+    }
+    setValue("sacrifices", next, { shouldValidate: false });
+    setValue("quantity", n, { shouldValidate: false });
+  };
+
+  // Filet de sécurité : si `quantity` est jamais modifié hors de
+  // `setQuantity` (ex: defaultValues, devtools), on resynchronise.
   useEffect(() => {
     const current = getValues("sacrifices") ?? [];
     if (current.length === quantity) return;
@@ -191,8 +216,9 @@ export default function OrderForm() {
     const parsed = parseInt(qtyParam, 10);
     if (Number.isNaN(parsed) || parsed <= 1) return;
     const bounded = Math.min(5, parsed);
-    setValue("quantity", bounded, { shouldValidate: false });
-  }, [setValue]);
+    setQuantity(bounded);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
 
   // Validation live du code parrain (debounce 400ms)
@@ -343,9 +369,7 @@ export default function OrderForm() {
               <button
                 key={pack.qty}
                 type="button"
-                onClick={() =>
-                  setValue("quantity", pack.qty, { shouldValidate: true })
-                }
+                onClick={() => setQuantity(pack.qty)}
                 className={`relative text-left rounded-xl p-4 transition-all duration-200 ${
                   selected
                     ? "bg-primary text-white shadow-glow-primary scale-[1.02] border-2 border-primary"
@@ -419,9 +443,7 @@ export default function OrderForm() {
               <button
                 key={q}
                 type="button"
-                onClick={() =>
-                  setValue("quantity", q, { shouldValidate: true })
-                }
+                onClick={() => setQuantity(q)}
                 className={`flex-1 h-12 rounded-lg font-bold text-sm transition-all duration-200 ${
                   quantity === q
                     ? "bg-primary text-white"
