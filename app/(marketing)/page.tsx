@@ -4,6 +4,7 @@ import TrustBar from "@/components/ui/TrustBar";
 import ProblemSolution from "@/components/sections/ProblemSolution";
 import HowItWorks from "@/components/sections/HowItWorks";
 import Sheikh from "@/components/sections/Sheikh";
+import SheikhAudioMessage from "@/components/sections/SheikhAudioMessage";
 import MadagascarVideo from "@/components/sections/MadagascarVideo";
 import Testimonials from "@/components/sections/Testimonials";
 import RealTestimonials from "@/components/sections/RealTestimonials";
@@ -57,6 +58,12 @@ export default function HomePage() {
       {/* 5. AUTORITÉ — Le cheikh qui supervise */}
       <Divider />
       <Sheikh />
+
+      {/* 5a. MESSAGE AUDIO — Le cheikh parle directement à la communauté.
+          Audio-only volontairement : la vidéo source avait un fond chroma-key
+          (Mecque incrustée) qui risquait d'être perçu comme trompeur par
+          l'audience musulmane. Le discours est intact, sous-titres synchros. */}
+      <SheikhAudioMessage />
 
       {/* 5bis. PREUVE TERRAIN — Vidéo collaborateur Madagascar */}
       <Divider />
