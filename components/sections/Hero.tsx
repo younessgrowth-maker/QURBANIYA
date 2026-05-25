@@ -45,7 +45,7 @@ export default function Hero({ aidDate = "Mai 2026" }: HeroProps) {
           style={{ filter: "brightness(0.92) saturate(1.08) contrast(1.05)" }}
         />
 
-        <div className="relative z-10 max-w-7xl mx-auto px-5 py-32 md:py-40 w-full">
+        <div className="relative z-10 max-w-7xl mx-auto px-5 py-20 md:py-32 lg:py-40 w-full">
           <motion.div variants={stagger} initial="hidden" animate="visible" className="max-w-2xl">
 
             <motion.div variants={fadeUp}>

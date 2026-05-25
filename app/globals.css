@@ -46,7 +46,10 @@
   }
 
   .section-padding {
-    @apply px-5 py-12 md:px-8 lg:py-16;
+    /* Mobile : py-8 (32px) au lieu de py-12 (48px) — l'ancien créait des
+       sections trop aérées les unes derrière les autres, donnant l'impression
+       d'un site "bombé" entre chaque bloc. Desktop inchangé. */
+    @apply px-5 py-8 md:px-8 md:py-12 lg:py-16;
   }
 
   .scrollbar-hide {

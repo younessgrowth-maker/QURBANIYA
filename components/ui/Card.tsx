@@ -19,7 +19,7 @@ export default function Card({ children, className, hover = true }: CardProps) {
       transition={{ duration: DURATION.slow, ease: EASE_OUT_EXPO }}
       whileHover={hover ? { y: -4, transition: { duration: 0.25, ease: EASE_OUT_EXPO } } : undefined}
       className={cn(
-        "bg-white rounded-card p-7",
+        "bg-white rounded-card p-5 md:p-7",
         "border border-gray-100/80",
         "shadow-soft transition-all duration-300",
         hover && "hover:shadow-elevated hover:border-gold/20",

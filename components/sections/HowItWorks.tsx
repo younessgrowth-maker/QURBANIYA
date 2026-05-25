@@ -95,7 +95,7 @@ export default function HowItWorks() {
           {/* Vertical line */}
           <div className="absolute left-[15px] top-4 bottom-4 w-px border-l-2 border-dashed border-gold/30" aria-hidden="true" />
 
-          <div className="space-y-10">
+          <div className="space-y-7 md:space-y-10">
             {steps.map((step, i) => (
               <motion.div
                 key={step.num}

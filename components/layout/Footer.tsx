@@ -47,7 +47,7 @@ function FooterAccordion({ title, children }: { title: string; children: React.R
 export default function Footer() {
   return (
     <footer className="bg-primary-dark border-t border-white/10">
-      <div className="max-w-7xl mx-auto px-4 py-12 md:py-16">
+      <div className="max-w-7xl mx-auto px-4 py-8 md:py-12 lg:py-16">
         {/* Desktop columns */}
         <div className="hidden md:grid md:grid-cols-3 gap-12">
           {/* Col 1: Logo + tagline + socials */}
