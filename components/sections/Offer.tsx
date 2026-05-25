@@ -50,7 +50,7 @@ export default function Offer() {
               </span>
             </div>
 
-            <div className="p-8 md:p-10">
+            <div className="p-6 md:p-10">
               {/* Price */}
               <div className="text-center mb-8">
                 <div className="text-[72px] md:text-[80px] font-black leading-none text-gradient-gold">

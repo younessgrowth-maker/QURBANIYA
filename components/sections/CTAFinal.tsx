@@ -7,7 +7,7 @@ import { Zap } from "lucide-react";
 
 export default function CTAFinal() {
   return (
-    <section className="relative overflow-hidden py-20 px-5">
+    <section className="relative overflow-hidden py-12 md:py-16 lg:py-20 px-5">
       <div className="absolute inset-0 bg-gradient-to-br from-primary via-primary-dark to-primary-light animated-gradient-bg" style={{ backgroundSize: "200% 200%" }} />
       <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-white/8 rounded-full blur-[100px]" />
       <div className="absolute bottom-0 left-0 w-[300px] h-[300px] bg-gold/10 rounded-full blur-[80px]" />

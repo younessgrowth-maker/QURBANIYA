@@ -53,7 +53,7 @@ export default function ProblemSolution() {
           whileInView="visible"
           viewport={{ once: true, margin: "-60px" }}
           variants={{ visible: { transition: { staggerChildren: 0.15 } } }}
-          className="space-y-6 mb-16"
+          className="space-y-6 mb-10 md:mb-16"
         >
           {/* Constat */}
           <motion.div

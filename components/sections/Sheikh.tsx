@@ -18,7 +18,7 @@ export default function Sheikh() {
   return (
     <section ref={sectionRef} className="bg-bg-secondary section-padding" id="cheikh">
       <div className="max-w-6xl mx-auto">
-        <div className="grid grid-cols-1 lg:grid-cols-[0.4fr_0.6fr] gap-10 lg:gap-16 items-center">
+        <div className="grid grid-cols-1 lg:grid-cols-[0.4fr_0.6fr] gap-6 md:gap-10 lg:gap-16 items-center">
 
           {/* Photo column */}
           <motion.div
