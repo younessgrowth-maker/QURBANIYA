@@ -121,7 +121,7 @@ export default function SheikhAudioMessage() {
             Message audio
           </span>
           <h2 className="text-2xl md:text-3xl font-black uppercase text-text-primary mb-3">
-            Écoutez l&apos;<span className="text-gold">imam Shamsuddin</span>
+            Écoutez <span className="text-gold">Cheikh Chamsouddin</span>
           </h2>
           <p className="text-text-muted text-sm md:text-base">
             1 minute 42 — notre ambassadeur explique le service en quelques mots
@@ -137,7 +137,7 @@ export default function SheikhAudioMessage() {
             >
               <Image
                 src="/cheikhChamsouddin.jpg"
-                alt="Imam Shamsuddin"
+                alt="Cheikh Chamsouddin"
                 fill
                 sizes="(max-width: 768px) 100vw, 200px"
                 className="object-cover"
@@ -156,7 +156,7 @@ export default function SheikhAudioMessage() {
             <div className="p-5 md:p-6 flex flex-col gap-4">
               <div>
                 <p className="font-bold text-text-primary text-base">
-                  Imam Shamsuddin
+                  Cheikh Chamsouddin
                 </p>
                 <p className="text-text-muted-light text-xs font-inter">
                   Ambassadeur · Conformité Sounnah
@@ -220,13 +220,13 @@ export default function SheikhAudioMessage() {
               {/* Audio HTML5 avec sous-titres */}
               <audio
                 ref={audioRef}
-                src="/audio/cheikh-shamsuddin.mp3"
+                src="/audio/cheikh-chamsouddin.mp3"
                 preload="metadata"
                 className="hidden"
               >
                 <track
                   kind="subtitles"
-                  src="/audio/cheikh-shamsuddin.vtt"
+                  src="/audio/cheikh-chamsouddin.vtt"
                   srcLang="fr"
                   label="Français"
                   default
