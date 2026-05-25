@@ -14,5 +14,6 @@ export async function refreshAnalytics() {
     throw new Error("Non autorisé");
   }
   revalidateTag("stripe-yoy-v1");
+  revalidateTag("pulse-stats-v1");
   revalidatePath("/admin/analytics");
 }
