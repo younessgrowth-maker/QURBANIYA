@@ -77,8 +77,17 @@ function RefundButton({ order }: { order: Order }) {
   );
 }
 
+// État du bouton après réponse API :
+// - "full" : email + WhatsApp Whapi répond `sent:true` (le plus probable
+//   quand le compte WA n'est pas restreint). Affiché vert plein.
+// - "email-only" : email envoyé mais WA n'a pas pu être tenté (téléphone
+//   invalide / Whapi 401 / channel offline). Affiché doré "attention" pour
+//   que l'admin sache qu'un WA manuel est probablement nécessaire.
+// - "error" : email lui-même a échoué ou skip Stripe (session expirée, etc.)
+type RelanceState = "idle" | "loading" | "full" | "email-only" | "error";
+
 function RelanceButton({ order }: { order: Order }) {
-  const [state, setState] = useState<"idle" | "loading" | "done" | "error">("idle");
+  const [state, setState] = useState<RelanceState>("idle");
   const [msg, setMsg] = useState<string | null>(null);
 
   // N'apparaît que pour les pending Stripe avec une session existante.
@@ -110,17 +119,44 @@ function RelanceButton({ order }: { order: Order }) {
         setMsg(r.skipped);
         return;
       }
-      setState("done");
-      const parts = [];
-      if (r.email_sent) parts.push("email ✓");
-      if (r.wa_sent) parts.push("WA ✓");
-      else if (r.wa_error) parts.push(`WA ✗ ${r.wa_error.slice(0, 40)}`);
-      setMsg(parts.join(" · "));
+      // Email OK + WA répond sent:true côté Whapi → état complet "full".
+      // Note : Whapi peut renvoyer sent:true mais le message reste pending
+      // côté WhatsApp pendant des heures/jours quand le compte est en
+      // shadow-ban algorithmique. On affiche "WA ✓" car la requête API a
+      // été acceptée, pas pour garantir la délivrance finale.
+      if (r.email_sent && r.wa_sent) {
+        setState("full");
+        setMsg("Email envoyé · WA accepté par Whapi (délivrance via WhatsApp non garantie pendant restriction).");
+      } else if (r.email_sent) {
+        setState("email-only");
+        setMsg(
+          r.wa_error
+            ? `Email envoyé · WA non transmis : ${r.wa_error.slice(0, 80)} — pense au WA manuel depuis ton phone.`
+            : "Email envoyé · WA non tenté (téléphone manquant ou invalide).",
+        );
+      } else {
+        setState("error");
+        setMsg("Email non envoyé");
+      }
     } catch {
       setState("error");
       setMsg("Réseau indisponible");
     }
   }
+
+  // Compose le label dynamique avec 2 micro-indicateurs distincts pour
+  // qu'on voie d'un coup d'œil quel canal est parti — au lieu d'un
+  // unique "Relancé" qui cache l'éventuel échec WhatsApp silencieux.
+  const label =
+    state === "loading"
+      ? null
+      : state === "full"
+        ? "Email ✓ · WA ✓"
+        : state === "email-only"
+          ? "Email ✓ · WA ⋯"
+          : state === "error"
+            ? "Erreur"
+            : "Relancer";
 
   return (
     <button
@@ -129,12 +165,14 @@ function RelanceButton({ order }: { order: Order }) {
       disabled={state === "loading"}
       title={msg ?? "Renvoyer email + WhatsApp avec lien de paiement"}
       className={cn(
-        "inline-flex items-center gap-1 rounded-md border text-xs font-semibold px-2 py-1 mr-1.5 transition-colors disabled:opacity-50 disabled:cursor-not-allowed",
-        state === "done"
+        "inline-flex items-center gap-1 rounded-md border text-xs font-semibold px-2 py-1 mr-1.5 transition-colors disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap",
+        state === "full"
           ? "border-emerald/40 bg-emerald/10 text-emerald"
-          : state === "error"
-          ? "border-urgency/40 bg-urgency/10 text-urgency"
-          : "border-gray-300 bg-white text-gray-700 hover:bg-gold/10 hover:border-gold hover:text-gold"
+          : state === "email-only"
+            ? "border-gold/40 bg-gold/10 text-gold"
+            : state === "error"
+              ? "border-urgency/40 bg-urgency/10 text-urgency"
+              : "border-gray-300 bg-white text-gray-700 hover:bg-gold/10 hover:border-gold hover:text-gold"
       )}
     >
       {state === "loading" ? (
@@ -142,7 +180,7 @@ function RelanceButton({ order }: { order: Order }) {
       ) : (
         <Send size={12} />
       )}
-      {state === "done" ? "Relancé" : "Relancer"}
+      {label}
     </button>
   );
 }
@@ -184,7 +222,17 @@ function RelanceAllButton({ orders }: { orders: Order[] }) {
         setState("idle");
         return;
       }
-      setSummary(`${data.email_sent} email · ${data.wa_sent} WA · ${data.skipped} sautés (sur ${data.total})`);
+      // On affiche distinctement email vs WA pour que l'admin sache quels
+      // canaux ont effectivement été tentés. wa_sent = nombre de requêtes
+      // que Whapi a accepté (sent:true), pas forcément le nombre de
+      // messages effectivement délivrés côté WhatsApp (peut prendre des
+      // heures/jours pendant une période de restriction algorithmique).
+      const parts: string[] = [
+        `${data.email_sent}/${data.total} emails ✓`,
+        `${data.wa_sent} WA tentés`,
+      ];
+      if (data.skipped) parts.push(`${data.skipped} sautés`);
+      setSummary(parts.join(" · "));
       setState("done");
     } catch {
       setSummary("Réseau indisponible");
