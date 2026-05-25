@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { orderSchema, type OrderFormValues } from "@/lib/validations";
@@ -10,6 +10,7 @@ import Button from "@/components/ui/Button";
 import { cn } from "@/lib/utils";
 import { track } from "@/lib/track";
 import type { LucideIcon } from "lucide-react";
+import type { Intention } from "@/types";
 
 // ─── Lecture du cookie qrb_ref posé par le middleware ─────────────
 function readReferralCookie(): string {
@@ -148,29 +149,58 @@ export default function OrderForm() {
   const referralCode = watch("referred_by_code") || "";
   const email = watch("email") || "";
 
-  // Synchronise la longueur du tableau `sacrifices` avec `quantity`.
-  // Sans ça, si l'utilisateur passe de 3 → 1 puis revient à 3, les
-  // valeurs précédentes sont perdues. On préserve donc les saisies
-  // existantes et on ne fait que tronquer/étendre.
+  // Setter atomique : met à jour `quantity` ET `sacrifices` dans la même
+  // commit React, en préservant les entrées existantes (intention/niyyah
+  // déjà saisies). Avant ce helper, on faisait setValue("quantity") puis
+  // un useEffect séparé synchronisait sacrifices[]. Race condition :
+  // l'utilisateur cliquait sur l'intention d'un nouveau bloc AVANT que
+  // sacrifices[] soit étendu → setValue("sacrifices.1.intention", ...)
+  // créait un objet partiel { intention } sans niyyah, et Zod plantait
+  // au submit avec un message "intention non renseignée" (en fait le
+  // schema rejetait l'objet incomplet).
+  const applyQuantity = useCallback(
+    (n: number) => {
+      const bounded = Math.max(1, Math.min(5, n));
+      const current = getValues("sacrifices") ?? [];
+      const next: Array<{ niyyah: string; intention: Intention }> = Array.from(
+        { length: bounded },
+        (_, i) =>
+          current[i] ?? { niyyah: "", intention: "pour_moi" }
+      );
+      setValue("quantity", bounded, { shouldValidate: false });
+      setValue("sacrifices", next, { shouldValidate: false });
+    },
+    [getValues, setValue]
+  );
+
+  // Safety net : si quantity est mutée par un autre chemin (ex: react-hook-form
+  // setValue externe), on resync. Préserve les entrées existantes.
   useEffect(() => {
     const current = getValues("sacrifices") ?? [];
     if (current.length === quantity) return;
-    if (current.length < quantity) {
-      const toAdd = quantity - current.length;
-      const extended = [
-        ...current,
-        ...Array.from({ length: toAdd }, () => ({
-          niyyah: "",
-          intention: "pour_moi" as const,
-        })),
-      ];
-      setValue("sacrifices", extended, { shouldValidate: false });
-    } else {
-      setValue("sacrifices", current.slice(0, quantity), {
-        shouldValidate: false,
-      });
-    }
+    const next = Array.from({ length: quantity }, (_, i) =>
+      current[i] ?? { niyyah: "", intention: "pour_moi" as const }
+    );
+    setValue("sacrifices", next, { shouldValidate: false });
   }, [quantity, getValues, setValue]);
+
+  // Setter atomique pour l'intention d'un sacrifice donné. Lit l'entrée
+  // existante (créée par applyQuantity), garde la niyyah saisie, n'écrase
+  // QUE l'intention. Évite tout objet partiel côté form state.
+  const setIntention = useCallback(
+    (idx: number, intention: Intention) => {
+      const current = getValues(`sacrifices.${idx}`);
+      setValue(
+        `sacrifices.${idx}`,
+        {
+          niyyah: current?.niyyah ?? "",
+          intention,
+        },
+        { shouldValidate: true }
+      );
+    },
+    [getValues, setValue]
+  );
 
   // Auto-fill depuis le cookie posé par le middleware (?ref=XXX)
   useEffect(() => {
@@ -182,7 +212,8 @@ export default function OrderForm() {
 
   // Pré-remplissage `quantity` depuis l'URL (?qty=N) — propagation depuis
   // l'ImpactCalculator de la home pour éviter à l'utilisateur de re-sélectionner
-  // le nombre de moutons qu'il vient juste de choisir. Borne 1-5 pour suivre le schema.
+  // le nombre de moutons qu'il vient juste de choisir. Borne 1-5 + sync atomique
+  // de sacrifices[] dans la foulée via applyQuantity.
   useEffect(() => {
     if (typeof window === "undefined") return;
     const params = new URLSearchParams(window.location.search);
@@ -190,9 +221,8 @@ export default function OrderForm() {
     if (!qtyParam) return;
     const parsed = parseInt(qtyParam, 10);
     if (Number.isNaN(parsed) || parsed <= 1) return;
-    const bounded = Math.min(5, parsed);
-    setValue("quantity", bounded, { shouldValidate: false });
-  }, [setValue]);
+    applyQuantity(parsed);
+  }, [applyQuantity]);
 
 
   // Validation live du code parrain (debounce 400ms)
@@ -343,9 +373,7 @@ export default function OrderForm() {
               <button
                 key={pack.qty}
                 type="button"
-                onClick={() =>
-                  setValue("quantity", pack.qty, { shouldValidate: true })
-                }
+                onClick={() => applyQuantity(pack.qty)}
                 className={`relative text-left rounded-xl p-4 transition-all duration-200 ${
                   selected
                     ? "bg-primary text-white shadow-glow-primary scale-[1.02] border-2 border-primary"
@@ -419,9 +447,7 @@ export default function OrderForm() {
               <button
                 key={q}
                 type="button"
-                onClick={() =>
-                  setValue("quantity", q, { shouldValidate: true })
-                }
+                onClick={() => applyQuantity(q)}
                 className={`flex-1 h-12 rounded-lg font-bold text-sm transition-all duration-200 ${
                   quantity === q
                     ? "bg-primary text-white"
@@ -489,33 +515,21 @@ export default function OrderForm() {
                   label="Pour moi"
                   icon={User}
                   selected={blockIntention === "pour_moi"}
-                  onSelect={() =>
-                    setValue(`sacrifices.${idx}.intention`, "pour_moi", {
-                      shouldValidate: true,
-                    })
-                  }
+                  onSelect={() => setIntention(idx, "pour_moi")}
                 />
                 <RadioCard
                   label="Pour ma famille"
                   icon={Users}
                   description="Épouse, parents, enfants..."
                   selected={blockIntention === "famille"}
-                  onSelect={() =>
-                    setValue(`sacrifices.${idx}.intention`, "famille", {
-                      shouldValidate: true,
-                    })
-                  }
+                  onSelect={() => setIntention(idx, "famille")}
                 />
                 <RadioCard
                   label="En sadaqa"
                   icon={Heart}
                   description="Pour un proche décédé ou vivant"
                   selected={blockIntention === "sadaqa"}
-                  onSelect={() =>
-                    setValue(`sacrifices.${idx}.intention`, "sadaqa", {
-                      shouldValidate: true,
-                    })
-                  }
+                  onSelect={() => setIntention(idx, "sadaqa")}
                 />
               </div>
             </div>
