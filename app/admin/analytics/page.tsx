@@ -1,8 +1,10 @@
 import { Suspense } from "react";
 import { BarChart3 } from "lucide-react";
 import StripeAnalyticsDashboard from "@/components/admin/StripeAnalyticsDashboard";
+import PulseSection from "@/components/admin/PulseSection";
 import RefreshButton from "@/components/admin/RefreshButton";
 import { fetchYearOverYearAnalytics } from "@/lib/stripe-analytics";
+import { fetchPulseStats } from "@/lib/pulse-stats";
 import { buildForecast, type ForecastResult } from "@/lib/forecasting";
 import { createServiceRoleClient } from "@/lib/supabase/server";
 import { AID_DATE, CURRENT_YEAR } from "@/lib/constants";
@@ -37,16 +39,26 @@ async function AnalyticsContent() {
   const now = new Date();
   const daysUntilAid = daysBetween(now, AID_DATE);
 
+  // Pulse stats (Supabase) en parallèle de Stripe — résilient à un échec
+  // Stripe car la source est Supabase orders.
+  const [yoyResult, pulseResult] = await Promise.allSettled([
+    fetchYearOverYearAnalytics(CURRENT_YEAR, CURRENT_YEAR - 1),
+    fetchPulseStats(),
+  ]);
+
   let yoy;
   let error: string | null = null;
-  try {
-    yoy = await fetchYearOverYearAnalytics(CURRENT_YEAR, CURRENT_YEAR - 1);
-  } catch (e) {
+  if (yoyResult.status === "fulfilled") {
+    yoy = yoyResult.value;
+  } else {
+    const e = yoyResult.reason;
     error =
       e instanceof Error
         ? `Impossible de joindre Stripe : ${e.message}`
         : "Erreur Stripe inconnue.";
   }
+
+  const pulse = pulseResult.status === "fulfilled" ? pulseResult.value : null;
 
   const stockRemaining = await fetchStockRemaining();
 
@@ -75,6 +87,12 @@ async function AnalyticsContent() {
 
   return (
     <>
+      {pulse && (
+        <div className="mb-6">
+          <PulseSection pulse={pulse} />
+        </div>
+      )}
+
       {error && (
         <div className="mb-6 border border-urgency/30 bg-urgency/5 rounded-xl p-4 text-sm text-text-primary">
           <strong className="text-urgency">Erreur :</strong> {error}
