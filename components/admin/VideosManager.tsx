@@ -463,11 +463,12 @@ export default function VideosManager({ initialRows }: VideosManagerProps) {
                       allUploadedForOrder && (
                         <button
                           onClick={() => sendEmail(s.row.orderId)}
-                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary text-white text-xs font-semibold hover:bg-primary/90 transition-colors"
+                          disabled={s.status === "sending"}
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary text-white text-xs font-semibold hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                           <Send size={12} />
-                          Envoyer l&apos;email
-                          {s.row.quantity > 1 && (
+                          {s.status === "sending" ? "Envoi…" : "Envoyer l'email"}
+                          {s.status !== "sending" && s.row.quantity > 1 && (
                             <span className="ml-1 opacity-80">
                               ({s.row.quantity} vidéos)
                             </span>
