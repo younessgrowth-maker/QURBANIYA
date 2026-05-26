@@ -2,9 +2,12 @@ import { z } from "zod";
 
 export const orderSchema = z
   .object({
-    prenom: z.string().min(2, "Prénom requis (min. 2 caractères)"),
-    nom: z.string().min(2, "Nom requis (min. 2 caractères)"),
-    email: z.string().email("Email invalide"),
+    prenom: z.string().trim().min(2, "Prénom requis (min. 2 caractères)").max(50, "Prénom trop long"),
+    nom: z.string().trim().min(2, "Nom requis (min. 2 caractères)").max(50, "Nom trop long"),
+    // Trim + lowercase l'email pour cohérence partout (dédup, anti-self-referral,
+    // lookup admin) — un même client tapant " MOHAMED@gmail.com " et
+    // "mohamed@gmail.com" doit être traité comme 1 seule personne.
+    email: z.string().trim().toLowerCase().email("Email invalide"),
     telephone: z
       .string()
       .trim()
@@ -30,7 +33,8 @@ export const orderSchema = z
           niyyah: z
             .string()
             .trim()
-            .min(2, "Indiquez le nom pour ce sacrifice"),
+            .min(2, "Indiquez le nom pour ce sacrifice")
+            .max(80, "Nom trop long (max. 80 caractères)"),
           intention: z.enum(["pour_moi", "famille", "sadaqa"], {
             message: "Veuillez choisir une intention",
           }),
