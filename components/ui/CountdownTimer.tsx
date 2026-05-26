@@ -93,13 +93,11 @@ export default function CountdownTimer({ className = "", variant = "hero" }: Cou
     );
   }
 
+  // BUG FIX 26/05 — l'animation `initial=opacity:0 animate=opacity:1`
+  // restait stuck à 0 sur certaines pages (vu via audit Chrome MCP J-1).
+  // L'animation entrance ne vaut pas le risque de countdown invisible.
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.6, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
-      className={`${className}`}
-    >
+    <div className={`${className}`}>
       <div className="flex items-center gap-2 md:gap-3 justify-center md:justify-start">
         <FlipDigit value={timeLeft.days} label="jours" />
         <Separator />
@@ -112,6 +110,6 @@ export default function CountdownTimer({ className = "", variant = "hero" }: Cou
       <p className="text-white/40 text-xs md:text-sm font-inter mt-3 text-center md:text-left">
         Chaque jour qui passe, c&apos;est un mouton de moins disponible
       </p>
-    </motion.div>
+    </div>
   );
 }
