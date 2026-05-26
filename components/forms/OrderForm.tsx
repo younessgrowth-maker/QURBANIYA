@@ -35,16 +35,20 @@ type ReferralState =
   | { status: "invalid"; reason: string };
 
 /* ── Field wrapper ── */
-function Field({ label, error, optional, hint, children }: {
+function Field({ label, error, optional, hint, children, htmlFor }: {
   label: string;
   error?: string;
   optional?: boolean;
   hint?: string;
   children: React.ReactNode;
+  /** Associe `<label for>` avec l'input enfant (id à matcher). Sans cette
+   * association, les screen readers et la dictée vocale iOS ne savent pas
+   * à quoi correspond le champ — accessibilité cassée. */
+  htmlFor?: string;
 }) {
   return (
     <div>
-      <label className="block text-sm font-medium text-text-primary mb-1.5">
+      <label htmlFor={htmlFor} className="block text-sm font-medium text-text-primary mb-1.5">
         {label}
         {optional && <span className="text-text-muted-light ml-1 font-normal">(optionnel)</span>}
       </label>
@@ -55,8 +59,13 @@ function Field({ label, error, optional, hint, children }: {
   );
 }
 
+// IMPORTANT — text-base (16px) au lieu de text-[15px] : iOS Safari zoome
+// automatiquement à 16px quand un input a une font-size < 16px, déclenchant
+// un décalage du viewport à chaque tap dans un champ → friction massive sur
+// mobile (où on fait 60%+ des conversions). 16px = le minimum qui désactive
+// ce comportement.
 const inputClass =
-  "w-full bg-bg-tertiary border border-gray-200 text-text-primary rounded-lg px-4 py-3.5 text-[15px] placeholder:text-text-muted-light/60 focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold/50 transition-all duration-250 input-glow";
+  "w-full bg-bg-tertiary border border-gray-200 text-text-primary rounded-lg px-4 py-3.5 text-base placeholder:text-text-muted-light/60 focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold/50 transition-all duration-250 input-glow";
 
 /* ── Radio card ── */
 function RadioCard({ label, icon: Icon, description, selected, onSelect }: {
@@ -323,18 +332,46 @@ export default function OrderForm() {
         </h3>
         <div className="space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <Field label="Prénom" error={errors.prenom?.message}>
-              <input {...register("prenom")} className={inputClass} placeholder="Mohamed" />
+            <Field label="Prénom" error={errors.prenom?.message} htmlFor="form-prenom">
+              <input
+                {...register("prenom")}
+                id="form-prenom"
+                autoComplete="given-name"
+                className={inputClass}
+                placeholder="Mohamed"
+              />
             </Field>
-            <Field label="Nom" error={errors.nom?.message}>
-              <input {...register("nom")} className={inputClass} placeholder="Ben Ali" />
+            <Field label="Nom" error={errors.nom?.message} htmlFor="form-nom">
+              <input
+                {...register("nom")}
+                id="form-nom"
+                autoComplete="family-name"
+                className={inputClass}
+                placeholder="Ben Ali"
+              />
             </Field>
           </div>
-          <Field label="Email" error={errors.email?.message}>
-            <input {...register("email")} type="email" className={inputClass} placeholder="votre@email.com" />
+          <Field label="Email" error={errors.email?.message} htmlFor="form-email">
+            <input
+              {...register("email")}
+              id="form-email"
+              type="email"
+              autoComplete="email"
+              inputMode="email"
+              className={inputClass}
+              placeholder="votre@email.com"
+            />
           </Field>
-          <Field label="Téléphone" error={errors.telephone?.message} hint="WhatsApp — pour recevoir la vidéo de votre sacrifice">
-            <input {...register("telephone")} type="tel" className={inputClass} placeholder="+33 6 12 34 56 78" />
+          <Field label="Téléphone" error={errors.telephone?.message} hint="WhatsApp — pour recevoir la vidéo de votre sacrifice" htmlFor="form-telephone">
+            <input
+              {...register("telephone")}
+              id="form-telephone"
+              type="tel"
+              autoComplete="tel"
+              inputMode="tel"
+              className={inputClass}
+              placeholder="+33 6 12 34 56 78"
+            />
           </Field>
         </div>
       </div>
@@ -557,9 +594,12 @@ export default function OrderForm() {
                   ? "Ce nom de famille sera mentionné lors du sacrifice"
                   : "Ce prénom sera mentionné lors du sacrifice"
               }
+              htmlFor={`form-niyyah-${idx}`}
             >
               <input
                 {...register(`sacrifices.${idx}.niyyah`)}
+                id={`form-niyyah-${idx}`}
+                autoComplete="off"
                 className={inputClass}
                 placeholder={
                   blockIntention === "famille"
@@ -605,16 +645,19 @@ export default function OrderForm() {
             exit={{ opacity: 0, height: 0 }}
             className="space-y-4 mb-4"
           >
-            <Field label="Nom du bénéficiaire" error={errors.recipient_name?.message}>
+            <Field label="Nom du bénéficiaire" error={errors.recipient_name?.message} htmlFor="form-recipient-name">
               <input
                 {...register("recipient_name")}
+                id="form-recipient-name"
+                autoComplete="name"
                 className={inputClass}
                 placeholder="Prénom et nom du bénéficiaire"
               />
             </Field>
-            <Field label="Message personnalisé" optional error={errors.recipient_message?.message} hint="Apparaîtra sur la confirmation envoyée au bénéficiaire (max. 500 caractères)">
+            <Field label="Message personnalisé" optional error={errors.recipient_message?.message} hint="Apparaîtra sur la confirmation envoyée au bénéficiaire (max. 500 caractères)" htmlFor="form-recipient-message">
               <textarea
                 {...register("recipient_message")}
+                id="form-recipient-message"
                 className={`${inputClass} resize-none`}
                 rows={2}
                 placeholder="Un petit message pour accompagner le cadeau..."
@@ -629,10 +672,13 @@ export default function OrderForm() {
               Envoyer la confirmation et la vidéo au bénéficiaire par email
             </label>
             {notifyRecipient && (
-              <Field label="Email du bénéficiaire" error={errors.recipient_email?.message}>
+              <Field label="Email du bénéficiaire" error={errors.recipient_email?.message} htmlFor="form-recipient-email">
                 <input
                   {...register("recipient_email")}
+                  id="form-recipient-email"
                   type="email"
+                  autoComplete="email"
+                  inputMode="email"
                   className={inputClass}
                   placeholder="email@du.beneficiaire"
                 />
@@ -652,6 +698,7 @@ export default function OrderForm() {
           label="Vous avez un code parrain ?"
           error={errors.referred_by_code?.message}
           hint="6 caractères — vous bénéficiez de −15€"
+          htmlFor="form-referral-code"
         >
           <div className="relative">
             <input
@@ -660,6 +707,7 @@ export default function OrderForm() {
                   e.target.value = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 6);
                 },
               })}
+              id="form-referral-code"
               className={cn(
                 inputClass,
                 "uppercase tracking-widest font-mono pr-12",

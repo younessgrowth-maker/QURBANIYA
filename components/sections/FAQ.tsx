@@ -62,13 +62,15 @@ export default function FAQ() {
         subtitle="Tout ce que vous devez savoir avant de commander."
       />
       <div className="max-w-3xl mx-auto space-y-3">
+        {/* BUG FIX 26/05 : on supprime l'animation `whileInView` qui causait
+            un bug critique mobile — Framer Motion ne déclenchait l'animation
+            que pour le 1er item, laissant les 9 suivants à opacity:0 (stuck
+            initial state). La page FAQ apparaissait quasi vide sur mobile
+            avec seulement 1 question visible. L'animation cosmétique ne vaut
+            pas le risque, on rend les items directement visibles. */}
         {faqs.map((faq, i) => (
-          <motion.div
+          <div
             key={i}
-            initial={{ opacity: 0, y: 12 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ delay: i * 0.08, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
             className={cn(
               "bg-white rounded-xl overflow-hidden transition-all duration-300",
               "shadow-[0_1px_8px_rgba(44,36,24,0.04)]",
@@ -99,7 +101,7 @@ export default function FAQ() {
                 </motion.div>
               )}
             </AnimatePresence>
-          </motion.div>
+          </div>
         ))}
       </div>
 
