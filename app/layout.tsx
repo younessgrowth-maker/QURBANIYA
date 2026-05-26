@@ -94,13 +94,21 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // Lit la locale détectée par le middleware (header x-locale).
+  // Avant ce fix : `lang="fr"` en dur sur toutes les pages, y compris /en
+  // /ar /es /tr → Google indexait dans la mauvaise langue, screen readers
+  // lisaient l'arabe en voix française, RTL non appliqué pour AR.
+  const { headers } = await import("next/headers");
+  const h = await headers();
+  const lang = h.get("x-locale") || "fr";
+  const dir = (h.get("x-locale-dir") as "ltr" | "rtl") || "ltr";
   return (
-    <html lang="fr" className={`${inter.variable} ${playfair.variable}`}>
+    <html lang={lang} dir={dir} className={`${inter.variable} ${playfair.variable}`}>
       <head>
         {/* Preconnect to critical origins */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />

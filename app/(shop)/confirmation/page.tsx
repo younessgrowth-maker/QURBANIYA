@@ -194,8 +194,8 @@ function StripeConfirmationView({
               <p className="text-red-400 text-sm">
                 Nous n&apos;avons pas retrouvé cette commande. Si votre paiement a été débité,
                 contactez-nous à{" "}
-                <a href="mailto:contact@qurbaniya.fr" className="text-gold underline">
-                  contact@qurbaniya.fr
+                <a href="mailto:support@qurbaniya.fr" className="text-gold underline">
+                  support@qurbaniya.fr
                 </a>
                 .
               </p>
@@ -342,8 +342,8 @@ function MissingSessionView() {
           <p className="text-text-muted mb-8">
             Cette page de confirmation n&apos;a pas de référence de commande. Si votre paiement a
             été débité, contactez-nous à{" "}
-            <a href="mailto:contact@qurbaniya.fr" className="text-gold underline">
-              contact@qurbaniya.fr
+            <a href="mailto:support@qurbaniya.fr" className="text-gold underline">
+              support@qurbaniya.fr
             </a>
             .
           </p>
