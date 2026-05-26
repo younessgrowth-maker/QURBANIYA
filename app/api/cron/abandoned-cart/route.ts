@@ -5,14 +5,22 @@ import { sendAbandonedCartReminder } from "@/lib/resend";
 import type { Order } from "@/types";
 
 // Cron Vercel — relance les paniers Stripe abandonnés.
-// - Cherche les orders payment_status='pending' créés entre 1h et 23h
-//   (avant 1h : laisse au client le temps de payer ; après 23h : Stripe
-//   session expirée, mieux vaut re-créer un parcours).
+// - Cherche les orders payment_status='pending' créés entre 1h et 24h
+//   (avant 1h : laisse au client le temps de payer ; au-delà de 24h la
+//   session Stripe est expirée et `session.status !== "open"` filtre).
 // - Envoie un seul email de relance par commande (reminder_sent_at).
 // - Récupère l'URL Stripe Checkout encore valide pour repasser direct au paiement.
 //
 // Sécurisé par le header Authorization: Bearer $CRON_SECRET (Vercel Cron
 // le définit automatiquement à partir de la variable d'env CRON_SECRET).
+//
+// FIX 26/05 : la fenêtre était [now-23h, now-1h] et l'exclusion "déjà payé"
+// ne couvrait pas les `refunded`. Conséquences :
+//   1. Les commandes créées entre 23h et 24h passaient à travers (Stripe
+//      session encore valide mais cron les ratait).
+//   2. Un client remboursé recevait un email de relance avec un lien Stripe
+//      actif → re-paiement involontaire possible. On filtre maintenant
+//      `paid` OU `refunded` dans le check de session payée existante.
 
 export const dynamic = "force-dynamic";
 
@@ -26,7 +34,7 @@ export async function GET(req: NextRequest) {
   const supabase = createServiceRoleClient();
   const now = new Date();
   const oneHourAgo = new Date(now.getTime() - 60 * 60 * 1000).toISOString();
-  const twentyThreeHoursAgo = new Date(now.getTime() - 23 * 60 * 60 * 1000).toISOString();
+  const twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString();
 
   const { data: candidates, error } = await supabase
     .from("orders")
@@ -35,7 +43,7 @@ export async function GET(req: NextRequest) {
     .eq("payment_method", "stripe")
     .is("reminder_sent_at", null)
     .lte("created_at", oneHourAgo)
-    .gte("created_at", twentyThreeHoursAgo);
+    .gte("created_at", twentyFourHoursAgo);
 
   if (error) {
     console.error("[cron/abandoned-cart] DB query failed:", error);
@@ -55,17 +63,21 @@ export async function GET(req: NextRequest) {
       continue;
     }
     try {
-      // ─── Skip si ce client a DÉJÀ une commande payée ───
+      // ─── Skip si ce client a DÉJÀ une commande payée OU remboursée ───
       // Cas typique : le client crée 3 commandes pending (clic sans payer),
       // puis finit par payer via une 4ème commande. Sans cette vérif, le
       // cron envoie 3 emails "vous avez abandonné" alors qu'il a déjà
       // payé. On marque la pending obsolète comme failed pour ne plus la
       // repasser au cron suivant + assainir les KPIs admin.
+      //
+      // On inclut `refunded` car un client remboursé qui recevrait un
+      // email de relance avec lien Stripe encore "open" pourrait re-payer
+      // par accident → litige garanti.
       const { data: alreadyPaid } = await supabase
         .from("orders")
         .select("id")
         .ilike("email", order.email)
-        .eq("payment_status", "paid")
+        .in("payment_status", ["paid", "refunded"])
         .limit(1)
         .maybeSingle();
 

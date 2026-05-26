@@ -6,6 +6,7 @@ import SocialProofToast from "@/components/ui/SocialProofToast";
 import WhatsAppButton from "@/components/ui/WhatsAppButton";
 import ExitIntentPopup from "@/components/ui/ExitIntentPopup";
 import MobileStickyCTA from "@/components/ui/MobileStickyCTA";
+import { InventoryProvider } from "@/components/providers/InventoryProvider";
 import { createServiceRoleClient } from "@/lib/supabase/server";
 import { CURRENT_YEAR } from "@/lib/constants";
 import { fetchRecentActivities } from "@/lib/recent-activity";
@@ -40,7 +41,7 @@ export default async function MarketingLayout({
     fetchRecentActivities(8),
   ]);
   return (
-    <>
+    <InventoryProvider remaining={inventory.remaining} total={inventory.total}>
       <StickyTopBar inventory={inventory} />
       <Header />
       <main>{children}</main>
@@ -50,6 +51,6 @@ export default async function MarketingLayout({
       <WhatsAppButton />
       <ExitIntentPopup />
       <MobileStickyCTA />
-    </>
+    </InventoryProvider>
   );
 }

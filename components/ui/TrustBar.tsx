@@ -16,7 +16,7 @@ const items: TrustItem[] = [
   { icon: Check, text: "Conforme à la Sunnah" },
   { icon: Phone, text: "Support WhatsApp réactif" },
   { icon: RefreshCw, text: "Remboursement si empêchement" },
-  { icon: GraduationCap, text: "Supervisé par un imam diplômé" },
+  { icon: GraduationCap, text: "Supervisé par un cheikh diplômé" },
 ];
 
 interface TrustBarProps {

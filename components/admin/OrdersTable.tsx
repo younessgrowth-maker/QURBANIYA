@@ -478,7 +478,11 @@ export default function OrdersTable({ orders }: { orders: Order[] }) {
       if (status !== "all" && o.payment_status !== status) return false;
       if (method !== "all" && o.payment_method !== method) return false;
       if (q) {
-        const hay = `${o.prenom} ${o.nom} ${o.email} ${o.telephone}`.toLowerCase();
+        // On indexe aussi `id` et `niyyah` pour pouvoir retrouver une commande
+        // par son ID Supabase ou son nom de niyyah (cas SAV : un client appelle
+        // en disant "ma commande au nom de XXX" — c'est plus rapide que de
+        // chercher dans tous les emails).
+        const hay = `${o.prenom} ${o.nom} ${o.email} ${o.telephone} ${o.id} ${o.niyyah ?? ""}`.toLowerCase();
         if (!hay.includes(q)) return false;
       }
       return true;

@@ -7,6 +7,7 @@ import Link from "next/link";
 import Button from "@/components/ui/Button";
 import SectionTitle from "@/components/ui/SectionTitle";
 import { getUrgencyMessage } from "@/lib/constants";
+import { useInventory } from "@/components/providers/InventoryProvider";
 
 const inclusions = [
   "Mouton sélectionné conforme aux critères islamiques",
@@ -18,6 +19,7 @@ const inclusions = [
 
 export default function Offer() {
   const urgency = getUrgencyMessage();
+  const { isSoldOut } = useInventory();
   return (
     <section className="bg-bg-secondary section-padding" id="offre">
       <div className="max-w-5xl mx-auto">
@@ -83,10 +85,10 @@ export default function Offer() {
                 <StockGauge variant="compact" />
               </div>
 
-              {/* CTA */}
+              {/* CTA — bascule en liste d'attente quand sold-out */}
               <Link href="/commander" className="block">
                 <Button size="lg" variant="primary" className="w-full text-base glow-pulse">
-                  RÉSERVER MON SACRIFICE MAINTENANT
+                  {isSoldOut ? "S'INSCRIRE À LA LISTE D'ATTENTE 2027" : "RÉSERVER MON SACRIFICE MAINTENANT"}
                 </Button>
               </Link>
 

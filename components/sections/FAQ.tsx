@@ -31,15 +31,15 @@ const faqs = [
   },
   {
     q: "Puis-je annuler ma commande ?",
-    a: "Vous pouvez annuler jusqu'à 7 jours avant la date du sacrifice pour un remboursement complet. Contactez-nous par email ou WhatsApp.",
+    a: "Oui, tant que le sacrifice n'a pas encore été effectué. Contactez-nous au plus vite par email à support@qurbaniya.fr ou WhatsApp et nous procédons au remboursement intégral. Une fois le mouton sacrifié le jour de l'Aïd, l'annulation n'est plus possible.",
   },
   {
     q: "Et si je change d'avis ?",
-    a: "Pas de souci. Vous pouvez modifier ou annuler votre commande jusqu'à 7 jours avant l'Aïd pour un remboursement intégral. Après cette date, contactez-nous pour trouver une solution.",
+    a: "Pas de souci. Tant que le sacrifice n'a pas eu lieu, contactez-nous à support@qurbaniya.fr et nous trouvons une solution (modification d'intention/de niyyah, remboursement, report sur 2027).",
   },
   {
     q: "Comment être sûr que mon sacrifice est bien fait ?",
-    a: "Le sacrifice est effectué par un imam diplômé en sciences islamiques, selon les règles strictes de la Sunnah. Vous recevez une vidéo nominative montrant l'intégralité du processus.",
+    a: "Le sacrifice est effectué par un cheikh diplômé en sciences islamiques, selon les règles strictes de la Sunnah. Vous recevez une vidéo nominative montrant l'intégralité du processus.",
   },
   {
     q: "Quand vais-je recevoir ma vidéo ?",

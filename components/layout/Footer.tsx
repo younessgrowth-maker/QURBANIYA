@@ -13,7 +13,7 @@ const LINK_GROUPS = [
       { label: "Commander mon sacrifice", href: "/commander" },
       { label: "FAQ", href: "/faq" },
       { label: "Blog", href: "/blog" },
-      { label: "Contact", href: "mailto:contact@qurbaniya.fr" },
+      { label: "Contact", href: "mailto:support@qurbaniya.fr" },
       // Pages légales temporairement désactivées (en attente RCS/SIRET).
       // À réactiver une fois les infos juridiques complétées.
       // { label: "Mentions légales", href: "/mentions-legales" },
@@ -119,8 +119,8 @@ export default function Footer() {
             <ul className="space-y-3 text-sm text-gray-400">
               <li className="flex items-center gap-2">
                 <Mail size={14} className="text-gold flex-shrink-0" />
-                <a href="mailto:contact@qurbaniya.fr" className="hover:text-gold transition-colors">
-                  contact@qurbaniya.fr
+                <a href="mailto:support@qurbaniya.fr" className="hover:text-gold transition-colors">
+                  support@qurbaniya.fr
                 </a>
               </li>
               <li className="flex items-center gap-2">
@@ -190,8 +190,8 @@ export default function Footer() {
           <FooterAccordion title="Contact">
             <ul className="space-y-3 text-sm text-gray-400 pl-1">
               <li>
-                <a href="mailto:contact@qurbaniya.fr" className="hover:text-gold transition-colors">
-                  contact@qurbaniya.fr
+                <a href="mailto:support@qurbaniya.fr" className="hover:text-gold transition-colors">
+                  support@qurbaniya.fr
                 </a>
               </li>
               <li>

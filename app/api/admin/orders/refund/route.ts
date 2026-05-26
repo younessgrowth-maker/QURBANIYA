@@ -116,22 +116,29 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Libérer le slot d'inventaire (decrement reserved_slots si > 0).
+    // Libérer les slots d'inventaire (decrement reserved_slots).
+    // IMPORTANT : il faut libérer autant de slots que la quantity de la
+    // commande (commandes multi-mouton). Avant le fix on libérait toujours 1,
+    // ce qui créait des slots fantômes pour les commandes qty > 1.
     // Pas critique si ça rate (les slots ne sont pas une vérité absolue,
     // juste un compteur d'affichage), donc on log mais on ne casse pas
     // la réponse au client.
+    const qtyToRelease = typed.quantity ?? 1;
     const { data: inv } = await supabase
       .from("inventory")
       .select("reserved_slots")
       .eq("year", CURRENT_YEAR)
       .single();
     if (inv && inv.reserved_slots > 0) {
+      const nextReserved = Math.max(0, inv.reserved_slots - qtyToRelease);
       const { error: invErr } = await supabase
         .from("inventory")
-        .update({ reserved_slots: inv.reserved_slots - 1 })
+        .update({ reserved_slots: nextReserved })
         .eq("year", CURRENT_YEAR);
       if (invErr) {
         console.error("Inventory release failed:", invErr.message);
+      } else {
+        console.log(`Inventory released: -${qtyToRelease} slot(s) for refund ${typed.id}`);
       }
     }
 
