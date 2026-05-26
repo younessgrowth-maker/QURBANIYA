@@ -7,6 +7,7 @@ import WhatsAppButton from "@/components/ui/WhatsAppButton";
 import ExitIntentPopup from "@/components/ui/ExitIntentPopup";
 import MobileStickyCTA from "@/components/ui/MobileStickyCTA";
 import { InventoryProvider } from "@/components/providers/InventoryProvider";
+import FramerMotionFallback from "@/components/providers/FramerMotionFallback";
 import { createServiceRoleClient } from "@/lib/supabase/server";
 import { CURRENT_YEAR } from "@/lib/constants";
 import { fetchRecentActivities } from "@/lib/recent-activity";
@@ -51,6 +52,7 @@ export default async function MarketingLayout({
       <WhatsAppButton />
       <ExitIntentPopup />
       <MobileStickyCTA />
+      <FramerMotionFallback />
     </InventoryProvider>
   );
 }
