@@ -125,10 +125,12 @@ export default function StickyTopBar({ inventory }: Props) {
                     className="text-amber-200 flex-shrink-0"
                   />
                   <span className="text-xs md:text-sm font-bold leading-tight truncate">
-                    <span className="hidden sm:inline">
-                      Stock quasi épuisé
-                    </span>
-                    <span className="sm:hidden">Stock épuisé</span>
+                    {/* Avant le fix : mobile affichait "Stock épuisé" tout court
+                        (raccourci à tort) → message FAUX et contradictoire avec
+                        le bouton "Réserver" juste à côté. On garde maintenant
+                        "Stock quasi épuisé" sur toutes les tailles ; la classe
+                        `truncate` du parent gère un éventuel overflow. */}
+                    Stock quasi épuisé
                     <span className="opacity-80 font-normal hidden md:inline">
                       {" "}
                       · Bientôt complet
