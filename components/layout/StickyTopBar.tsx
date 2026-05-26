@@ -66,11 +66,17 @@ export default function StickyTopBar({ inventory }: Props) {
   // On affiche un message qualitatif + une barre toujours visuellement
   // "quasi pleine" pour signaler la rareté sans donner d'info exploitable.
   void reserved;
+  // Sold-out réel : remaining = 0 OU presque (les pending Stripe peuvent
+  // créer un drift de quelques unités entre l'API inventory et la réalité
+  // — quand 99%+ du stock est consommé, on considère sold-out pour
+  // cohérence avec le Hero qui bascule en "Liste d'attente 2027").
+  const isSoldOut = remaining <= 5;
   const stockCritical = remaining <= 50;
   const stockLow = remaining <= 100;
   // Barre toujours haute (92% min) pour transmettre l'urgence visuelle
-  // indépendamment du chiffre exact. 95% si critical, 92% sinon.
-  const displayedFillPct = stockCritical ? 96 : 92;
+  // indépendamment du chiffre exact. 100% si sold-out, 96% si critical,
+  // 92% sinon.
+  const displayedFillPct = isSoldOut ? 100 : stockCritical ? 96 : 92;
 
   // Format countdown
   const countdownDisplay =
@@ -125,16 +131,23 @@ export default function StickyTopBar({ inventory }: Props) {
                     className="text-amber-200 flex-shrink-0"
                   />
                   <span className="text-xs md:text-sm font-bold leading-tight truncate">
-                    {/* Avant le fix : mobile affichait "Stock épuisé" tout court
-                        (raccourci à tort) → message FAUX et contradictoire avec
-                        le bouton "Réserver" juste à côté. On garde maintenant
-                        "Stock quasi épuisé" sur toutes les tailles ; la classe
-                        `truncate` du parent gère un éventuel overflow. */}
-                    Stock quasi épuisé
-                    <span className="opacity-80 font-normal hidden md:inline">
-                      {" "}
-                      · Bientôt complet
-                    </span>
+                    {isSoldOut ? (
+                      <>
+                        Stock épuisé
+                        <span className="opacity-80 font-normal hidden md:inline">
+                          {" "}
+                          · Liste d&apos;attente 2027
+                        </span>
+                      </>
+                    ) : (
+                      <>
+                        Stock quasi épuisé
+                        <span className="opacity-80 font-normal hidden md:inline">
+                          {" "}
+                          · Bientôt complet
+                        </span>
+                      </>
+                    )}
                   </span>
                 </div>
                 {/* Barre d'urgence visuelle (pas une vraie jauge de stock) */}
@@ -159,11 +172,13 @@ export default function StickyTopBar({ inventory }: Props) {
             </div>
 
             {/* ── CTA ──────────────────────────────────────────────── */}
+            {/* Quand sold-out, le CTA bascule vers la liste d'attente 2027
+                pour rester cohérent avec le Hero et le SoldOutPanel. */}
             <Link
               href="/commander"
               className="flex-shrink-0 bg-white text-urgency font-bold text-xs md:text-sm px-3 md:px-4 py-1.5 md:py-2 rounded-full hover:bg-amber-50 hover:shadow-md transition-all whitespace-nowrap"
             >
-              Réserver
+              {isSoldOut ? "Liste d'attente" : "Réserver"}
               <span className="ml-1" aria-hidden>
                 →
               </span>
