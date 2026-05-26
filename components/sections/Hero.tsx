@@ -48,7 +48,15 @@ export default function Hero({ aidDate = "Mai 2026" }: HeroProps) {
         />
 
         <div className="relative z-10 max-w-7xl mx-auto px-5 py-20 md:py-32 lg:py-40 w-full">
-          <motion.div variants={stagger} initial="hidden" animate="visible" className="max-w-2xl">
+          {/* BUG FIX 26/05 — Hero invisible J-1 :
+              le `initial="hidden"` + `staggerChildren: 0.12` laissait parfois
+              les enfants stuck à opacity:0 (vu via Chrome MCP + report user
+              "Stock épuisé" screenshot avec Hero quasi-blanc). Le risque
+              d'un Hero invisible aux visiteurs J-1 ne vaut pas le bénéfice
+              cosmétique de l'animation. On démarre directement à "visible".
+              Les enfants `motion.X` restent en motion pour permettre une
+              future ré-activation simple via `initial="hidden"`. */}
+          <motion.div variants={stagger} initial="visible" animate="visible" className="max-w-2xl">
 
             <motion.div variants={fadeUp}>
               <span
