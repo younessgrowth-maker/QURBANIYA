@@ -11,8 +11,9 @@ import Footer from "@/components/layout/Footer";
 import { reviewSchema, type ReviewFormValues } from "@/lib/validations";
 import { cn } from "@/lib/utils";
 
+// text-base (16px) — anti zoom auto iOS Safari sur tap input.
 const inputClass =
-  "w-full bg-bg-tertiary border border-gray-200 text-text-primary rounded-lg px-4 py-3.5 text-[15px] placeholder:text-text-muted-light/60 focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold/50 transition-all duration-250";
+  "w-full bg-bg-tertiary border border-gray-200 text-text-primary rounded-lg px-4 py-3.5 text-base placeholder:text-text-muted-light/60 focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold/50 transition-all duration-250";
 
 function StarPicker({
   value,
