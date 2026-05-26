@@ -1,9 +1,8 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import { motion, useInView } from "framer-motion";
+import { useInView } from "framer-motion";
 import { useRef, useEffect, useState } from "react";
-import { EASE_OUT_EXPO, DURATION } from "@/lib/animations";
 
 interface SectionTitleProps {
   title: string;
@@ -46,13 +45,19 @@ export default function SectionTitle({
     );
   };
 
+  // BUG FIX 26/05 — Sections home invisibles :
+  // L'animation `initial={{opacity:0}} whileInView` causait des stuck
+  // opacity:0 sur de nombreuses sections de la home (ProblemSolution,
+  // HowItWorks, ImpactCalculator, Sheikh, ComparisonTable, WhyActNow).
+  // Comme SectionTitle est utilisé par TOUTES les sections, le bug
+  // touchait au moins 11 éléments par section. Sur scroll lent, sur
+  // mobile bas-de-gamme ou avec scroll programmatique, IntersectionObserver
+  // ne déclenchait pas l'animation et le titre + le sous-titre restaient
+  // invisibles. Fix : passer directement à l'état final (pas d'animation
+  // d'entrée). La sous-animation `highlight-accent` du span gold reste.
   return (
-    <motion.div
+    <div
       ref={ref}
-      initial={{ opacity: 0, x: -20 }}
-      whileInView={{ opacity: 1, x: 0 }}
-      viewport={{ once: true, margin: "-40px" }}
-      transition={{ duration: DURATION.slow, ease: EASE_OUT_EXPO }}
       className={cn(
         align === "center" ? "text-center" : "text-left",
         "mb-14",
@@ -70,16 +75,10 @@ export default function SectionTitle({
         {renderTitle()}
       </h2>
       {subtitle && (
-        <motion.p
-          initial={{ opacity: 0, y: 10 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: DURATION.medium, ease: EASE_OUT_EXPO, delay: 0.15 }}
-          className="mt-4 text-text-muted text-base md:text-lg max-w-2xl leading-relaxed font-light mx-auto"
-        >
+        <p className="mt-4 text-text-muted text-base md:text-lg max-w-2xl leading-relaxed font-light mx-auto">
           {subtitle}
-        </motion.p>
+        </p>
       )}
-    </motion.div>
+    </div>
   );
 }
