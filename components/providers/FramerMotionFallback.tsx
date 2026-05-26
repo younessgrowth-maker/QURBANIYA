@@ -21,42 +21,50 @@ import { useEffect } from "react";
 export default function FramerMotionFallback() {
   useEffect(() => {
     // ─── Bug 1 : Framer Motion stuck ───────────────────────────────
-    // Mise à jour de l'algo après audit Chrome MCP plus poussé :
-    // La cause racine n'est PAS un simple `opacity: 0` inline figé. C'est
-    // une `CSSTransition` (créée par framer-motion via transition CSS)
-    // qui reste à `playState: running, currentTime: 0` indéfiniment —
-    // probablement un timing/race condition de l'API Animation Web.
-    // Conséquence : `getComputedStyle.opacity = 0` même si on force
-    // `style.opacity = 1 !important` (l'animation override la valeur).
+    // Cause racine : `CSSTransition` (créée par framer-motion via transition
+    // CSS) qui reste à `playState: running, currentTime: 0` indéfiniment.
+    // `getComputedStyle.opacity = 0` même si on force `style.opacity = 1
+    // !important` (l'animation override). Fix : appeler `.finish()` sur
+    // les animations stuck.
     //
-    // Fix robuste : on appelle `.finish()` sur toutes les animations
-    // stuck (currentTime 0 mais running). Ça avance la transition à
-    // son état final → opacity:1 effective.
-    const FALLBACK_DELAY_MS = 3000;
-    const id = setTimeout(() => {
+    // Stratégie : scan multi-passes (1.5s, 3s, 6s) car les sections en
+    // dessous du fold peuvent passer à l'état stuck quand l'IntersectionObserver
+    // se déclenche au scroll (donc APRÈS le 1er scan). Plus un scan déclenché
+    // par scroll (throttlé), pour couvrir les sections révélées tardivement.
+    function rescue() {
       const all = document.querySelectorAll<HTMLElement>("body *");
       let fixed = 0;
       all.forEach((el) => {
         const op = parseFloat(getComputedStyle(el).opacity);
-        if (op >= 0.95) return; // déjà visible, on saute
-        if ((el.textContent || "").trim().length < 5) return; // élément non textuel, on s'en fout
-
-        // Force-fin de toutes les animations CSS / WAAPI en cours
+        if (op >= 0.95) return;
+        if ((el.textContent || "").trim().length < 5) return;
         try {
           el.getAnimations().forEach((a) => {
             try { a.finish(); } catch { /* déjà finie */ }
           });
         } catch { /* getAnimations non supporté */ }
-
-        // Force aussi opacity:1 inline en filet de sécurité supplémentaire
         el.style.opacity = "1";
         el.style.transform = "none";
         fixed++;
       });
       if (fixed > 0 && process.env.NODE_ENV !== "production") {
-        console.warn(`[FramerMotionFallback] fixed ${fixed} stuck element(s)`);
+        console.warn(`[FramerMotionFallback] rescued ${fixed} stuck element(s)`);
       }
-    }, FALLBACK_DELAY_MS);
+    }
+
+    const passes = [setTimeout(rescue, 1500), setTimeout(rescue, 3000), setTimeout(rescue, 6000)];
+
+    // Scroll-triggered scan (throttlé à 500ms) — couvre les sections
+    // qui deviennent stuck quand IntersectionObserver les active après scroll.
+    let scrollTimer: number | undefined;
+    const onScroll = () => {
+      if (scrollTimer) return;
+      scrollTimer = window.setTimeout(() => {
+        scrollTimer = undefined;
+        rescue();
+      }, 500);
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
 
     // ─── Bug 2 : ChunkLoadError → full reload ───────────────────────
     // On évite les boucles de reload via sessionStorage : si on a déjà
@@ -78,7 +86,9 @@ export default function FramerMotionFallback() {
     window.addEventListener("unhandledrejection", onChunkError);
 
     return () => {
-      clearTimeout(id);
+      passes.forEach((p) => clearTimeout(p));
+      if (scrollTimer) clearTimeout(scrollTimer);
+      window.removeEventListener("scroll", onScroll);
       window.removeEventListener("error", onChunkError);
       window.removeEventListener("unhandledrejection", onChunkError);
     };
