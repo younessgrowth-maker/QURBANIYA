@@ -21,17 +21,37 @@ import { useEffect } from "react";
 export default function FramerMotionFallback() {
   useEffect(() => {
     // ─── Bug 1 : Framer Motion stuck ───────────────────────────────
+    // Mise à jour de l'algo après audit Chrome MCP plus poussé :
+    // La cause racine n'est PAS un simple `opacity: 0` inline figé. C'est
+    // une `CSSTransition` (créée par framer-motion via transition CSS)
+    // qui reste à `playState: running, currentTime: 0` indéfiniment —
+    // probablement un timing/race condition de l'API Animation Web.
+    // Conséquence : `getComputedStyle.opacity = 0` même si on force
+    // `style.opacity = 1 !important` (l'animation override la valeur).
+    //
+    // Fix robuste : on appelle `.finish()` sur toutes les animations
+    // stuck (currentTime 0 mais running). Ça avance la transition à
+    // son état final → opacity:1 effective.
     const FALLBACK_DELAY_MS = 3000;
     const id = setTimeout(() => {
-      const stuck = document.querySelectorAll<HTMLElement>('[style*="opacity"]');
+      const all = document.querySelectorAll<HTMLElement>("body *");
       let fixed = 0;
-      stuck.forEach((el) => {
+      all.forEach((el) => {
         const op = parseFloat(getComputedStyle(el).opacity);
-        if (op < 0.05) {
-          el.style.opacity = "1";
-          el.style.transform = "none";
-          fixed++;
-        }
+        if (op >= 0.95) return; // déjà visible, on saute
+        if ((el.textContent || "").trim().length < 5) return; // élément non textuel, on s'en fout
+
+        // Force-fin de toutes les animations CSS / WAAPI en cours
+        try {
+          el.getAnimations().forEach((a) => {
+            try { a.finish(); } catch { /* déjà finie */ }
+          });
+        } catch { /* getAnimations non supporté */ }
+
+        // Force aussi opacity:1 inline en filet de sécurité supplémentaire
+        el.style.opacity = "1";
+        el.style.transform = "none";
+        fixed++;
       });
       if (fixed > 0 && process.env.NODE_ENV !== "production") {
         console.warn(`[FramerMotionFallback] fixed ${fixed} stuck element(s)`);
