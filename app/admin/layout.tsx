@@ -46,6 +46,9 @@ export default async function AdminLayout({ children }: { children: React.ReactN
               <Link href="/admin/reviews" className="text-text-muted hover:text-text-primary transition-colors">
                 Avis
               </Link>
+              <Link href="/admin/waitlist" className="text-text-muted hover:text-text-primary transition-colors">
+                Liste d&apos;attente
+              </Link>
             </nav>
           </div>
           <div className="flex items-center gap-3 text-xs text-text-muted-light">
