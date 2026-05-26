@@ -8,6 +8,7 @@ import { Menu, X, Zap } from "lucide-react";
 import Button from "@/components/ui/Button";
 import LanguageSwitcher from "@/components/layout/LanguageSwitcher";
 import { getUrgencyMessage } from "@/lib/constants";
+import { useInventory } from "@/components/providers/InventoryProvider";
 
 const NAV_LINKS = [
   { label: "Comment ça marche", href: "#comment-ca-marche" },
@@ -35,6 +36,7 @@ export default function Header() {
   const [scrolled, setScrolled] = useState(false);
   const [activeSection, setActiveSection] = useState<string | null>(null);
   const urgency = getUrgencyMessage();
+  const { isSoldOut } = useInventory();
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 50);
@@ -150,10 +152,10 @@ export default function Header() {
             {/* Language switcher */}
             <LanguageSwitcher />
 
-            {/* CTA */}
+            {/* CTA — bascule en liste d'attente quand sold-out */}
             <Link href="/commander" className="hidden sm:block">
               <Button size="sm" variant="primary">
-                COMMANDER — 140€
+                {isSoldOut ? "LISTE D'ATTENTE 2027" : "COMMANDER — 140€"}
               </Button>
             </Link>
 
@@ -229,7 +231,7 @@ export default function Header() {
               >
                 <Link href="/commander" onClick={() => setOpen(false)}>
                   <Button size="lg" variant="primary">
-                    COMMANDER MON SACRIFICE — 140€
+                    {isSoldOut ? "LISTE D'ATTENTE 2027" : "COMMANDER MON SACRIFICE — 140€"}
                   </Button>
                 </Link>
               </motion.div>

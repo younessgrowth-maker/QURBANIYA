@@ -240,7 +240,7 @@ export default async function AdminDashboardPage() {
           className="inline-flex items-center gap-2 rounded-lg bg-primary text-white text-sm font-semibold px-3 py-2 hover:bg-primary/90 transition-colors"
         >
           <Printer size={16} />
-          Télécharger les étiquettes PDF ({paid.length})
+          Télécharger les étiquettes PDF ({paid.reduce((s, o) => s + (o.quantity ?? 1), 0)})
         </a>
       </div>
 

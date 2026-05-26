@@ -77,6 +77,25 @@ export async function GET() {
   const logoUrl = `${getBaseUrl()}/logos/export/qurbaniya-symbol-1024.png`;
   const hijriYear = HIJRI_YEAR_BY_GREGORIAN[CURRENT_YEAR] ?? CURRENT_YEAR;
 
+  // ─── Pré-télécharger le logo en data-URL pour éviter 271 fetch HTTPS ──
+  // Avec ~270 étiquettes, React-PDF re-fetch l'image à chaque page si la
+  // src est une URL externe — coût TLS + latence × N → timeout 60s Vercel
+  // quasi garanti à l'approche de l'Aïd. En base64 inline, le rendu est
+  // ~5× plus rapide et déterministe.
+  let logoSrc: string = logoUrl;
+  try {
+    const logoResp = await fetch(logoUrl, { cache: "force-cache" });
+    if (logoResp.ok) {
+      const logoBuf = Buffer.from(await logoResp.arrayBuffer());
+      const contentType = logoResp.headers.get("content-type") ?? "image/png";
+      logoSrc = `data:${contentType};base64,${logoBuf.toString("base64")}`;
+    } else {
+      console.warn("[labels] logo prefetch returned", logoResp.status, "— fallback URL");
+    }
+  } catch (logoErr) {
+    console.warn("[labels] logo prefetch failed, falling back to URL:", logoErr);
+  }
+
   // Police arabe désactivée — voir commentaire dans LabelsPdf.tsx.
   // Workaround : translittérer les niyyahs arabes en base avant impression.
 
@@ -89,7 +108,7 @@ export async function GET() {
     buffer = await renderToBuffer(
       React.createElement(LabelsPdf, {
         items: labelItems,
-        logoUrl,
+        logoUrl: logoSrc,
         year: CURRENT_YEAR,
         hijriYear,
       }) as React.ReactElement<DocumentProps>

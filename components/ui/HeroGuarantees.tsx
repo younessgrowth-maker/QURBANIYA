@@ -35,7 +35,7 @@ const COLS: Col[] = [
   },
   {
     icon: GraduationCap,
-    title: "Imam diplômé",
+    title: "Cheikh diplômé",
     subtitle: "Cheikh Chamsouddin · Sunnah",
     accent: "emerald",
   },

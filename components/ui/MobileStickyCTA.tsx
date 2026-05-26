@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { AlertTriangle } from "lucide-react";
 import { track } from "@/lib/track";
+import { useInventory } from "@/components/providers/InventoryProvider";
 
 // Sticky bottom CTA mobile-only. Apparaît après 500px de scroll.
 // Masqué sur /commander (déjà sur la page d'achat) et /confirmation.
@@ -16,6 +17,7 @@ import { track } from "@/lib/track";
 export default function MobileStickyCTA() {
   const pathname = usePathname();
   const [visible, setVisible] = useState(false);
+  const { isSoldOut } = useInventory();
 
   useEffect(() => {
     const onScroll = () => {
@@ -47,12 +49,15 @@ export default function MobileStickyCTA() {
               <div className="flex items-center gap-1.5">
                 <AlertTriangle size={12} className="text-urgency flex-shrink-0" />
                 <span className="text-[11px] font-bold text-urgency uppercase tracking-wide leading-none">
-                  Stock quasi épuisé
+                  {isSoldOut ? "Complet pour 2026" : "Stock quasi épuisé"}
                 </span>
               </div>
               <div className="text-[13px] text-text-primary font-semibold leading-tight mt-1">
-                Sacrifice à <span className="text-gold">140€</span> ·{" "}
-                <span className="text-text-muted font-normal">Vidéo garantie</span>
+                {isSoldOut ? (
+                  <>Réservez votre place pour <span className="text-gold">Aïd 2027</span></>
+                ) : (
+                  <>Sacrifice à <span className="text-gold">140€</span> · <span className="text-text-muted font-normal">Vidéo garantie</span></>
+                )}
               </div>
             </div>
             <Link
@@ -62,7 +67,7 @@ export default function MobileStickyCTA() {
               }
               className="flex-shrink-0 bg-urgency text-white font-bold uppercase text-xs px-4 py-3 rounded-full hover:opacity-95 transition-opacity whitespace-nowrap"
             >
-              Réserver →
+              {isSoldOut ? "M'inscrire →" : "Réserver →"}
             </Link>
           </div>
         </motion.div>

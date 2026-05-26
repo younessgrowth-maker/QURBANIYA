@@ -2,9 +2,10 @@
 
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
+import { AID_DATE } from "@/lib/constants";
 
-// Aid al-Adha 2026 — 27 Mai 2026
-const AID_DATE = new Date("2026-05-27T06:00:00+01:00");
+// AID_DATE est désormais importée depuis lib/constants pour rester en sync
+// avec le reste du site (constante source de vérité unique).
 
 interface TimeLeft {
   days: number;

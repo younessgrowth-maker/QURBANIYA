@@ -8,6 +8,7 @@ import Button from "@/components/ui/Button";
 import CountdownTimer from "@/components/ui/CountdownTimer";
 import HeroGuarantees from "@/components/ui/HeroGuarantees";
 import { getUrgencyMessage } from "@/lib/constants";
+import { useInventory } from "@/components/providers/InventoryProvider";
 
 interface HeroProps {
   /** @deprecated — le message d'urgence est maintenant généré automatiquement depuis la date de l'Aïd (getUrgencyMessage) */
@@ -31,6 +32,7 @@ const HERO_IMAGE = "https://images.unsplash.com/photo-1484557985045-edf25e08da73
 
 export default function Hero({ aidDate = "Mai 2026" }: HeroProps) {
   const urgency = getUrgencyMessage();
+  const { isSoldOut } = useInventory();
   return (
     <>
       {/* Fullscreen Hero */}
@@ -110,7 +112,7 @@ export default function Hero({ aidDate = "Mai 2026" }: HeroProps) {
             <motion.div variants={fadeUp} className="flex flex-col sm:flex-row gap-3 mb-5">
               <Link href="/commander">
                 <Button size="lg" variant="secondary" className="w-full sm:w-auto uppercase glow-pulse">
-                  {`RÉSERVER MON SACRIFICE — 140€`}
+                  {isSoldOut ? "LISTE D'ATTENTE 2027" : `RÉSERVER MON SACRIFICE — 140€`}
                 </Button>
               </Link>
               <Link href="#comment-ca-marche">

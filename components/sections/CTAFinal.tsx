@@ -4,8 +4,10 @@ import { motion } from "framer-motion";
 import Link from "next/link";
 import Button from "@/components/ui/Button";
 import { Zap } from "lucide-react";
+import { useInventory } from "@/components/providers/InventoryProvider";
 
 export default function CTAFinal() {
+  const { isSoldOut } = useInventory();
   return (
     <section className="relative overflow-hidden py-12 md:py-16 lg:py-20 px-5">
       <div className="absolute inset-0 bg-gradient-to-br from-primary via-primary-dark to-primary-light animated-gradient-bg" style={{ backgroundSize: "200% 200%" }} />
@@ -56,7 +58,7 @@ export default function CTAFinal() {
         >
           <Link href="/commander">
             <Button size="lg" variant="secondary" className="text-lg px-10 py-5 uppercase glow-pulse">
-              Réserver mon sacrifice — 140€
+              {isSoldOut ? "Liste d'attente Aïd 2027" : "Réserver mon sacrifice — 140€"}
             </Button>
           </Link>
         </motion.div>

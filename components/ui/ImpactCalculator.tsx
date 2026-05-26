@@ -6,19 +6,21 @@ import Link from "next/link";
 import Button from "@/components/ui/Button";
 import SectionTitle from "@/components/ui/SectionTitle";
 
-import { MEALS_PER_SHEEP, FAMILIES_PER_SHEEP } from "@/lib/constants";
+import { MEALS_PER_SHEEP, FAMILIES_PER_SHEEP, PRICE_AMOUNT } from "@/lib/constants";
 
-const PRICE_PER_SHEEP = 140;
+// Prix de référence "France métropole" pour le calcul d'économies. Centralisé
+// ici pour rester localisable (source : moyenne haute boucheries halal Paris
+// banlieue, observée mars 2026).
 const FRANCE_PRICE = 380;
 
-const quantities = [1, 2, 3, 5];
+const quantities = [1, 2, 3, 4, 5];
 
 export default function ImpactCalculator() {
   const [qty, setQty] = useState(1);
 
   const meals = qty * MEALS_PER_SHEEP;
   const families = qty * FAMILIES_PER_SHEEP;
-  const totalPrice = qty * PRICE_PER_SHEEP;
+  const totalPrice = qty * PRICE_AMOUNT;
   const savings = qty * FRANCE_PRICE - totalPrice;
 
   return (

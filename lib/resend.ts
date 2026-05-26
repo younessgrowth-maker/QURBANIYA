@@ -245,6 +245,7 @@ export async function sendOrderConfirmation(order: Order) {
                 <tr>
                   <td style="color:#5C5347;font-size:14px;padding:6px 0;">Niyyah</td>
                   <td style="color:#B8860B;font-size:14px;padding:6px 0;text-align:right;font-weight:bold;font-family:Georgia,serif;font-style:italic;">${order.niyyah}</td>
+                </tr>
               `;
             }
             return sacrificesList
@@ -263,10 +264,6 @@ export async function sendOrderConfirmation(order: Order) {
               )
               .join("");
           })()}
-          <tr style="display:none">
-            <td></td>
-            <td>
-          </tr>
           ${order.is_gift && order.recipient_name ? `<tr>
             <td style="color:#5C5347;font-size:14px;padding:6px 0;">Offert à</td>
             <td style="color:#1A1A18;font-size:14px;padding:6px 0;text-align:right;font-weight:bold;">🎁 ${order.recipient_name}</td>
@@ -336,11 +333,68 @@ export async function sendOrderConfirmation(order: Order) {
     from: FROM,
     to: order.email,
     headers: unsubscribeHeaders(order.email),
-    subject: `✅ Votre sacrifice Aïd 2026 est confirmé — Qurbaniya`,
+    subject: qty > 1
+      ? `✅ Vos ${qty} sacrifices Aïd 2026 sont confirmés — Qurbaniya`
+      : `✅ Votre sacrifice Aïd 2026 est confirmé — Qurbaniya`,
     html,
   });
 
   console.log("Email confirmation sent:", result.data?.id ?? "ok");
+
+  // ─── Notification au destinataire si commande "cadeau" ───────────────
+  // Le formulaire promet au client "votre destinataire sera prévenu" quand
+  // is_gift + notify_recipient + recipient_email sont remplis. Avant ce
+  // fix on ne faisait absolument rien → promesse non tenue. On envoie
+  // maintenant un email léger au destinataire (sans facture, avec un mot
+  // personnel si recipient_message est rempli).
+  if (
+    order.is_gift &&
+    order.notify_recipient &&
+    order.recipient_email &&
+    order.recipient_email !== order.email
+  ) {
+    try {
+      const recipName = order.recipient_name?.trim() || "Salam";
+      const personalMessage = order.recipient_message?.trim() || "";
+      const giftHtml = emailLayout(`
+        <h1 style="color:#1A1A18;font-size:24px;margin:0 0 12px;font-weight:bold;text-align:center;font-family:Georgia,serif;">
+          Un cadeau pour vous, ${recipName}
+        </h1>
+        <p style="margin:0 0 24px;color:#5C5347;font-size:15px;line-height:1.7;text-align:center;">
+          <strong>${order.prenom} ${order.nom}</strong> vous a offert un sacrifice
+          de l'Aïd al-Adha 2026 via Qurbaniya — qu'Allah récompense cette générosité.
+        </p>
+        ${personalMessage ? `
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#FDF6E3;border-left:4px solid #D4A843;border-radius:0 8px 8px 0;margin:0 0 24px;">
+          <tr><td style="padding:16px 20px;">
+            <p style="margin:0 0 6px;color:#8B6508;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;font-weight:bold;">Mot personnel</p>
+            <p style="margin:0;color:#5C5347;font-size:14px;line-height:1.6;font-style:italic;font-family:Georgia,serif;">« ${personalMessage} »</p>
+          </td></tr>
+        </table>` : ""}
+        <p style="margin:0 0 18px;color:#5C5347;font-size:14px;line-height:1.7;">
+          Le sacrifice est programmé pour le <strong>mercredi 27 mai 2026</strong>,
+          jour de l'Aïd. Vous recevrez la vidéo nominative directement sur cet
+          email dans les 48 heures suivantes.
+        </p>
+        <p style="margin:0;color:#5C5347;font-size:13px;text-align:center;line-height:1.6;font-style:italic;font-family:Georgia,serif;">
+          Qu'Allah accepte ce sacrifice de ${order.prenom}.
+        </p>
+      `, order.recipient_email);
+
+      const giftResult = await getResend().emails.send({
+        from: FROM,
+        to: order.recipient_email,
+        headers: unsubscribeHeaders(order.recipient_email),
+        subject: `🎁 ${order.prenom} vous offre un sacrifice Aïd 2026`,
+        html: giftHtml,
+      });
+      console.log("Email gift recipient sent:", giftResult.data?.id ?? "ok");
+    } catch (giftErr) {
+      // On ne casse pas le flux principal si le mail destinataire échoue
+      console.error("Gift recipient email failed:", giftErr);
+    }
+  }
+
   return result;
 }
 
@@ -487,9 +541,44 @@ export async function sendAbandonedCartReminder(order: Order, resumeUrl: string)
     console.log("Skip abandoned cart — unsubscribed:", order.email);
     return null;
   }
-  const intentionLabel =
-    order.intention === "pour_moi" ? "pour vous-même" :
-    order.intention === "famille" ? "pour votre famille" : "en sadaqa";
+
+  // ─── Multi-mouton + discount handling (aligné sur sendOrderConfirmation) ──
+  // Même logique : amount = prix unitaire (140), total = amount × qty,
+  // discount_amount déduit du total. Et si sacrifices[] est rempli, on liste
+  // chaque sacrifice (intention + niyyah) au lieu d'une seule ligne.
+  const qty = order.quantity ?? 1;
+  const discount = order.discount_amount ?? 0;
+  const grossAmount = order.amount * qty;
+  const netAmount = grossAmount - discount;
+  const fmt = (n: number) => `${n.toFixed(2).replace(".", ",")} €`;
+
+  const sacrificesList =
+    Array.isArray(order.sacrifices) && order.sacrifices.length > 0
+      ? order.sacrifices
+      : [{ niyyah: order.niyyah, intention: order.intention }];
+
+  const intentionFr = (i: string) =>
+    i === "pour_moi"
+      ? "Pour vous-même"
+      : i === "famille"
+      ? "Pour votre famille"
+      : "En sadaqa";
+
+  // Phrase d'accroche : adapte au pluriel et liste les niyyahs si multi
+  const introSentence =
+    sacrificesList.length === 1
+      ? (() => {
+          const introIntention =
+            order.intention === "pour_moi"
+              ? "pour vous-même"
+              : order.intention === "famille"
+              ? "pour votre famille"
+              : "en sadaqa";
+          return `Votre commande pour un sacrifice ${introIntention} au nom de
+            <strong style="color:#1A1A18;font-family:Georgia,serif;font-style:italic;">${order.niyyah}</strong>
+            est en attente de paiement.`;
+        })()
+      : `Votre commande pour <strong>${qty} sacrifices</strong> est en attente de paiement.`;
 
   const html = emailLayout(`
     <h1 style="color:#1A1A18;font-size:25px;margin:0 0 12px;font-weight:bold;font-family:Georgia,serif;">
@@ -497,9 +586,8 @@ export async function sendAbandonedCartReminder(order: Order, resumeUrl: string)
     </h1>
 
     <p style="margin:0 0 24px;color:#5C5347;font-size:15px;line-height:1.7;">
-      Votre commande pour un sacrifice ${intentionLabel} au nom de
-      <strong style="color:#1A1A18;font-family:Georgia,serif;font-style:italic;">${order.niyyah}</strong>
-      est en attente de paiement. Aïd 2026 approche (le 27 mai) et les places se remplissent vite.
+      ${introSentence}
+      Aïd 2026 approche (le 27 mai) et les places se remplissent vite.
     </p>
 
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#F7F3ED;border:1px solid #EFE9DF;border-radius:12px;margin:0 0 28px;">
@@ -507,13 +595,43 @@ export async function sendAbandonedCartReminder(order: Order, resumeUrl: string)
         <p style="margin:0 0 12px;color:#8C8279;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;font-weight:bold;">Récap de votre commande</p>
         <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
           <tr>
-            <td style="color:#5C5347;font-size:14px;padding:5px 0;">Sacrifice mouton — Aïd 2026</td>
-            <td style="color:#1A1A18;font-size:14px;padding:5px 0;text-align:right;font-weight:bold;">140,00 €</td>
+            <td style="color:#5C5347;font-size:14px;padding:5px 0;">${qty > 1 ? `${qty} sacrifices mouton` : "Sacrifice mouton"} — Aïd 2026</td>
+            <td style="color:#1A1A18;font-size:14px;padding:5px 0;text-align:right;font-weight:bold;">${qty > 1 ? `${qty} × ${fmt(order.amount)}` : fmt(order.amount)}</td>
+          </tr>
+          ${discount > 0 ? `
+          <tr>
+            <td style="color:#5C5347;font-size:14px;padding:5px 0;">Sous-total</td>
+            <td style="color:#5C5347;font-size:14px;padding:5px 0;text-align:right;text-decoration:line-through;">${fmt(grossAmount)}</td>
           </tr>
           <tr>
-            <td style="color:#5C5347;font-size:14px;padding:5px 0;">Niyyah</td>
-            <td style="color:#B8860B;font-size:14px;padding:5px 0;text-align:right;font-weight:bold;font-family:Georgia,serif;font-style:italic;">${order.niyyah}</td>
+            <td style="color:#5C5347;font-size:14px;padding:5px 0;">Réduction</td>
+            <td style="color:#2D6A4F;font-size:14px;padding:5px 0;text-align:right;font-weight:bold;">−${fmt(discount)}</td>
           </tr>
+          ` : ""}
+          <tr>
+            <td style="color:#5C5347;font-size:14px;padding:5px 0;font-weight:bold;">Total à payer</td>
+            <td style="color:#1B4332;font-size:14px;padding:5px 0;text-align:right;font-weight:bold;">${fmt(netAmount)}</td>
+          </tr>
+          ${sacrificesList.length === 1
+            ? `<tr>
+                <td style="color:#5C5347;font-size:14px;padding:5px 0;">Niyyah</td>
+                <td style="color:#B8860B;font-size:14px;padding:5px 0;text-align:right;font-weight:bold;font-family:Georgia,serif;font-style:italic;">${order.niyyah}</td>
+              </tr>`
+            : sacrificesList
+                .map(
+                  (s, i) => `
+                    <tr>
+                      <td style="color:#5C5347;font-size:14px;padding:5px 0;">${
+                        i === 0 ? "1er" : `${i + 1}e`
+                      } sacrifice</td>
+                      <td style="color:#1A1A18;font-size:14px;padding:5px 0;text-align:right;">
+                        <span style="color:#5C5347;">${intentionFr(s.intention)} · </span>
+                        <span style="color:#B8860B;font-family:Georgia,serif;font-style:italic;font-weight:bold;">${s.niyyah}</span>
+                      </td>
+                    </tr>
+                  `
+                )
+                .join("")}
         </table>
       </td></tr>
     </table>
@@ -801,17 +919,54 @@ export async function sendAidReminder(order: Order) {
     order.intention === "pour_moi" ? "pour vous-même" :
     order.intention === "famille" ? "pour votre famille" : "en sadaqa";
 
+  // ─── Multi-mouton handling (aligné sur sendOrderConfirmation) ──────────
+  // Avant ce fix, sendAidReminder ignorait quantity/sacrifices[] et envoyait
+  // toujours un récap mono-mouton avec une seule niyyah, même pour les
+  // commandes qty>1 — soit potentiellement plusieurs dizaines de clients
+  // recevant un rappel J-X incomplet.
+  const qty = order.quantity ?? 1;
+  const sacrificesList =
+    Array.isArray(order.sacrifices) && order.sacrifices.length > 0
+      ? order.sacrifices
+      : [{ niyyah: order.niyyah, intention: order.intention }];
+  const intentionFr = (i: string) =>
+    i === "pour_moi"
+      ? "Pour vous-même"
+      : i === "famille"
+      ? "Pour votre famille"
+      : "En sadaqa";
+
+  const introSentence =
+    qty === 1
+      ? `Votre sacrifice <strong>${intentionLabel}</strong> au nom de <strong style="color:#1A1A18;font-family:Georgia,serif;font-style:italic;">${order.niyyah}</strong> est confirmé — référence <strong>${orderRef(order)}</strong>.`
+      : `Vos <strong>${qty} sacrifices</strong> sont confirmés — référence <strong>${orderRef(order)}</strong>.`;
+
+  const niyyahsBlock =
+    qty === 1
+      ? `<strong>Niyyah&nbsp;:</strong> <span style="font-family:Georgia,serif;font-style:italic;">${order.niyyah}</span><br>`
+      : sacrificesList
+          .map(
+            (s, i) =>
+              `<strong>${i === 0 ? "1er" : `${i + 1}e`} sacrifice&nbsp;:</strong> <span style="color:#5C5347;">${intentionFr(s.intention)}</span> · <span style="font-family:Georgia,serif;font-style:italic;color:#B8860B;font-weight:bold;">${s.niyyah}</span><br>`
+          )
+          .join("");
+
+  const giftLine =
+    order.is_gift && order.recipient_name
+      ? `<strong>Offert à&nbsp;:</strong> 🎁 ${order.recipient_name}<br>`
+      : "";
+
   const html = emailLayout(`
     <div style="text-align:center;margin:0 0 20px;">
       <span style="font-size:48px;">🐑</span>
     </div>
 
     <h1 style="color:#1A1A18;font-size:26px;margin:0 0 12px;font-weight:bold;text-align:center;font-family:Georgia,serif;">
-      ${order.prenom}, votre sacrifice approche
+      ${order.prenom}, ${qty > 1 ? "vos sacrifices approchent" : "votre sacrifice approche"}
     </h1>
 
     <p style="margin:0 0 24px;color:#5C5347;font-size:15px;line-height:1.7;text-align:center;">
-      L'Aïd al-Adha sera célébré le <strong style="color:#1A1A18;">mercredi 27 mai 2026</strong>, in sha Allah. Votre sacrifice <strong>${intentionLabel}</strong> au nom de <strong style="color:#1A1A18;font-family:Georgia,serif;font-style:italic;">${order.niyyah}</strong> est confirmé — référence <strong>${orderRef(order)}</strong>.
+      L'Aïd al-Adha sera célébré le <strong style="color:#1A1A18;">mercredi 27 mai 2026</strong>, in sha Allah. ${introSentence}
     </p>
 
     <!-- Récap commande -->
@@ -820,7 +975,9 @@ export async function sendAidReminder(order: Order) {
         <p style="margin:0 0 6px;color:#B8860B;font-size:11px;font-weight:bold;text-transform:uppercase;letter-spacing:1.5px;">Récapitulatif</p>
         <p style="margin:0;color:#1A1A18;font-size:14px;line-height:1.8;">
           <strong>Référence&nbsp;:</strong> ${orderRef(order)}<br>
-          <strong>Niyyah&nbsp;:</strong> <span style="font-family:Georgia,serif;font-style:italic;">${order.niyyah}</span><br>
+          ${qty > 1 ? `<strong>Nombre de moutons&nbsp;:</strong> ${qty}<br>` : ""}
+          ${niyyahsBlock}
+          ${giftLine}
           <strong>Date du sacrifice&nbsp;:</strong> mercredi 27 mai 2026
         </p>
       </td></tr>
@@ -846,8 +1003,8 @@ export async function sendAidReminder(order: Order) {
 
     <!-- Étapes restantes -->
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 24px;">
-      ${stepItem("1", "Jour de l'Aïd — 27 mai", "Le cheikh effectue le sacrifice en votre nom, dans le respect total de la Sunnah.")}
-      ${stepItem("2", "Vidéo nominative", "Vous la recevez par WhatsApp dans les 24h qui suivent. Aucune action à faire de votre côté.")}
+      ${stepItem("1", "Jour de l'Aïd — 27 mai", qty > 1 ? `Le cheikh effectue ${qty > 1 ? `vos ${qty} sacrifices` : "votre sacrifice"} en votre nom, dans le respect total de la Sunnah.` : "Le cheikh effectue le sacrifice en votre nom, dans le respect total de la Sunnah.")}
+      ${stepItem("2", qty > 1 ? "Vidéos nominatives" : "Vidéo nominative", qty > 1 ? `Vous recevez vos ${qty} vidéos par WhatsApp dans les 48h qui suivent. Aucune action à faire de votre côté.` : "Vous la recevez par WhatsApp dans les 24h qui suivent. Aucune action à faire de votre côté.")}
     </table>
 
     <p style="margin:24px 0 0;color:#5C5347;font-size:14px;line-height:1.6;text-align:center;">
@@ -858,7 +1015,7 @@ export async function sendAidReminder(order: Order) {
     </p>
 
     <p style="margin:24px 0 0;color:#B8860B;font-size:14px;font-style:italic;text-align:center;font-family:Georgia,serif;">
-      Qu'Allah accepte votre sacrifice.
+      Qu'Allah accepte ${qty > 1 ? "vos sacrifices" : "votre sacrifice"}.
     </p>
   `, order.email);
 
@@ -866,7 +1023,9 @@ export async function sendAidReminder(order: Order) {
     from: FROM,
     to: order.email,
     headers: unsubscribeHeaders(order.email),
-    subject: `🐑 ${order.prenom}, votre sacrifice du 27 mai approche`,
+    subject: qty > 1
+      ? `🐑 ${order.prenom}, vos ${qty} sacrifices du 27 mai approchent`
+      : `🐑 ${order.prenom}, votre sacrifice du 27 mai approche`,
     html,
     replyTo: SUPPORT_EMAIL,
   });
