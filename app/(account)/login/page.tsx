@@ -109,17 +109,20 @@ function LoginContent() {
 
             <form onSubmit={handleLogin} className="space-y-5">
               <div>
-                <label className="block text-sm font-medium text-text-primary mb-1.5">
+                <label htmlFor="login-email" className="block text-sm font-medium text-text-primary mb-1.5">
                   Adresse email
                 </label>
                 <div className="relative">
                   <Mail size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-text-muted-light" />
                   <input
+                    id="login-email"
                     type="email"
+                    autoComplete="email"
+                    inputMode="email"
                     required
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="w-full bg-bg-tertiary border border-gray-200 text-text-primary rounded-lg pl-11 pr-4 py-3.5 text-[15px] placeholder:text-text-muted-light/60 focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold/50 transition-colors"
+                    className="w-full bg-bg-tertiary border border-gray-200 text-text-primary rounded-lg pl-11 pr-4 py-3.5 text-base placeholder:text-text-muted-light/60 focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold/50 transition-colors"
                     placeholder="votre@email.com"
                   />
                 </div>
