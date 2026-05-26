@@ -3,8 +3,26 @@ import { NextResponse, type NextRequest } from "next/server";
 
 const PROTECTED_ROUTES = ["/mes-commandes", "/admin"];
 
+// ─── Détection de la locale depuis l'URL ─────────────────────────────────
+// On déduit la langue de la 1ère section du pathname (/en/..., /ar/..., etc.)
+// pour que le root layout puisse définir un <html lang="xx" dir="..."> correct.
+// Avant ce fix : toutes les pages déclaraient lang="fr" même /en /ar /es /tr
+// → Google indexait dans la mauvaise langue + screen readers lisaient avec
+// la mauvaise voix. Critique SEO/A11Y.
+function detectLocaleFromPath(pathname: string): { lang: string; dir: "ltr" | "rtl" } {
+  const seg = pathname.split("/")[1];
+  switch (seg) {
+    case "en": return { lang: "en", dir: "ltr" };
+    case "ar": return { lang: "ar", dir: "rtl" };
+    case "es": return { lang: "es", dir: "ltr" };
+    case "tr": return { lang: "tr", dir: "ltr" };
+    default:   return { lang: "fr", dir: "ltr" };
+  }
+}
+
 export async function middleware(request: NextRequest) {
   const { pathname, searchParams } = request.nextUrl;
+  const locale = detectLocaleFromPath(pathname);
 
   // If a Supabase magic-link code ends up anywhere other than /auth/callback
   // (e.g. because Supabase Site URL overrode emailRedirectTo), funnel it through
@@ -46,12 +64,18 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  // Only check protected routes
+  // Only check protected routes — pour les routes non-protégées, on ajoute
+  // juste les headers x-locale/x-locale-dir et on laisse passer.
   if (!PROTECTED_ROUTES.some((r) => pathname.startsWith(r))) {
-    return NextResponse.next();
+    const passthrough = NextResponse.next({ request });
+    passthrough.headers.set("x-locale", locale.lang);
+    passthrough.headers.set("x-locale-dir", locale.dir);
+    return passthrough;
   }
 
   let response = NextResponse.next({ request });
+  response.headers.set("x-locale", locale.lang);
+  response.headers.set("x-locale-dir", locale.dir);
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
