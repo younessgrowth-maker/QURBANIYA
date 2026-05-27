@@ -153,27 +153,44 @@ export default function VideosManager({ initialRows }: VideosManagerProps) {
 
   const processFile = useCallback(
     async (file: File) => {
-      if (!workerRef.current) {
-        console.warn("Tesseract worker not ready, skipping", file.name);
-        return;
+      let detectedLabel: string | null = null;
+      let detectionSource = "ocr";
+
+      // 1) Fallback nom de fichier — si l'utilisateur a renommé son fichier
+      // en "N°234.mp4" ou "N°234a.mp4", on lit le N° directement depuis le
+      // nom de fichier (plus fiable que l'OCR Tesseract qui ajoute parfois
+      // des lettres parasites sur les étiquettes floues : "259f" au lieu
+      // de "259", "277l" au lieu de "277", etc.).
+      // Précondition : le label détecté doit matcher un sacrifice existant ;
+      // sinon on tombe sur l'OCR.
+      const fromName = parseLabel(file.name);
+      if (fromName && rows.find((s) => s.row.combinedLabel === fromName)) {
+        detectedLabel = fromName;
+        detectionSource = "filename";
       }
 
-      let detectedLabel: string | null = null;
-      try {
-        // Multi-frame OCR : essaie plusieurs timestamps (0.5s, 2s, 4s, 6s, 8s)
-        // et arrête au premier qui détecte un N°X. Safari fait parfois un
-        // seek imprécis qui tombe sur une frame floue → multi-essai indispensable.
-        for await (const canvas of extractFrames(file)) {
-          if (!workerRef.current) break;
-          const { data: { text } } = await workerRef.current.recognize(canvas);
-          const label = parseLabel(text);
-          if (label !== null) {
-            detectedLabel = label;
-            break;
-          }
+      // 2) Sinon OCR sur les frames vidéo
+      if (detectedLabel === null) {
+        if (!workerRef.current) {
+          console.warn("Tesseract worker not ready, skipping", file.name);
+          return;
         }
-      } catch (err) {
-        console.error("OCR failed for", file.name, err);
+        try {
+          // Multi-frame OCR : essaie plusieurs timestamps (0.5s, 2s, 4s, 6s, 8s)
+          // et arrête au premier qui détecte un N°X. Safari fait parfois un
+          // seek imprécis qui tombe sur une frame floue → multi-essai indispensable.
+          for await (const canvas of extractFrames(file)) {
+            if (!workerRef.current) break;
+            const { data: { text } } = await workerRef.current.recognize(canvas);
+            const label = parseLabel(text);
+            if (label !== null) {
+              detectedLabel = label;
+              break;
+            }
+          }
+        } catch (err) {
+          console.error("OCR failed for", file.name, err);
+        }
       }
 
       if (detectedLabel === null) {
@@ -183,8 +200,13 @@ export default function VideosManager({ initialRows }: VideosManagerProps) {
 
       const match = rows.find((s) => s.row.combinedLabel === detectedLabel);
       if (!match) {
-        console.warn(`N°${detectedLabel} détecté mais aucun sacrifice correspondant`);
+        console.warn(
+          `N°${detectedLabel} détecté (via ${detectionSource}) mais aucun sacrifice correspondant`
+        );
         return;
+      }
+      if (process.env.NODE_ENV !== "production") {
+        console.info(`✓ ${file.name} → N°${detectedLabel} (via ${detectionSource})`);
       }
 
       updateRow(detectedLabel, {
