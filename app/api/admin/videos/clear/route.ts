@@ -9,7 +9,7 @@ import { isAdminEmail } from "@/lib/admin";
 //   - on s'est trompé d'étiquette (OCR a matché un mauvais N°)
 //   - on doit re-tourner la vidéo
 //
-// Reset aussi video_sent_at + wa_sent_at pour permettre le re-envoi propre.
+// Reset aussi video_sent + video_sent_at pour permettre le re-envoi propre.
 // Reset aid_reminder_sent_at NON — c'est un email différent (J-X).
 //
 // Auth admin only.
@@ -85,7 +85,8 @@ export async function POST(req: NextRequest) {
   }
 
   // Si nextPaths est null OU ne contient que des chaînes vides → on remet
-  // video_url à null aussi (miroir) + on reset video_sent_at/wa_sent_at.
+  // video_url à null aussi (miroir) + on reset video_sent + video_sent_at
+  // pour que l'email puisse être réenvoyé proprement après le re-upload.
   const allEmpty =
     nextPaths === null || nextPaths.every((p) => !p || p.trim() === "");
 
@@ -95,8 +96,8 @@ export async function POST(req: NextRequest) {
   };
   if (allEmpty) {
     update.video_url = null;
+    update.video_sent = false;
     update.video_sent_at = null;
-    update.wa_sent_at = null;
   } else if (
     typeof sacrifice_index === "number" &&
     sacrifice_index === 0 &&
@@ -112,7 +113,7 @@ export async function POST(req: NextRequest) {
     .from("orders")
     .update(update)
     .eq("id", order_id)
-    .select("id, video_paths, video_url, video_sent_at, wa_sent_at")
+    .select("id, video_paths, video_url, video_sent, video_sent_at")
     .maybeSingle();
 
   if (error) {
