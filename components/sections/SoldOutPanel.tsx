@@ -1,18 +1,30 @@
 "use client";
 
 import { useState } from "react";
-import { Package, CheckCircle2, MessageCircle, Mail, Loader2 } from "lucide-react";
+import { Package, CalendarX, CheckCircle2, MessageCircle, Mail, Loader2 } from "lucide-react";
 import { whatsappUrl } from "@/lib/constants";
 
-// Panneau "Réservations complètes — inscription liste d'attente" affiché sur
-// /commander quand inventory.isFull = true. Volontairement plus court et plus
-// rassurant que le panneau "Aïd passé / réservations closes" (cas calendaire) :
-// on parle ici d'un sold-out qui PEUT se débloquer si le fournisseur libère
-// des places.
+// Panneau "Réservations complètes — inscription liste d'attente" utilisé sur
+// /commander dans 2 cas :
+//   - variant="soldout"  → isFull = true mais cut-off pas atteint (place
+//                          peut se libérer si fournisseur débloque du stock)
+//   - variant="closed"   → cut-off dépassé, l'Aïd est passé. Inscription
+//                          pour ouverture 2027.
+//
+// Dans les deux cas, le formulaire est identique (prénom + email + téléphone)
+// et sauve dans la table waitlist. Seuls le titre, l'icône et le paragraphe
+// d'intro diffèrent.
 //
 // Le POST est best-effort côté UX : un email déjà inscrit renvoie 200 et on
 // montre quand même l'écran "Merci" pour éviter de faire douter l'utilisateur.
-export default function SoldOutPanel() {
+
+type Variant = "soldout" | "closed";
+
+interface Props {
+  variant?: Variant;
+}
+
+export default function SoldOutPanel({ variant = "soldout" }: Props) {
   const [prenom, setPrenom] = useState("");
   const [email, setEmail] = useState("");
   const [telephone, setTelephone] = useState("");
@@ -39,7 +51,7 @@ export default function SoldOutPanel() {
           prenom: prenom.trim(),
           email: email.trim(),
           telephone: telephone.trim() || undefined,
-          source: "commander_soldout",
+          source: variant === "closed" ? "commander_closed" : "commander_soldout",
         }),
       });
       const json = await res.json().catch(() => ({}));
@@ -60,35 +72,77 @@ export default function SoldOutPanel() {
       <div className="max-w-2xl mx-auto bg-white border border-gray-100/80 rounded-card p-8 md:p-12 shadow-soft text-center">
         <CheckCircle2 className="text-emerald mx-auto mb-5" size={48} />
         <h2 className="text-xl md:text-2xl font-bold text-text-primary mb-4">
-          Vous êtes sur la liste d&apos;attente
+          {variant === "closed"
+            ? "Vous êtes inscrit(e) pour l’Aïd 2027"
+            : "Vous êtes sur la liste d’attente"}
         </h2>
-        <p className="text-text-muted leading-relaxed mb-2">
-          Nous vous écrivons par email <strong className="text-text-primary">dès qu&apos;une place se libère</strong>. Notre fournisseur peut débloquer du stock supplémentaire jusqu&apos;à la veille de l&apos;Aïd.
-        </p>
-        <p className="text-text-muted leading-relaxed mb-6">
-          Pour augmenter vos chances, contactez-nous aussi sur WhatsApp — la priorité va aux personnes que nous avons en direct.
-        </p>
-        <a
-          href={whatsappUrl("Salam, je suis sur la liste d'attente Aïd 2026, prévenez-moi en priorité si une place se libère 🙏")}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex items-center justify-center gap-2 bg-emerald hover:bg-emerald/90 text-white font-bold uppercase text-sm px-5 py-3 rounded-xl transition-colors font-inter"
-        >
-          <MessageCircle size={16} /> Me prévenir sur WhatsApp
-        </a>
+        {variant === "closed" ? (
+          <>
+            <p className="text-text-muted leading-relaxed mb-2">
+              Nous vous écrivons <strong className="text-text-primary">dès que les réservations Aïd 2027 ouvriront</strong> (en général début d&apos;année), avec un tarif early-bird réservé aux inscrits.
+            </p>
+            <p className="text-text-muted leading-relaxed mb-6">
+              D&apos;ici là, gardez un œil sur votre boîte mail. Aucune relance entre temps.
+            </p>
+          </>
+        ) : (
+          <>
+            <p className="text-text-muted leading-relaxed mb-2">
+              Nous vous écrivons par email <strong className="text-text-primary">dès qu&apos;une place se libère</strong>. Notre fournisseur peut débloquer du stock supplémentaire jusqu&apos;à la veille de l&apos;Aïd.
+            </p>
+            <p className="text-text-muted leading-relaxed mb-6">
+              Pour augmenter vos chances, contactez-nous aussi sur WhatsApp — la priorité va aux personnes que nous avons en direct.
+            </p>
+            <a
+              href={whatsappUrl("Salam, je suis sur la liste d'attente Aïd 2026, prévenez-moi en priorité si une place se libère 🙏")}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center justify-center gap-2 bg-emerald hover:bg-emerald/90 text-white font-bold uppercase text-sm px-5 py-3 rounded-xl transition-colors font-inter"
+            >
+              <MessageCircle size={16} /> Me prévenir sur WhatsApp
+            </a>
+          </>
+        )}
       </div>
     );
   }
 
+  const isClosed = variant === "closed";
+
   return (
     <div className="max-w-2xl mx-auto bg-white border border-gray-100/80 rounded-card p-8 md:p-10 shadow-soft">
       <div className="text-center mb-6">
-        <Package className="text-urgency mx-auto mb-4" size={44} />
+        {isClosed ? (
+          <CalendarX className="text-gold mx-auto mb-4" size={44} />
+        ) : (
+          <Package className="text-urgency mx-auto mb-4" size={44} />
+        )}
         <h2 className="text-xl md:text-2xl font-bold text-text-primary mb-2">
-          Réservations complètes pour l&apos;Aïd 2026
+          {isClosed
+            ? "Les réservations Aïd 2026 sont closes"
+            : "Réservations complètes pour l’Aïd 2026"}
         </h2>
         <p className="text-text-muted leading-relaxed">
-          Tous les moutons disponibles ont été réservés. <strong className="text-text-primary">Une place peut se libérer</strong> (annulation, stock supplémentaire débloqué par notre fournisseur). Inscrivez-vous sur la liste d&apos;attente, nous vous écrivons dès qu&apos;une réservation est de nouveau possible.
+          {isClosed ? (
+            <>
+              L&apos;Aïd al-Adha 2026 est passé. Les commandes pour
+              l&apos;<strong className="text-text-primary">édition 2027</strong>{" "}
+              ouvriront en début d&apos;année prochaine. Inscrivez-vous
+              ci-dessous pour être prévenu(e) en priorité avec un tarif
+              early-bird réservé aux inscrits.
+            </>
+          ) : (
+            <>
+              Tous les moutons disponibles ont été réservés.{" "}
+              <strong className="text-text-primary">
+                Une place peut se libérer
+              </strong>{" "}
+              (annulation, stock supplémentaire débloqué par notre
+              fournisseur). Inscrivez-vous sur la liste d&apos;attente,
+              nous vous écrivons dès qu&apos;une réservation est de
+              nouveau possible.
+            </>
+          )}
         </p>
       </div>
 
