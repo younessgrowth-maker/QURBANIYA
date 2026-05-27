@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { CheckCircle2, Upload, Loader2, XCircle, Send, Video } from "lucide-react";
+import { CheckCircle2, Upload, Loader2, XCircle, Send, Video, Trash2 } from "lucide-react";
 import type { SacrificeRow } from "@/app/admin/videos/page";
 import type { Worker as TesseractWorker } from "tesseract.js";
 
@@ -272,6 +272,47 @@ export default function VideosManager({ initialRows }: VideosManagerProps) {
     [processFile]
   );
 
+  // Vide la vidéo d'une row (cas : mauvaise vidéo uploadée, ou besoin de
+  // re-tourner). Reset video_paths[idx] + video_url + video_sent_at côté DB
+  // via /api/admin/videos/clear.
+  const clearVideo = useCallback(
+    async (orderId: string, sacrificeIndex: number, combinedLabel: string) => {
+      if (
+        !window.confirm(
+          `Vider la vidéo du N°${combinedLabel} ?\n\nLa row repassera en "En attente". Si l'email a déjà été envoyé, video_sent_at sera aussi reset.`
+        )
+      ) {
+        return;
+      }
+      try {
+        const res = await fetch("/api/admin/videos/clear", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            order_id: orderId,
+            sacrifice_index: sacrificeIndex,
+          }),
+        });
+        const body = await res.json().catch(() => ({}));
+        if (!res.ok) {
+          throw new Error(body.details || body.error || `clear ${res.status}`);
+        }
+        updateRow(combinedLabel, {
+          status: "idle",
+          message: undefined,
+          ocrLabel: undefined,
+        });
+      } catch (err) {
+        console.error("Clear failed:", err);
+        updateRow(combinedLabel, {
+          status: "error",
+          message: err instanceof Error ? err.message : "clear failed",
+        });
+      }
+    },
+    [updateRow]
+  );
+
   const sendEmail = useCallback(
     async (orderId: string) => {
       // Marque toutes les rows de la commande en "sending" (l'envoi groupe
@@ -491,6 +532,26 @@ export default function VideosManager({ initialRows }: VideosManagerProps) {
                     <StatusBadge status={s.status} message={s.message} />
                   </td>
                   <td className="px-4 py-3 text-right">
+                    {/* Bouton vider visible si la row a une vidéo uploadée
+                        mais pas (encore) envoyée — permet de corriger un
+                        upload erroné (mauvaise vidéo / mauvais N°). */}
+                    {(s.status === "uploaded" || s.status === "error") &&
+                      s.row.videoPath && (
+                        <button
+                          onClick={() =>
+                            clearVideo(
+                              s.row.orderId,
+                              s.row.sacrificeIndex,
+                              s.row.combinedLabel
+                            )
+                          }
+                          title="Vider la vidéo de cette ligne (re-upload possible ensuite)"
+                          className="inline-flex items-center gap-1 px-2 py-1 mr-2 rounded-lg border border-gray-200 text-text-muted-light hover:bg-red-50 hover:text-urgency hover:border-urgency/40 text-xs transition-colors"
+                        >
+                          <Trash2 size={12} />
+                          Vider
+                        </button>
+                      )}
                     {isFirstOfOrder && allSentForOrder && (
                       <span className="inline-flex items-center gap-1 text-emerald-600 text-xs font-semibold">
                         <CheckCircle2 size={14} />
