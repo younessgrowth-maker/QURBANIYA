@@ -79,7 +79,7 @@ export default function SoldOutPanel({ variant = "soldout" }: Props) {
         {variant === "closed" ? (
           <>
             <p className="text-text-muted leading-relaxed mb-2">
-              Nous vous écrivons <strong className="text-text-primary">dès que les réservations Aïd 2027 ouvriront</strong> (en général début d&apos;année), avec un tarif early-bird réservé aux inscrits.
+              Nous vous écrivons <strong className="text-text-primary">dès que les réservations Aïd 2027 ouvriront</strong> (en général début d&apos;année), en priorité aux personnes inscrites.
             </p>
             <p className="text-text-muted leading-relaxed mb-6">
               D&apos;ici là, gardez un œil sur votre boîte mail. Aucune relance entre temps.
@@ -128,8 +128,7 @@ export default function SoldOutPanel({ variant = "soldout" }: Props) {
               L&apos;Aïd al-Adha 2026 est passé. Les commandes pour
               l&apos;<strong className="text-text-primary">édition 2027</strong>{" "}
               ouvriront en début d&apos;année prochaine. Inscrivez-vous
-              ci-dessous pour être prévenu(e) en priorité avec un tarif
-              early-bird réservé aux inscrits.
+              ci-dessous pour être prévenu(e) en priorité dès l&apos;ouverture.
             </>
           ) : (
             <>
