@@ -42,6 +42,10 @@ const faqs = [
     a: "Le sacrifice est effectué par un cheikh diplômé en sciences islamiques, selon les règles strictes de la Sunnah. Vous recevez une vidéo nominative montrant l'intégralité du processus.",
   },
   {
+    q: "Dois-je éviter de me raser ou couper mes ongles avant le sacrifice ?",
+    a: "Selon le hadith rapporté par Muslim (d'Oumm Salama), celui qui souhaite faire un sacrifice doit s'abstenir de couper ses cheveux et ses ongles à partir du 1er Dhul Hijjah, jusqu'à ce que son sacrifice soit effectué. Concrètement : dès que vous recevez votre vidéo nominative (signe que le sacrifice a été accompli en votre nom), vous pouvez vous raser/couper en toute tranquillité. Cette abstention est fortement recommandée (mustahabb) selon les écoles malikite/hanafite/shafi'ite, et obligatoire selon l'école hanbalite. Pour une réponse selon votre madhhab spécifique, nous vous invitons à consulter un cheikh de référence.",
+  },
+  {
     q: "Quand vais-je recevoir ma vidéo ?",
     a: "Votre vidéo nominative est envoyée par WhatsApp dans les 24h suivant le sacrifice. Généralement, vous la recevez le jour même.",
   },
