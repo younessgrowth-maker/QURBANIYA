@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { CalendarX, MessageCircle, Mail } from "lucide-react";
 import Header from "@/components/layout/Header";
 import OrderForm from "@/components/forms/OrderForm";
 import OrderSummary from "@/components/forms/OrderSummary";
@@ -9,7 +8,7 @@ import SoldOutPanel from "@/components/sections/SoldOutPanel";
 import CommanderTrustStrip from "@/components/sections/CommanderTrustStrip";
 import { ProductJsonLd, BreadcrumbJsonLd } from "@/components/seo/JsonLd";
 import Breadcrumb from "@/components/ui/Breadcrumb";
-import { CURRENT_YEAR, isOrderingOpen, whatsappUrl } from "@/lib/constants";
+import { CURRENT_YEAR, isOrderingOpen } from "@/lib/constants";
 import { getInventory } from "@/lib/supabase/queries";
 
 // Revalidation courte pour que la bascule "complet" se propage rapidement
@@ -190,40 +189,25 @@ export default async function CommanderPage() {
             </div>
             </>
           ) : (
-            /* État fermé : pas de formulaire, message + canaux contact */
-            <div className="max-w-2xl mx-auto bg-white border border-gray-100/80 rounded-card p-8 md:p-12 shadow-soft text-center">
-              <CalendarX className="text-gold mx-auto mb-5" size={48} />
-              <h2 className="text-xl md:text-2xl font-bold text-text-primary mb-4">
-                Les réservations sont fermées
-              </h2>
-              <p className="text-text-muted leading-relaxed mb-2">
-                Les commandes Qurbaniya pour l&apos;Aïd al-Adha 2026 sont closes depuis le jour de l&apos;Aïd. Le service ne peut plus accepter de paiement pour cette édition.
-              </p>
-              <p className="text-text-muted leading-relaxed mb-8">
-                Pour être informé(e) de l&apos;ouverture des réservations Aïd 2027 (prévue début 2027), contactez-nous :
-              </p>
-              <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                <a
-                  href={whatsappUrl("Salam, je souhaite être averti(e) de l'ouverture des réservations Aïd 2027")}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center justify-center gap-2 bg-gold hover:bg-gold-light text-white font-bold uppercase text-sm px-5 py-3 rounded-xl transition-colors font-inter"
-                >
-                  <MessageCircle size={16} /> Me prévenir sur WhatsApp
-                </a>
-                <a
-                  href="mailto:support@qurbaniya.fr?subject=Liste%20d'attente%20A%C3%AFd%202027"
-                  className="inline-flex items-center justify-center gap-2 border-2 border-gold text-gold hover:bg-gold/5 font-bold uppercase text-sm px-5 py-3 rounded-xl transition-colors font-inter"
-                >
-                  <Mail size={16} /> support@qurbaniya.fr
-                </a>
-              </div>
-              <div className="mt-8 pt-6 border-t border-gray-100">
+            /* État fermé (Aïd passé / cut-off dépassé) : on réutilise le
+               SoldOutPanel en mode "closed" qui propose le même formulaire
+               de waitlist (prénom + email + tel) mais avec un copy adapté
+               (inscription pour l'édition 2027 vs sold-out 2026). Les
+               inscriptions atterrissent dans la même table `waitlist`
+               avec source="commander_closed", utile pour segmenter ensuite. */
+            <>
+              <SoldOutPanel variant="closed" />
+              <div className="max-w-2xl mx-auto mt-6 text-center">
                 <p className="text-sm text-text-muted-light">
-                  En attendant, vous pouvez consulter notre <Link href="/blog" className="text-gold hover:underline font-semibold">blog</Link> ou notre <Link href="/faq" className="text-gold hover:underline font-semibold">FAQ</Link>.
+                  Une question ?{" "}
+                  <a href="mailto:support@qurbaniya.fr?subject=A%C3%AFd%202027" className="text-gold hover:underline font-semibold">support@qurbaniya.fr</a>
+                  {" · "}
+                  <Link href="/blog" className="text-gold hover:underline font-semibold">blog</Link>
+                  {" · "}
+                  <Link href="/faq" className="text-gold hover:underline font-semibold">FAQ</Link>
                 </p>
               </div>
-            </div>
+            </>
           )}
 
           {/* Avis vérifiés — preuve sociale après le tunnel, juste avant la FAQ. */}
