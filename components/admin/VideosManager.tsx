@@ -269,8 +269,25 @@ export default function VideosManager({ initialRows }: VideosManagerProps) {
         });
         const body = await res.json().catch(
           () =>
-            ({} as { error?: string; wa_sent?: boolean; wa_error?: string })
+            ({} as {
+              error?: string;
+              wa_sent?: boolean;
+              wa_error?: string;
+              already_sent?: boolean;
+              sent_at?: string;
+            })
         );
+        // Cas spécial : HTTP 409 = idempotency (PR #126) — la vidéo a déjà
+        // été envoyée précédemment. On NE veut PAS afficher "Erreur" rouge
+        // dans ce cas. On marque comme "déjà envoyée" (état sent) et on
+        // affiche un message clair plutôt que le message d'erreur générique.
+        if (res.status === 409 && body.already_sent) {
+          const date = body.sent_at
+            ? new Date(body.sent_at).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })
+            : "";
+          markOrderSent(orderId, `Déjà envoyé${date ? ` à ${date}` : ""}`);
+          return;
+        }
         if (!res.ok) {
           throw new Error(body.error || "send failed");
         }
