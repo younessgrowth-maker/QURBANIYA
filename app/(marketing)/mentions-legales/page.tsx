@@ -1,6 +1,6 @@
 import LegalPage from "@/components/layout/LegalPage";
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
+import { LEGAL } from "@/lib/legal";
 
 export const metadata: Metadata = {
   title: "Mentions légales — Qurbaniya",
@@ -8,65 +8,73 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-// Page temporairement désactivée (en attente RCS/SIRET).
-const LEGAL_PAGES_ENABLED = false;
-
 export default function MentionsLegalesPage() {
-  if (!LEGAL_PAGES_ENABLED) notFound();
   return (
-    <LegalPage title="Mentions légales" updatedAt="22 avril 2026">
+    <LegalPage title="Mentions légales" updatedAt="28 mai 2026">
       <h2>1. Éditeur du site</h2>
       <p>
-        Le site <strong>qurbaniya.fr</strong> est édité par :
+        Le site <strong>qurbaniya.fr</strong> est édité par la société{" "}
+        <strong>{LEGAL.raisonSociale}</strong>, exploitant la marque
+        commerciale <strong>{LEGAL.nomCommercial}</strong> :
       </p>
       <ul>
         <li>
-          <strong>Raison sociale :</strong> [À COMPLÉTER : nom légal de la SAS]
+          <strong>Raison sociale :</strong> {LEGAL.raisonSociale}
         </li>
         <li>
-          <strong>Forme juridique :</strong> Société par Actions Simplifiée (SAS)
+          <strong>Forme juridique :</strong> {LEGAL.formeJuridique}
         </li>
         <li>
-          <strong>Capital social :</strong> [À COMPLÉTER : montant en euros]
+          <strong>Capital social :</strong> {LEGAL.capitalSocial}
         </li>
         <li>
-          <strong>Siège social :</strong> [À COMPLÉTER : adresse complète du siège]
+          <strong>Siège social :</strong> {LEGAL.siegeSocial.complet}
         </li>
         <li>
-          <strong>RCS :</strong> [À COMPLÉTER : ville d&apos;immatriculation et numéro]
+          <strong>RCS :</strong> {LEGAL.rcs}
         </li>
         <li>
-          <strong>SIRET :</strong> [À COMPLÉTER : numéro SIRET]
+          <strong>SIREN :</strong> {LEGAL.sirenFormatte}
         </li>
         <li>
-          <strong>TVA intracommunautaire :</strong> [À COMPLÉTER : numéro si applicable]
+          <strong>SIRET (siège) :</strong> {LEGAL.siret}
         </li>
         <li>
-          <strong>Président :</strong> [À COMPLÉTER : nom du président / dirigeant]
+          <strong>Code APE :</strong> {LEGAL.codeApe}
+        </li>
+        <li>
+          <strong>TVA intracommunautaire :</strong> {LEGAL.tvaIntracomFormatte}
+        </li>
+        <li>
+          <strong>{LEGAL.presidentTitre} :</strong> {LEGAL.president}
         </li>
         <li>
           <strong>Email :</strong>{" "}
-          <a href="mailto:support@qurbaniya.fr">support@qurbaniya.fr</a>
+          <a href={LEGAL.emailMailto}>{LEGAL.email}</a>
         </li>
       </ul>
 
       <h2>2. Directeur de la publication</h2>
       <p>
-        Le directeur de la publication est [À COMPLÉTER : nom], en qualité de
-        président de la société éditrice.
+        Le directeur de la publication est <strong>{LEGAL.directeurPublication}</strong>,
+        en sa qualité de {LEGAL.presidentTitre} de la société {LEGAL.raisonSociale}.
       </p>
 
       <h2>3. Hébergeur</h2>
       <p>Le site est hébergé par :</p>
       <ul>
         <li>
-          <strong>Vercel Inc.</strong>
+          <strong>{LEGAL.hebergeur.nom}</strong>
         </li>
-        <li>340 S Lemon Ave #4133, Walnut, CA 91789, États-Unis</li>
+        <li>{LEGAL.hebergeur.adresse}</li>
         <li>
           Site :{" "}
-          <a href="https://vercel.com" target="_blank" rel="noopener noreferrer">
-            vercel.com
+          <a
+            href={`https://${LEGAL.hebergeur.siteWeb}`}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            {LEGAL.hebergeur.siteWeb}
           </a>
         </li>
       </ul>
@@ -75,8 +83,10 @@ export default function MentionsLegalesPage() {
       <p>
         L&apos;ensemble des contenus présents sur le site (textes, images,
         vidéos, logos, éléments graphiques, structure) sont la propriété
-        exclusive de Qurbaniya ou de ses partenaires et sont protégés par le
-        droit d&apos;auteur et le droit des marques. Toute reproduction,
+        exclusive de {LEGAL.raisonSociale} ou de ses partenaires et sont
+        protégés par le droit d&apos;auteur et le droit des marques. La marque{" "}
+        <strong>{LEGAL.nomCommercial}</strong> et le logo associé sont la
+        propriété exclusive de {LEGAL.raisonSociale}. Toute reproduction,
         représentation, modification ou adaptation, totale ou partielle, sans
         autorisation écrite préalable, est interdite.
       </p>
@@ -85,23 +95,46 @@ export default function MentionsLegalesPage() {
       <p>
         Pour toute question relative au site ou à son contenu, vous pouvez
         contacter l&apos;équipe à l&apos;adresse{" "}
-        <a href="mailto:support@qurbaniya.fr">support@qurbaniya.fr</a>.
+        <a href={LEGAL.emailMailto}>{LEGAL.email}</a>.
       </p>
 
       <h2>6. Médiation de la consommation</h2>
       <p>
         Conformément à l&apos;article L.612-1 du Code de la consommation, en cas
         de litige non résolu avec notre service client, le consommateur peut
-        recourir gratuitement au service de médiation de la consommation :
+        recourir gratuitement au service de médiation de la consommation suivant :
       </p>
       <ul>
-        <li>[À COMPLÉTER : nom et coordonnées du médiateur de la consommation]</li>
+        <li>
+          <strong>{LEGAL.mediateur.nom}</strong>
+        </li>
+        <li>{LEGAL.mediateur.adresse}</li>
+        <li>
+          Site :{" "}
+          <a
+            href={LEGAL.mediateur.siteWeb}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            {LEGAL.mediateur.siteWeb}
+          </a>
+        </li>
+        <li>
+          Déclarer un litige :{" "}
+          <a
+            href={LEGAL.mediateur.formulaire}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            {LEGAL.mediateur.formulaire}
+          </a>
+        </li>
       </ul>
       <p>
         La plateforme européenne de règlement en ligne des litiges est également
         accessible à l&apos;adresse :{" "}
         <a
-          href="https://ec.europa.eu/consumers/odr"
+          href={LEGAL.odrEU}
           target="_blank"
           rel="noopener noreferrer"
         >

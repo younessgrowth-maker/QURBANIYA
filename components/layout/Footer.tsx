@@ -14,11 +14,9 @@ const LINK_GROUPS = [
       { label: "FAQ", href: "/faq" },
       { label: "Blog", href: "/blog" },
       { label: "Contact", href: "mailto:support@qurbaniya.fr" },
-      // Pages légales temporairement désactivées (en attente RCS/SIRET).
-      // À réactiver une fois les infos juridiques complétées.
-      // { label: "Mentions légales", href: "/mentions-legales" },
-      // { label: "CGV", href: "/cgv" },
-      // { label: "Confidentialité", href: "/confidentialite" },
+      { label: "Mentions légales", href: "/mentions-legales" },
+      { label: "CGV", href: "/cgv" },
+      { label: "Confidentialité", href: "/confidentialite" },
     ],
   },
 ];

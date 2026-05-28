@@ -1,7 +1,7 @@
 import LegalPage from "@/components/layout/LegalPage";
 import type { Metadata } from "next";
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { LEGAL } from "@/lib/legal";
 
 export const metadata: Metadata = {
   title: "Conditions Générales de Vente — Qurbaniya",
@@ -10,21 +10,17 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-// Page temporairement désactivée (en attente RCS/SIRET de l'entreprise).
-// Retirer notFound() + restaurer Footer + sitemap quand les infos sont prêtes.
-const LEGAL_PAGES_ENABLED = false;
-
 export default function CGVPage() {
-  if (!LEGAL_PAGES_ENABLED) notFound();
   return (
-    <LegalPage title="Conditions Générales de Vente" updatedAt="22 avril 2026">
+    <LegalPage title="Conditions Générales de Vente" updatedAt="28 mai 2026">
       <p>
         Les présentes Conditions Générales de Vente (ci-après « CGV »)
         s&apos;appliquent à toute commande passée sur le site{" "}
-        <strong>qurbaniya.fr</strong>, exploité par [À COMPLÉTER : raison
-        sociale], société par actions simplifiée au capital de [À COMPLÉTER],
-        dont le siège est situé [À COMPLÉTER : adresse], immatriculée au RCS de
-        [À COMPLÉTER : ville et numéro] (ci-après « Qurbaniya »).
+        <strong>qurbaniya.fr</strong>, exploité par la société{" "}
+        <strong>{LEGAL.raisonSociale}</strong>, {LEGAL.formeJuridique} au
+        capital de {LEGAL.capitalSocial}, dont le siège est situé{" "}
+        {LEGAL.siegeSocial.complet}, immatriculée au RCS de {LEGAL.rcs}{" "}
+        (ci-après « Qurbaniya », nom commercial exploité par {LEGAL.raisonSociale}).
       </p>
 
       <h2>1. Objet</h2>
