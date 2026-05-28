@@ -1,6 +1,6 @@
 import LegalPage from "@/components/layout/LegalPage";
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
+import { LEGAL } from "@/lib/legal";
 
 export const metadata: Metadata = {
   title: "Politique de confidentialité — Qurbaniya",
@@ -9,15 +9,11 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-// Page temporairement désactivée (en attente RCS/SIRET).
-const LEGAL_PAGES_ENABLED = false;
-
 export default function ConfidentialitePage() {
-  if (!LEGAL_PAGES_ENABLED) notFound();
   return (
     <LegalPage
       title="Politique de confidentialité"
-      updatedAt="22 avril 2026"
+      updatedAt="28 mai 2026"
     >
       <p>
         La présente politique de confidentialité décrit la manière dont
@@ -29,10 +25,11 @@ export default function ConfidentialitePage() {
 
       <h2>1. Responsable du traitement</h2>
       <p>
-        Le responsable du traitement des données est [À COMPLÉTER : raison
-        sociale], société éditrice de qurbaniya.fr, dont les coordonnées
-        figurent dans les{" "}
-        <a href="/mentions-legales">Mentions légales</a>.
+        Le responsable du traitement des données est la société{" "}
+        <strong>{LEGAL.raisonSociale}</strong>, {LEGAL.formeJuridiqueCourt} au
+        capital de {LEGAL.capitalSocial}, immatriculée au RCS de {LEGAL.rcs},
+        société éditrice de qurbaniya.fr, dont les coordonnées figurent dans
+        les <a href="/mentions-legales">Mentions légales</a>.
       </p>
       <p>
         Contact dédié à la protection des données :{" "}
