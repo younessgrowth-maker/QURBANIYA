@@ -46,6 +46,10 @@ const faqs = [
     a: "Selon le hadith rapporté par Muslim (d'Oumm Salama), celui qui souhaite faire un sacrifice doit s'abstenir de couper ses cheveux et ses ongles à partir du 1er Dhul Hijjah, jusqu'à ce que son sacrifice soit effectué. Concrètement : dès que vous recevez votre vidéo nominative (signe que le sacrifice a été accompli en votre nom), vous pouvez vous raser/couper en toute tranquillité. Cette abstention est fortement recommandée (mustahabb) selon les écoles malikite/hanafite/shafi'ite, et obligatoire selon l'école hanbalite. Pour une réponse selon votre madhhab spécifique, nous vous invitons à consulter un cheikh de référence.",
   },
   {
+    q: "Mon mouton sur la vidéo ressemble à une chèvre, est-ce normal ?",
+    a: "Oui, c'est tout à fait normal. Nos sacrifices sont effectués à Madagascar par notre cheikh, où la race ovine locale est une race tropicale à pelage très court — contrairement aux moutons européens type Mérinos avec leur grosse toison de laine. Cette race tropicale (présente également en Afrique de l'Ouest, au Maghreb pour le Mouloud) peut visuellement ressembler à une chèvre pour un œil habitué aux moutons à laine épaisse. Mais ce sont bien des ovins : queue qui pend vers le bas, absence de barbiche caractéristique, morphologie ovine confirmée. Religieusement, votre sacrifice est conforme à la Sunnah — toutes les écoles islamiques reconnaissent les ovins de toutes races comme animal valide pour le qurbani.",
+  },
+  {
     q: "Quand vais-je recevoir ma vidéo ?",
     a: "Votre vidéo nominative est envoyée par WhatsApp dans les 24h suivant le sacrifice. Généralement, vous la recevez le jour même.",
   },
