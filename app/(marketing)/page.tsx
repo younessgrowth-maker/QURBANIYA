@@ -7,6 +7,7 @@ import Sheikh from "@/components/sections/Sheikh";
 import SheikhAudioMessage from "@/components/sections/SheikhAudioMessage";
 import MadagascarVideo from "@/components/sections/MadagascarVideo";
 import Testimonials from "@/components/sections/Testimonials";
+import GoogleReviews from "@/components/sections/GoogleReviews";
 import RealTestimonials from "@/components/sections/RealTestimonials";
 import ComparisonTable from "@/components/sections/ComparisonTable";
 import Offer from "@/components/sections/Offer";
@@ -73,7 +74,15 @@ export default function HomePage() {
       <Divider />
       <Testimonials />
 
-      {/* 6bis. AVIS RÉELS — Hidden until 3+ approved reviews */}
+      {/* 6bis. AVIS GOOGLE — 10 avis 5.0/5 collectés sur GBP J+1 Aïd 2026.
+          Affiché en premier (avant les avis internes /avis) car la preuve
+          Google a plus de poids social que celle de notre propre formulaire. */}
+      <GoogleReviews />
+
+      {/* 6ter. AVIS RÉELS internes — Hidden until 3+ approved reviews
+          (formulaire /avis). Complémentaire à Google : on garde la
+          collecte interne pour les clients sans compte Google + comme
+          back-up si jamais GBP a un souci. */}
       <RealTestimonials />
 
       {/* 7. OFFRE — Le prix, clair et net */}
