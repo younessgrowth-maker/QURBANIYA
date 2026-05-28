@@ -8,7 +8,6 @@ import SheikhAudioMessage from "@/components/sections/SheikhAudioMessage";
 import MadagascarVideo from "@/components/sections/MadagascarVideo";
 import Testimonials from "@/components/sections/Testimonials";
 import GoogleReviews from "@/components/sections/GoogleReviews";
-import RealTestimonials from "@/components/sections/RealTestimonials";
 import ComparisonTable from "@/components/sections/ComparisonTable";
 import Offer from "@/components/sections/Offer";
 import ImpactCalculator from "@/components/ui/ImpactCalculator";
@@ -75,15 +74,13 @@ export default function HomePage() {
       <Testimonials />
 
       {/* 6bis. AVIS GOOGLE — 10 avis 5.0/5 collectés sur GBP J+1 Aïd 2026.
-          Affiché en premier (avant les avis internes /avis) car la preuve
-          Google a plus de poids social que celle de notre propre formulaire. */}
+          Source unique de social proof publique : on a retiré la section
+          RealTestimonials (avis internes /avis) car elle dupliquait la
+          preuve sociale et les avis Google avec badge "G" sont plus
+          crédibles pour les prospects anxieux qu'un témoignage interne
+          potentiellement perçu comme "trop choisi". Le formulaire /avis
+          interne reste actif pour collecte hors Google. */}
       <GoogleReviews />
-
-      {/* 6ter. AVIS RÉELS internes — Hidden until 3+ approved reviews
-          (formulaire /avis). Complémentaire à Google : on garde la
-          collecte interne pour les clients sans compte Google + comme
-          back-up si jamais GBP a un souci. */}
-      <RealTestimonials />
 
       {/* 7. OFFRE — Le prix, clair et net */}
       <Divider />
