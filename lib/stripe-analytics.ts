@@ -237,7 +237,7 @@ type SupabaseOrder = {
   email: string;
   prenom: string;
   nom: string;
-  payment_status: "pending" | "paid" | "failed";
+  payment_status: "pending" | "paid" | "failed" | "refunded";
   amount: number; // PRIX UNITAIRE en EUROS (cf insert dans app/api/orders/route.ts)
   quantity?: number; // nombre de moutons (migration 0018), default 1
   discount_amount?: number; // en euros, 0 si pas de promo

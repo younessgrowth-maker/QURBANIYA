@@ -63,6 +63,8 @@ export const orderSchema = z
     notify_recipient: z.boolean().optional(),
     recipient_email: z
       .string()
+      .trim()
+      .toLowerCase()
       .email("Email destinataire invalide")
       .optional()
       .or(z.literal("")),

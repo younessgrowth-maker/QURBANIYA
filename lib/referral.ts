@@ -50,7 +50,7 @@ export function shareUrl(code: string, base = "https://qurbaniya.fr"): string {
 export function shareWhatsAppMessage(code: string, prenom?: string): string {
   const url = shareUrl(code);
   const intro = prenom
-    ? `Salam ! J'ai commandé mon sacrifice de l'Aïd 2026 sur Qurbaniya — je te recommande, ils sont sérieux.`
+    ? `Salam ! C'est ${prenom}. J'ai commandé mon sacrifice de l'Aïd 2026 sur Qurbaniya — je te recommande, ils sont sérieux.`
     : `Salam ! Je te recommande Qurbaniya pour ton sacrifice de l'Aïd 2026, ils sont sérieux.`;
   return `${intro} Avec mon code, tu as -${REFERRAL_DISCOUNT_EUR}€ sur ta commande : ${url}`;
 }

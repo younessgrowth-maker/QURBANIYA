@@ -149,7 +149,7 @@ export type PulseStats = {
 type SupaOrder = {
   email: string;
   prenom: string;
-  payment_status: "pending" | "paid" | "failed";
+  payment_status: "pending" | "paid" | "failed" | "refunded";
   amount: number;
   quantity: number | null;
   discount_amount: number | null;
