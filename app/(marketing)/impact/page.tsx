@@ -2,15 +2,17 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 export const metadata: Metadata = {
-  title: "L'impact de votre sacrifice — Aïd 2026 | Qurbaniya",
+  title: "Nos actions — L'impact de vos sacrifices | Qurbaniya",
   description:
-    "Découvrez en images la distribution de la viande de l'Aïd al-Adha 2026 aux familles dans le besoin, dans des villages reculés de Madagascar. Voici à qui votre sacrifice a profité.",
+    "Découvrez en images la distribution de la viande de l'Aïd al-Adha (2025 et 2026) aux familles dans le besoin, dans des villages reculés de Madagascar. Voici à qui vos sacrifices ont profité.",
   alternates: { canonical: "https://qurbaniya.fr/impact" },
 };
 
 // Médias hébergés sur Supabase storage (bucket public "impact").
-const BASE =
-  "https://smhpeolksotaabdnfcxf.supabase.co/storage/v1/object/public/impact/2026";
+const STORAGE =
+  "https://smhpeolksotaabdnfcxf.supabase.co/storage/v1/object/public/impact";
+const BASE = `${STORAGE}/2026`;
+const BASE_2025 = `${STORAGE}/2025`;
 
 const PHOTOS = [
   { src: `${BASE}/distribution-1.jpg`, alt: "Des centaines de familles rassemblées pour la distribution de la viande à Madagascar" },
@@ -23,6 +25,16 @@ const VIDEOS = [
   { src: `${BASE}/distribution-video-1.mp4`, poster: `${BASE}/distribution-3.jpg` },
   { src: `${BASE}/distribution-video-2.mp4`, poster: `${BASE}/distribution-4.jpg` },
 ];
+
+// Aïd 2025 — première édition, preuve de track record.
+const PHOTO_2025 = {
+  src: `${BASE_2025}/distribution-1.jpg`,
+  alt: "Distribution de la viande de l'Aïd 2025 aux familles d'un village de Madagascar",
+};
+const VIDEO_2025 = {
+  src: `${BASE_2025}/distribution-video-1.mp4`,
+  poster: `${BASE_2025}/distribution-1.jpg`,
+};
 
 export default function ImpactPage() {
   return (
@@ -38,8 +50,8 @@ export default function ImpactPage() {
             <span className="text-primary">sacrifice</span>
           </h1>
           <p className="text-lg text-text-muted leading-relaxed max-w-2xl mx-auto">
-            Cette année, nous avons fait le choix d&apos;emmener nos équipes dans
-            des <strong className="text-text-primary">villages reculés de Madagascar</strong>,
+            Depuis 2025, nous menons chaque année cette action dans des
+            <strong className="text-text-primary"> villages reculés de Madagascar</strong>,
             là où le besoin est le plus grand et où la viande arrive rarement.
             Grâce à vous, des centaines de familles ont pu célébrer l&apos;Aïd
             dignement. Voici à qui votre sacrifice a profité.
@@ -47,9 +59,12 @@ export default function ImpactPage() {
         </div>
       </section>
 
-      {/* Photos */}
+      {/* Photos 2026 */}
       <section className="pb-12">
         <div className="max-w-5xl mx-auto px-4">
+          <h2 className="text-2xl md:text-3xl font-black uppercase text-text-primary text-center mb-8">
+            Aïd 2026
+          </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {PHOTOS.map((photo, i) => (
               // eslint-disable-next-line @next/next/no-img-element
@@ -108,6 +123,40 @@ export default function ImpactPage() {
             <p className="text-gold font-bold italic font-serif">
               Taqabbal Allahu minna wa minkum 🤲
             </p>
+          </div>
+        </div>
+      </section>
+
+      {/* Aïd 2025 — première édition, track record */}
+      <section className="pb-16">
+        <div className="max-w-5xl mx-auto px-4">
+          <h2 className="text-2xl md:text-3xl font-black uppercase text-text-primary text-center mb-3">
+            Aïd 2025 — notre première édition
+          </h2>
+          <p className="text-text-muted text-center max-w-2xl mx-auto mb-8">
+            Ce n&apos;est pas notre première année. En 2025 déjà, grâce à la
+            confiance de <strong className="text-text-primary">93 familles</strong>,
+            nous avons pu accomplir <strong className="text-text-primary">102 sacrifices</strong>{" "}
+            et distribuer la viande dans des villages reculés de Madagascar.
+          </p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={PHOTO_2025.src}
+              alt={PHOTO_2025.alt}
+              loading="lazy"
+              className="w-full aspect-video rounded-card shadow-soft object-cover"
+            />
+            <video
+              controls
+              preload="metadata"
+              playsInline
+              poster={VIDEO_2025.poster}
+              className="w-full aspect-video rounded-card shadow-soft bg-black object-cover"
+            >
+              <source src={VIDEO_2025.src} type="video/mp4" />
+              Votre navigateur ne supporte pas la lecture vidéo.
+            </video>
           </div>
         </div>
       </section>
