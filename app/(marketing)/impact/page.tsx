@@ -19,6 +19,8 @@ const PHOTOS = [
   { src: `${BASE}/distribution-2.jpg`, alt: "Vue aérienne d'un village reculé de Madagascar lors de la distribution" },
   { src: `${BASE}/distribution-3.jpg`, alt: "Distribution de la viande de l'Aïd aux habitants du village" },
   { src: `${BASE}/distribution-4.jpg`, alt: "Familles recevant leur part de viande pour l'Aïd al-Adha" },
+  { src: `${BASE}/distribution-5.jpg`, alt: "Des femmes du village reçoivent leur part de viande de l'Aïd à Madagascar" },
+  { src: `${BASE}/distribution-6.jpg`, alt: "Hommes et jeunes du village repartant avec leur part de viande de l'Aïd" },
 ];
 
 const VIDEOS = [
