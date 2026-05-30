@@ -136,12 +136,19 @@ export default function MesCommandesPage() {
         setUserName(user.email.split("@")[0]);
       }
 
-      const { data } = await supabase
-        .from("orders")
-        .select("*")
-        .order("created_at", { ascending: false });
-
-      if (data) setOrders(data as Order[]);
+      // Les commandes sont rattachées par email vérifié côté serveur
+      // (route /api/account/orders). On n'interroge plus la table via le
+      // client RLS : `user_id` n'est jamais renseigné → la requête RLS
+      // renvoyait toujours 0 ligne.
+      try {
+        const res = await fetch("/api/account/orders", { cache: "no-store" });
+        if (res.ok) {
+          const json = await res.json();
+          if (Array.isArray(json.orders)) setOrders(json.orders as Order[]);
+        }
+      } catch {
+        // silencieux : on retombe sur l'état vide (déjà géré par l'UI)
+      }
       setLoading(false);
     }
 
