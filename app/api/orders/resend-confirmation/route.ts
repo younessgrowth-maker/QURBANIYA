@@ -5,9 +5,17 @@ import type { Order } from "@/types";
 
 export async function POST(req: NextRequest) {
   try {
-    const { session_id } = await req.json();
-    if (!session_id) {
-      return NextResponse.json({ error: "Missing session_id" }, { status: 400 });
+    const { session_id, order_id } = await req.json();
+    // On exige session_id ET order_id (UUID v4, 122 bits) : sans ça, un
+    // session_id Stripe qui fuite (Referer, historique) suffirait à
+    // déclencher un renvoi d'email et à exposer l'email du client. Exiger
+    // l'order_id = preuve de possession de la commande (même garde que
+    // /api/orders/by-session en mode "full").
+    if (!session_id || !order_id) {
+      return NextResponse.json(
+        { error: "Missing session_id or order_id" },
+        { status: 400 }
+      );
     }
 
     const supabase = createServiceRoleClient();
@@ -15,6 +23,7 @@ export async function POST(req: NextRequest) {
       .from("orders")
       .select("*")
       .eq("stripe_session_id", session_id)
+      .eq("id", order_id)
       .single();
 
     if (error || !order) {

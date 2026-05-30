@@ -68,8 +68,8 @@ export async function ProductJsonLd() {
     "@type": "Product",
     name: "Sacrifice Aïd al-Adha 2026 — Mouton avec vidéo nominative",
     description:
-      "Mouton sacrifié en votre nom lors de l'Aïd al-Adha 2026, conforme à la Sounnah. Vidéo nominative envoyée par email. Viande distribuée aux nécessiteux.",
-    image: "https://qurbaniya.fr/og-sacrifice-aid-2026.png",
+      "Mouton sacrifié en votre nom lors de l'Aïd al-Adha 2026, conforme à la Sounnah. Vidéo nominative envoyée par WhatsApp. Viande distribuée aux nécessiteux.",
+    image: "https://qurbaniya.fr/opengraph-image",
     brand: {
       "@type": "Brand",
       name: "Qurbaniya",
@@ -81,8 +81,12 @@ export async function ProductJsonLd() {
       price: "140",
       availability: "https://schema.org/LimitedAvailability",
       validFrom: "2026-01-01",
-      validThrough: "2026-05-27",
-      priceValidUntil: "2026-05-27",
+      // Prolongé jusqu'à la prochaine édition (Aïd 2027) : une date passée
+      // fait considérer l'offre comme expirée par Google → perte du rich
+      // snippet prix/disponibilité. La fermeture réelle des commandes est
+      // gérée applicativement par isOrderingOpen() sur /commander.
+      validThrough: "2027-06-30",
+      priceValidUntil: "2027-06-30",
     },
   };
 

@@ -82,7 +82,9 @@ export async function computeSelfPromo(
 
     if (filleulErr) {
       console.error("computeSelfPromo filleul count failed:", filleulErr.message);
-      // On dégrade gracieusement vers le palier "returning" plutôt que 0.
+      // Fail-closed : ça touche à l'argent. Sur erreur DB on refuse la
+      // remise (0€) plutôt que d'accorder un palier non vérifié.
+      return { amountEur: 0, reason: "not_eligible" };
     } else if ((count ?? 0) >= 1) {
       return { amountEur: RETURNING_REFERRER_PROMO_EUR, reason: "referrer" };
     }
@@ -94,8 +96,9 @@ export async function computeSelfPromo(
 
 /**
  * Vrai si ce client a déjà utilisé sa promo retour client pour la saison
- * donnée (usage unique). Lecture best-effort : en cas d'erreur DB on
- * renvoie `false` (on préfère laisser passer que bloquer un client).
+ * donnée (usage unique). Fail-closed : en cas d'erreur DB on renvoie `true`
+ * (= considéré déjà utilisé → pas de remise), car ça touche à l'argent ; on
+ * préfère refuser une remise que d'en accorder une non vérifiable.
  */
 export async function hasRedeemedSelfPromo(
   supabase: ServiceClient,
@@ -112,7 +115,7 @@ export async function hasRedeemedSelfPromo(
 
   if (error) {
     console.error("hasRedeemedSelfPromo failed:", error.message);
-    return false;
+    return true;
   }
   return !!data;
 }

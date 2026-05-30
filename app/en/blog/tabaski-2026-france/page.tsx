@@ -6,7 +6,7 @@ import LanguageSwitcher from "@/components/blog/LanguageSwitcher";
 import { blogHreflangAlternates } from "@/lib/i18n";
 
 export const metadata: Metadata = {
-  title: "Tabaski 2026 from France: 27 May · Halal sacrifice from £140 🐑",
+  title: "Tabaski 2026 from France: 27 May · Halal sacrifice from €140 🐑",
   description:
     "Tabaski 2026 confirmed for Wednesday 27 May. West African diaspora in France or the UK? Delegated halal sacrifice, personalised video, distribution to families in need. €140 all-inclusive.",
   keywords: [
