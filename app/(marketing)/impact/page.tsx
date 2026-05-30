@@ -20,8 +20,8 @@ const PHOTOS = [
 ];
 
 const VIDEOS = [
-  `${BASE}/distribution-video-1.mp4`,
-  `${BASE}/distribution-video-2.mp4`,
+  { src: `${BASE}/distribution-video-1.mp4`, poster: `${BASE}/distribution-3.jpg` },
+  { src: `${BASE}/distribution-video-2.mp4`, poster: `${BASE}/distribution-4.jpg` },
 ];
 
 export default function ImpactPage() {
@@ -58,7 +58,7 @@ export default function ImpactPage() {
                 src={photo.src}
                 alt={photo.alt}
                 loading="lazy"
-                className="w-full h-auto rounded-card shadow-soft object-cover"
+                className="w-full aspect-[4/3] rounded-card shadow-soft object-cover"
               />
             ))}
           </div>
@@ -72,15 +72,16 @@ export default function ImpactPage() {
             La distribution en vidéo
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {VIDEOS.map((src, i) => (
+            {VIDEOS.map((video, i) => (
               <video
                 key={i}
                 controls
                 preload="metadata"
                 playsInline
-                className="w-full rounded-card shadow-soft bg-black"
+                poster={video.poster}
+                className="w-full aspect-video rounded-card shadow-soft bg-black object-cover"
               >
-                <source src={src} type="video/mp4" />
+                <source src={video.src} type="video/mp4" />
                 Votre navigateur ne supporte pas la lecture vidéo.
               </video>
             ))}
