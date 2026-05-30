@@ -247,7 +247,21 @@ export async function POST(req: NextRequest) {
     });
 
     if (insertError) {
+      // Échec FATAL : on ne renvoie PAS checkout_url. Sans ligne en DB, un
+      // paiement deviendrait une commande fantôme — le webhook ne trouverait
+      // rien à réconcilier (ni email, ni décrément d'inventaire, ni code
+      // parrain) : client débité, aucune trace. Mieux vaut un retry client.
+      // La session Stripe créée mais non utilisée expire d'elle-même (~24h)
+      // et reste invisible de notre DB.
       console.error("Order insert failed:", insertError);
+      return NextResponse.json(
+        {
+          error:
+            "Impossible d'enregistrer la commande. Réessayez dans quelques instants.",
+          code: "order_insert_failed",
+        },
+        { status: 500 }
+      );
     }
 
     return NextResponse.json({ checkout_url: session.url });
