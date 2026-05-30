@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { Shield, Video, GraduationCap, Star, Clock } from "lucide-react";
 import { useEffect, useState } from "react";
 import { AID_DATE } from "@/lib/constants";
+import { getAverageRating, getTotalReviews } from "@/lib/google-reviews";
 
 // Trust strip horizontal compact remplaçant l'ancienne carte 3-garanties
 // trop verticale et vide. Inspiré du pattern "trust bar" des leaders du
@@ -42,7 +43,8 @@ const COLS: Col[] = [
   {
     icon: Star,
     title: "+300 sacrifices · 5 ans",
-    subtitle: "4.8/5 (89 avis) · 100% satisfaction",
+    // Dérivé de la vraie source (lib/google-reviews) pour ne jamais diverger.
+    subtitle: `${getAverageRating().toFixed(1)}/5 (${getTotalReviews()} avis) · 100% satisfaction`,
     accent: "gold",
   },
 ];
