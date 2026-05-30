@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServiceRoleClient } from "@/lib/supabase/server";
 import { sanitizeReferralCode, REFERRAL_DISCOUNT_EUR } from "@/lib/referral";
+import { computeSelfPromo, hasRedeemedSelfPromo } from "@/lib/self-promo";
+import { CURRENT_YEAR } from "@/lib/constants";
 
 // Endpoint public — validation d'un code parrain pour affichage instantané
 // sur /commander. Ne révèle JAMAIS d'email/téléphone : juste le prénom du
@@ -42,11 +44,23 @@ export async function GET(req: NextRequest) {
     );
   }
 
-  // Anti-auto-parrainage : le même contrôle qu'à la création de commande
-  // (app/api/orders/route.ts). Sans ça, l'UI afficherait une réduction qui
-  // serait silencieusement annulée côté serveur → Stripe facture le plein
-  // tarif et le client se sent trompé.
+  // Son propre code : ce n'est plus un rejet sec. Si le client est éligible
+  // à la promo retour client (a commandé/parrainé l'édition précédente) et
+  // ne l'a pas déjà utilisée cette saison, on renvoie la réduction perso.
+  // Sinon on retombe sur l'ancien message "own_code" (à partager aux proches).
   if (email && data.email?.toLowerCase() === email) {
+    const promo = await computeSelfPromo(supabase, email, CURRENT_YEAR);
+    if (promo.amountEur > 0) {
+      const alreadyUsed = await hasRedeemedSelfPromo(supabase, email, CURRENT_YEAR);
+      if (!alreadyUsed) {
+        return NextResponse.json({
+          valid: true,
+          kind: "self_promo",
+          ownerPrenom: data.prenom,
+          discountEur: promo.amountEur,
+        });
+      }
+    }
     return NextResponse.json(
       { valid: false, reason: "own_code" },
       { status: 200 }
@@ -55,6 +69,7 @@ export async function GET(req: NextRequest) {
 
   return NextResponse.json({
     valid: true,
+    kind: "referral",
     ownerPrenom: data.prenom,
     discountEur: REFERRAL_DISCOUNT_EUR,
   });

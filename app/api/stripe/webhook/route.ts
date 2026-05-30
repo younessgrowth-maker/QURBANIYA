@@ -75,6 +75,37 @@ async function attributeAffiliateCommission(
   }
 }
 
+// ─── Rédemption promo retour client (usage unique) ─────────────────
+// Quand une commande payée porte une promo retour client (self_promo),
+// on enregistre la rédemption (email normalisé, saison). La contrainte
+// unique(email, season) rend l'opération idempotente (retry webhook → pas
+// de double ligne) et matérialise le verrou d'usage unique. Échec non
+// bloquant : la commande reste valide.
+async function recordSelfPromoRedemption(
+  supabase: ReturnType<typeof createServiceRoleClient>,
+  order: {
+    id: string;
+    email?: string | null;
+    season?: number | null;
+    self_promo_amount?: number | null;
+  }
+): Promise<void> {
+  const amount = order.self_promo_amount ?? 0;
+  if (amount <= 0 || !order.email || !order.season) return;
+
+  const { error } = await supabase.from("self_promo_redemptions").insert({
+    email: order.email.trim().toLowerCase(),
+    season: order.season,
+    order_id: order.id,
+    amount_eur: amount,
+  });
+
+  // 23505 = unique(email, season) → déjà enregistré (retry), idempotent.
+  if (error && (error as { code?: string }).code !== "23505") {
+    console.error("Self-promo redemption insert failed:", order.id, error);
+  }
+}
+
 export async function POST(req: NextRequest) {
   const body = await req.text();
   const headersList = headers();
@@ -244,6 +275,25 @@ export async function POST(req: NextRequest) {
           console.error(
             "Affiliate attribution error:",
             affError instanceof Error ? affError.message : "unknown"
+          );
+        }
+
+        // Promo retour client : matérialise l'usage unique (non-bloquant,
+        // idempotent). Ne touche ni le prix, ni l'email, ni le statut.
+        try {
+          await recordSelfPromoRedemption(
+            supabase,
+            order as {
+              id: string;
+              email?: string | null;
+              season?: number | null;
+              self_promo_amount?: number | null;
+            }
+          );
+        } catch (spError) {
+          console.error(
+            "Self-promo redemption error:",
+            spError instanceof Error ? spError.message : "unknown"
           );
         }
 
