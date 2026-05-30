@@ -432,7 +432,7 @@ export default function ArticleArefeGunu() {
             <p className="text-text-muted leading-relaxed">
               Zilhicce&apos;nin tam takvimi hakkında daha fazla bilgi için{" "}
               <Link
-                href="/tr/blog/kurban-bayrami-2026-tarihi"
+                href="/blog/date-aid-al-adha-2026"
                 className="text-gold hover:underline font-semibold"
               >
                 Kurban Bayramı 2026 tarihine ayrılmış makalemize
@@ -534,19 +534,14 @@ export default function ArticleArefeGunu() {
           className="mb-6"
         />
 
-        {/* Bottom navigation */}
+        {/* Bottom navigation — pas de "makale suivant" : un seul article TR
+            pour l'instant (l'article date n'existe qu'en FR). */}
         <div className="mt-12 pt-8 border-t border-gray-100 flex flex-col sm:flex-row items-center justify-between gap-4">
           <Link
             href="/tr/blog"
             className="flex items-center gap-2 text-text-muted hover:text-gold transition-colors font-inter text-sm"
           >
             <ArrowLeft size={14} /> Blog&apos;a dön
-          </Link>
-          <Link
-            href="/tr/blog/kurban-bayrami-2026-tarihi"
-            className="flex items-center gap-2 text-gold font-semibold font-inter text-sm"
-          >
-            Sonraki makale: Kurban Bayramı 2026 Tarihi <ArrowRight size={14} />
           </Link>
         </div>
       </article>

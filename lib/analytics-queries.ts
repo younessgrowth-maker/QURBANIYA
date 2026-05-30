@@ -67,6 +67,12 @@ export async function fetchAnalyticsSummary(): Promise<AnalyticsSummary> {
 
     if (row.event_name === "page_view") {
       pageviews30d++;
+      // Bucket journalier : doit couvrir les 14 jours de la série (pas
+      // seulement les 7 derniers), sinon la sparkline affiche 0 sur la
+      // première moitié. On remplit pour tout page_view de la fenêtre
+      // chargée ; la série ne lit que les 14 dernières clés (cf. plus bas).
+      const day = (row.created_at as string).slice(0, 10);
+      dailyBucket.set(day, (dailyBucket.get(day) || 0) + 1);
       if (ts >= since7d) {
         pageviews7d++;
         if (row.path) {
@@ -76,9 +82,6 @@ export async function fetchAnalyticsSummary(): Promise<AnalyticsSummary> {
           const host = safeHost(row.referrer);
           if (host) referrerCounts.set(host, (referrerCounts.get(host) || 0) + 1);
         }
-        // Daily bucket (14d)
-        const day = (row.created_at as string).slice(0, 10);
-        dailyBucket.set(day, (dailyBucket.get(day) || 0) + 1);
       }
       if (ts >= today) pageviewsToday++;
     }

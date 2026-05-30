@@ -142,7 +142,7 @@ function StripeConfirmationView({
       const res = await fetch("/api/orders/resend-confirmation", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ session_id: sessionId }),
+        body: JSON.stringify({ session_id: sessionId, order_id: orderId }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -156,7 +156,7 @@ function StripeConfirmationView({
       setResendState("error");
       setResendMessage("Erreur réseau. Réessayez plus tard.");
     }
-  }, [sessionId]);
+  }, [sessionId, orderId]);
 
   const isPaid = order?.payment_status === "paid";
   const isPending = !order || order.payment_status === "pending";
