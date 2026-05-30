@@ -30,7 +30,14 @@ function readAffiliateCookie(): string {
 type ReferralState =
   | { status: "idle" }
   | { status: "checking" }
-  | { status: "valid"; ownerPrenom: string; discountEur: number }
+  | {
+      status: "valid";
+      ownerPrenom: string;
+      discountEur: number;
+      // "referral" = code d'un autre (−15€) · "self_promo" = son propre
+      // code utilisé en promo retour client (10/20€).
+      kind: "referral" | "self_promo";
+    }
   | { status: "own" }
   | { status: "invalid"; reason: string };
 
@@ -254,6 +261,7 @@ export default function OrderForm() {
             status: "valid",
             ownerPrenom: data.ownerPrenom,
             discountEur: data.discountEur,
+            kind: data.kind === "self_promo" ? "self_promo" : "referral",
           });
         } else if (data.reason === "own_code") {
           setReferralState({ status: "own" });
@@ -746,7 +754,11 @@ export default function OrderForm() {
               <Check size={18} className="text-emerald flex-shrink-0" strokeWidth={3} />
               <div className="text-sm">
                 <span className="font-semibold text-emerald">Code valide</span>
-                <span className="text-text-muted"> · −{referralState.discountEur}€ appliqués grâce à {referralState.ownerPrenom}</span>
+                <span className="text-text-muted">
+                  {referralState.kind === "self_promo"
+                    ? ` · −${referralState.discountEur}€ — votre remise fidélité, merci de votre confiance`
+                    : ` · −${referralState.discountEur}€ appliqués grâce à ${referralState.ownerPrenom}`}
+                </span>
               </div>
             </motion.div>
           )}
@@ -803,7 +815,8 @@ export default function OrderForm() {
             {referralState.status === "valid" && (
               <span className="text-text-muted-light">
                 {" "}
-                · −{referralState.discountEur}€ parrain
+                · −{referralState.discountEur}€
+                {referralState.kind === "self_promo" ? " fidélité" : " parrain"}
               </span>
             )}
           </span>

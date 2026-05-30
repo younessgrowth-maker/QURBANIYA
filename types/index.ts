@@ -40,6 +40,10 @@ export interface Order {
   referrer_order_id: string | null;
   discount_amount: number;
   referrer_reward_paid_at: string | null;
+  // Promo retour client / self-promo (migration 0021)
+  season: number;
+  self_promo_code: string | null;
+  self_promo_amount: number;
   // Broadcast email parrainage (migration 0012)
   referral_broadcast_sent_at: string | null;
   // Broadcast WhatsApp parrainage (migration 0013)

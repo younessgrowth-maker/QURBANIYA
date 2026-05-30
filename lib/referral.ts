@@ -14,6 +14,16 @@ export const REFERRAL_DISCOUNT_CENTS = 1500;
 // et meilleure rétention.
 export const REFERRER_REWARD_EUR = 20;
 
+// ─── Promo "retour client" (self-promo) ─────────────────────────────
+// Le propre code d'un client devient une promo sur SA commande de
+// l'édition suivante (usage unique, saison N+1 seulement) :
+//  - tout client ayant commandé en saison N        → 10€
+//  - tout parrain ayant amené ≥1 filleul payant N  → 20€ (remplace 10€)
+// Le renouvellement est automatique : le droit en N+2 se recalcule sur
+// l'activité de N+1. Cf. lib/self-promo.ts + migration 0021.
+export const RETURNING_CUSTOMER_PROMO_EUR = 10;
+export const RETURNING_REFERRER_PROMO_EUR = 20;
+
 /**
  * Sanitize un code reçu en input. Accepte tout code alphanumérique 6 chars
  * uppercase. La validité d'un code est garantie par l'unicité DB, pas par
