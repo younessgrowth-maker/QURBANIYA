@@ -4,6 +4,7 @@ import { headers } from "next/headers";
 import { createServiceRoleClient } from "@/lib/supabase/server";
 import { sendOrderConfirmation } from "@/lib/resend";
 import { generateReferralCode } from "@/lib/referral-server";
+import { normalizePhone } from "@/lib/whatsapp";
 import type { Order } from "@/types";
 
 // ─── Génération du code parrain unique (anti-collision) ────────────
@@ -41,13 +42,18 @@ async function assignReferralCode(
 // commande reste valide même si l'attribution échoue.
 async function attributeAffiliateCommission(
   supabase: ReturnType<typeof createServiceRoleClient>,
-  orderId: string,
-  affiliateCode: string | null | undefined
+  order: {
+    id: string;
+    email?: string | null;
+    telephone?: string | null;
+    affiliate_code?: string | null;
+  }
 ): Promise<void> {
+  const affiliateCode = order.affiliate_code;
   if (!affiliateCode) return;
   const { data: affiliate, error: affErr } = await supabase
     .from("affiliates")
-    .select("id, commission_eur, approved")
+    .select("id, commission_eur, approved, email, phone")
     .eq("code", affiliateCode)
     .maybeSingle();
 
@@ -58,11 +64,28 @@ async function attributeAffiliateCommission(
   // Code inconnu ou affilié non approuvé → pas de commission (silencieux).
   if (!affiliate || !affiliate.approved) return;
 
+  // ── Anti auto-affiliation ──
+  // Un affilié ne touche AUCUNE commission sur sa propre commande (il
+  // utiliserait son lien pour se générer un cashback). On bloque si l'email
+  // OU le téléphone normalisé de l'acheteur correspond à ceux de l'affilié.
+  const sameEmail =
+    !!order.email &&
+    order.email.trim().toLowerCase() === (affiliate.email || "").trim().toLowerCase();
+  const buyerPhone = normalizePhone(order.telephone);
+  const affPhone = normalizePhone(affiliate.phone);
+  const samePhone = !!buyerPhone && buyerPhone === affPhone;
+  if (sameEmail || samePhone) {
+    console.warn(
+      `Self-affiliation blocked: ${affiliateCode} on order ${order.id} (email=${sameEmail}, phone=${samePhone})`
+    );
+    return;
+  }
+
   const { error: insErr } = await supabase
     .from("affiliate_conversions")
     .insert({
       affiliate_id: affiliate.id,
-      order_id: orderId,
+      order_id: order.id,
       commission_eur: affiliate.commission_eur,
       status: "pending",
     });
@@ -70,7 +93,7 @@ async function attributeAffiliateCommission(
   // 23505 = unique(order_id) violation → conversion déjà créée (retry
   // webhook), c'est normal et idempotent. Toute autre erreur = log.
   if (insErr && (insErr as { code?: string }).code !== "23505") {
-    console.error("Affiliate conversion insert failed:", orderId, insErr);
+    console.error("Affiliate conversion insert failed:", order.id, insErr);
   }
 }
 
@@ -228,8 +251,12 @@ export async function POST(req: NextRequest) {
         try {
           await attributeAffiliateCommission(
             supabase,
-            order.id,
-            (order as { affiliate_code?: string | null }).affiliate_code
+            order as {
+              id: string;
+              email?: string | null;
+              telephone?: string | null;
+              affiliate_code?: string | null;
+            }
           );
         } catch (affError) {
           console.error(
