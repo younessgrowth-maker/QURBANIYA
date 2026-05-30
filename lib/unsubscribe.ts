@@ -3,19 +3,23 @@
 // secret, un attaquant ne peut pas générer de token valide pour
 // désinscrire arbitrairement quelqu'un d'autre.
 //
-// Le secret vit dans UNSUBSCRIBE_SECRET (env var Vercel). Si absent,
-// fallback sur RESEND_API_KEY pour rester fonctionnel — au pire un
-// attaquant ayant ce secret peut désinscrire des clients, ce qui n'est
-// pas critique (il peuvent se ré-inscrire).
+// Le secret vit dans UNSUBSCRIBE_SECRET (env var Vercel). Fallback toléré
+// sur RESEND_API_KEY (toujours présent en prod pour envoyer les emails) afin
+// de ne pas invalider les tokens existants. PAS de fallback en dur : un
+// littéral committé serait public → n'importe qui pourrait forger un token
+// et désinscrire arbitrairement un email. Si aucun secret n'est défini, on
+// échoue fermé (lève) plutôt que d'utiliser un secret connu de tous.
 
 import { createHmac, timingSafeEqual } from "node:crypto";
 
 function getSecret(): string {
-  return (
-    process.env.UNSUBSCRIBE_SECRET ??
-    process.env.RESEND_API_KEY ??
-    "qrb-fallback-2026"
-  );
+  const secret = process.env.UNSUBSCRIBE_SECRET ?? process.env.RESEND_API_KEY;
+  if (!secret) {
+    throw new Error(
+      "UNSUBSCRIBE_SECRET (ou RESEND_API_KEY) manquant — impossible de signer/vérifier les tokens de désinscription."
+    );
+  }
+  return secret;
 }
 
 /** Signe un email avec HMAC SHA-256 tronqué à 16 hex chars. */
