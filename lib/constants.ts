@@ -17,7 +17,7 @@ export const STATS = {
   sacrificesCompleted: 300,
   mealsDistributed: 9000,   // 300 × MEALS_PER_SHEEP
   familiesFed: 1500,        // 300 × FAMILIES_PER_SHEEP
-  rating: 4.8,
+  rating: 5.0,              // = moyenne réelle Google (cf. lib/google-reviews)
   yearsExperience: 5,
   satisfactionRate: 100,
 } as const;
