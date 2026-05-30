@@ -9,21 +9,26 @@ import {
 import { unsubscribeHeaders, unsubscribeUrl } from "@/lib/unsubscribe";
 import { createServiceRoleClient } from "@/lib/supabase/server";
 
-/** Check si un email a été désinscrit. Cas marketing uniquement. */
+/** Check si un email a été désinscrit. Cas marketing uniquement.
+ *
+ * LÈVE sur erreur DB (transitoire) au lieu de retourner une valeur : ainsi
+ * l'appelant (cron/broadcast, tous en try/catch) ne marque PAS l'email comme
+ * envoyé → il sera retenté au prochain run, plutôt que silencieusement perdu.
+ * Auparavant : une erreur de requête renvoyait `false` (on spammait un
+ * désinscrit) et une exception renvoyait `true` (email perdu + marqué envoyé,
+ * jamais re-tenté) — deux comportements incohérents. Ne renvoie `true` QUE si
+ * une désinscription est réellement enregistrée. */
 async function isUnsubscribed(email: string): Promise<boolean> {
-  try {
-    const supabase = createServiceRoleClient();
-    const { data } = await supabase
-      .from("email_unsubscribes")
-      .select("email")
-      .eq("email", email.toLowerCase())
-      .maybeSingle();
-    return !!data;
-  } catch (err) {
-    // Fail-open : si la DB tombe, on n'envoie pas plutôt que de spammer
-    console.error("isUnsubscribed check failed:", err);
-    return true;
+  const supabase = createServiceRoleClient();
+  const { data, error } = await supabase
+    .from("email_unsubscribes")
+    .select("email")
+    .eq("email", email.toLowerCase())
+    .maybeSingle();
+  if (error) {
+    throw new Error(`isUnsubscribed check failed: ${error.message}`);
   }
+  return !!data;
 }
 
 let _resend: Resend | null = null;
