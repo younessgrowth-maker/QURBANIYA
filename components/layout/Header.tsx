@@ -13,6 +13,7 @@ import { useInventory } from "@/components/providers/InventoryProvider";
 const NAV_LINKS = [
   { label: "Comment ça marche", href: "#comment-ca-marche" },
   { label: "Témoignages", href: "#temoignages" },
+  { label: "Nos actions", href: "/impact" },
   { label: "Blog", href: "/blog" },
   { label: "FAQ", href: "#faq" },
 ];
