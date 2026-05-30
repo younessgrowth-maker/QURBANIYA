@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServerSupabaseClient, createServiceRoleClient } from "@/lib/supabase/server";
 import { isAdminEmail } from "@/lib/admin";
+import { escapeLike } from "@/lib/utils";
 import type { Order } from "@/types";
 
 // GET /api/admin/referral-lookup?q=...
@@ -85,7 +86,7 @@ export async function GET(req: NextRequest) {
     // ou sans préfixe). Pour les rares cas avec espacement bizarre, on
     // pourra élargir avec une RPC SQL plus tard.
   } else if (q.includes("@")) {
-    candidatesQuery = candidatesQuery.ilike("email", `%${q}%`);
+    candidatesQuery = candidatesQuery.ilike("email", `%${escapeLike(q)}%`);
   } else {
     candidatesQuery = candidatesQuery.or(
       `prenom.ilike.%${q}%,nom.ilike.%${q}%`,

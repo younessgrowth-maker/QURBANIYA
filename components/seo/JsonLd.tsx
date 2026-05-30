@@ -212,7 +212,9 @@ export function EventJsonLd() {
       url: "https://qurbaniya.fr/commander",
       price: "140",
       priceCurrency: "EUR",
-      availability: "https://schema.org/InStock",
+      // Aligné sur ProductJsonLd (LimitedAvailability) — évite des données
+      // structurées contradictoires entre les deux schémas pour la même offre.
+      availability: "https://schema.org/LimitedAvailability",
     },
   };
 

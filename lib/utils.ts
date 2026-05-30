@@ -19,3 +19,13 @@ export function getBaseUrl(): string {
 export function orderRef(orderId: string): string {
   return `QRB-2026-${orderId.slice(0, 4).toUpperCase()}`;
 }
+
+/**
+ * Échappe les métacaractères LIKE/ILIKE (`%`, `_`, `\`) — légaux dans un
+ * email ou une saisie utilisateur — avant de les passer à un filtre
+ * `.ilike()` Supabase, pour éviter un sur-matching (ex: `a_b@x.com` qui
+ * matcherait `aXb@x.com`).
+ */
+export function escapeLike(input: string): string {
+  return input.replace(/[\\%_]/g, "\\$&");
+}

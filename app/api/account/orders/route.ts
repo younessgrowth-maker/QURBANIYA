@@ -3,6 +3,7 @@ import {
   createServerSupabaseClient,
   createServiceRoleClient,
 } from "@/lib/supabase/server";
+import { escapeLike } from "@/lib/utils";
 import type { Order } from "@/types";
 
 export const dynamic = "force-dynamic";
@@ -29,7 +30,7 @@ export async function GET() {
   const email = user.email.trim().toLowerCase();
   // Échappe les jokers LIKE (% _ \), légaux dans un email, pour éviter un
   // sur-matching (un email tiers ne doit jamais être retourné).
-  const likePattern = email.replace(/[\\%_]/g, "\\$&");
+  const likePattern = escapeLike(email);
 
   const supabase = createServiceRoleClient();
   const { data, error } = await supabase

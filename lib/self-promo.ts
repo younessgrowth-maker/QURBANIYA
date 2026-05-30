@@ -19,6 +19,7 @@ import {
   RETURNING_CUSTOMER_PROMO_EUR,
   RETURNING_REFERRER_PROMO_EUR,
 } from "@/lib/referral";
+import { escapeLike } from "@/lib/utils";
 
 type ServiceClient = ReturnType<typeof createServiceRoleClient>;
 
@@ -48,7 +49,7 @@ export async function computeSelfPromo(
   //    codes parrain, pour compter les filleuls). Match insensible à la casse
   //    via ilike. On échappe `%` et `_` (jokers LIKE) car ils sont légaux
   //    dans un email et provoqueraient un sur-matching.
-  const likePattern = normalized.replace(/[\\%_]/g, "\\$&");
+  const likePattern = escapeLike(normalized);
   const { data: prevOrders, error: prevErr } = await supabase
     .from("orders")
     .select("referral_code")

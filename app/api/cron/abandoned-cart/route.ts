@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createServiceRoleClient } from "@/lib/supabase/server";
 import { getStripe } from "@/lib/stripe";
 import { sendAbandonedCartReminder } from "@/lib/resend";
+import { escapeLike } from "@/lib/utils";
 import type { Order } from "@/types";
 
 // Cron Vercel — relance les paniers Stripe abandonnés.
@@ -76,7 +77,7 @@ export async function GET(req: NextRequest) {
       const { data: alreadyPaid } = await supabase
         .from("orders")
         .select("id")
-        .ilike("email", order.email)
+        .ilike("email", escapeLike(order.email))
         .in("payment_status", ["paid", "refunded"])
         .limit(1)
         .maybeSingle();
