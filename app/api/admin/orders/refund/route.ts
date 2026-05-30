@@ -75,18 +75,22 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Émettre le refund. Stripe gère lui-même l'idempotency au niveau du
-    // payment_intent (un PI ne peut pas être remboursé plus que le montant
-    // capturé).
-    const refund = await stripe.refunds.create({
-      payment_intent: paymentIntentId,
-      reason: "requested_by_customer",
-      metadata: {
-        order_id: typed.id,
-        admin_email: user.email ?? "",
-        reason: reason?.slice(0, 200) ?? "",
+    // Émettre le refund. `idempotencyKey` = order_id : si la DB échoue après
+    // ce refund (cf. plus bas) et que l'admin re-clique, Stripe renvoie le
+    // MÊME refund au lieu d'en créer un second (clé valable 24h). En plus du
+    // garde-fou PI (on ne rembourse pas plus que le montant capturé).
+    const refund = await stripe.refunds.create(
+      {
+        payment_intent: paymentIntentId,
+        reason: "requested_by_customer",
+        metadata: {
+          order_id: typed.id,
+          admin_email: user.email ?? "",
+          reason: reason?.slice(0, 200) ?? "",
+        },
       },
-    });
+      { idempotencyKey: `refund_${typed.id}` }
+    );
 
     // Mettre à jour la commande en DB. Le .eq('payment_status','paid') joue
     // le rôle de garde-fou conditionnel : si entre-temps quelqu'un d'autre
@@ -116,30 +120,21 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Libérer les slots d'inventaire (decrement reserved_slots).
-    // IMPORTANT : il faut libérer autant de slots que la quantity de la
-    // commande (commandes multi-mouton). Avant le fix on libérait toujours 1,
-    // ce qui créait des slots fantômes pour les commandes qty > 1.
-    // Pas critique si ça rate (les slots ne sont pas une vérité absolue,
-    // juste un compteur d'affichage), donc on log mais on ne casse pas
-    // la réponse au client.
+    // Libérer les slots d'inventaire de façon ATOMIQUE via RPC (greatest(0,
+    // reserved - n)) au lieu d'un read-modify-write applicatif sujet aux lost
+    // updates. On libère `quantity` slots (commandes multi-mouton) sur la
+    // saison de la commande. Non critique si ça rate (compteur d'affichage),
+    // donc on log sans casser la réponse.
     const qtyToRelease = typed.quantity ?? 1;
-    const { data: inv } = await supabase
-      .from("inventory")
-      .select("reserved_slots")
-      .eq("year", CURRENT_YEAR)
-      .single();
-    if (inv && inv.reserved_slots > 0) {
-      const nextReserved = Math.max(0, inv.reserved_slots - qtyToRelease);
-      const { error: invErr } = await supabase
-        .from("inventory")
-        .update({ reserved_slots: nextReserved })
-        .eq("year", CURRENT_YEAR);
-      if (invErr) {
-        console.error("Inventory release failed:", invErr.message);
-      } else {
-        console.log(`Inventory released: -${qtyToRelease} slot(s) for refund ${typed.id}`);
-      }
+    const releaseYear = typed.season ?? CURRENT_YEAR;
+    const { error: invErr } = await supabase.rpc("release_slots", {
+      target_year: releaseYear,
+      n: qtyToRelease,
+    });
+    if (invErr) {
+      console.error("Inventory release failed:", invErr.message);
+    } else {
+      console.log(`Inventory released: -${qtyToRelease} slot(s) for refund ${typed.id}`);
     }
 
     return NextResponse.json({
