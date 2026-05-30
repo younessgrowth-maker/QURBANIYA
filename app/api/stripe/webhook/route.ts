@@ -3,7 +3,6 @@ import { getStripe } from "@/lib/stripe";
 import { headers } from "next/headers";
 import { createServiceRoleClient } from "@/lib/supabase/server";
 import { sendOrderConfirmation } from "@/lib/resend";
-import { CURRENT_YEAR } from "@/lib/constants";
 import { generateReferralCode } from "@/lib/referral-server";
 import type { Order } from "@/types";
 
@@ -160,63 +159,37 @@ export async function POST(req: NextRequest) {
         const amountPaidEuros = Math.round(amountTotalCents / 100);
         const calculatedDiscount = Math.max(0, 140 * qty - amountPaidEuros);
 
-        // Conditional update : on ne passe à 'paid' que si la commande est
-        // encore 'pending'. Si elle est déjà 'paid' (race condition entre
-        // 2 events ou retry qui aurait quand même passé l'idempotency check),
-        // .single() retourne PGRST116 et on skip les side effects.
-        const { data: order, error: updateError } = await supabase
-          .from("orders")
-          .update({
-            payment_status: "paid",
-            discount_amount: calculatedDiscount,
-            updated_at: new Date().toISOString(),
-          })
-          .eq("stripe_session_id", session.id)
-          .eq("payment_status", "pending")
-          .select()
-          .single();
-
-        if (updateError || !order) {
-          // PGRST116 = "no rows" → commande déjà paid (skip silencieux)
-          // Autre erreur → log mais on rend 200 pour ne pas bloquer Stripe
-          if (updateError && updateError.code !== "PGRST116") {
-            console.error("Order update failed on completed:", session.id, updateError);
-          } else {
-            console.log(`Order already paid or not found: ${session.id}`);
+        // ─── Passage à `paid` + réservation inventaire ATOMIQUE ───
+        // RPC mark_paid_and_reserve : flip pending→paid ET réservation des N
+        // slots dans une seule transaction. Idempotent (ne matche que
+        // pending). Remplace l'ancien combo UPDATE + decrement_slots_by où un
+        // échec du décrément laissait la commande paid mais non réservée
+        // (survente silencieuse, jamais rejouée car event déjà marqué traité).
+        const { data: paidRows, error: rpcError } = await supabase.rpc(
+          "mark_paid_and_reserve",
+          {
+            p_session_id: session.id,
+            p_quantity: qty,
+            p_discount: calculatedDiscount,
           }
+        );
+
+        if (rpcError) {
+          // Erreur DB pendant l'opération atomique : rien n'a été committé
+          // (transaction unique) → la commande reste pending, état COHÉRENT
+          // (pas d'oversell partiel). On rend 200 (l'event est déjà marqué
+          // traité) ; le paiement Stripe orphelin est réconciliable côté
+          // admin. Cas rare (panne DB pile à cet instant).
+          console.error("mark_paid_and_reserve failed:", session.id, rpcError);
           return NextResponse.json({ received: true });
         }
 
-        // Multi-moutons : décrémente N slots (quantity de la commande, défaut 1).
-        // On préfère lire depuis la DB (source de vérité après insert) mais on
-        // fallback sur la métadata si le champ n'existe pas (migration 0018
-        // pas appliquée).
-        const dbQty =
-          (order as { quantity?: number }).quantity ?? qty;
-        let rpcError: { message: string } | null = null;
-        const { error: rpcByError } = await supabase.rpc("decrement_slots_by", {
-          target_year: CURRENT_YEAR,
-          n: dbQty,
-        });
-        if (rpcByError) {
-          // Si decrement_slots_by n'existe pas (migration pas appliquée),
-          // on retombe sur l'ancienne, appelée dbQty fois.
-          console.warn(
-            "decrement_slots_by failed, falling back to decrement_slots × qty:",
-            rpcByError.message
-          );
-          for (let i = 0; i < dbQty; i++) {
-            const { error: legacyErr } = await supabase.rpc("decrement_slots", {
-              target_year: CURRENT_YEAR,
-            });
-            if (legacyErr) {
-              rpcError = legacyErr;
-              break;
-            }
-          }
-        }
-        if (rpcError) {
-          console.error("Inventory decrement failed:", rpcError);
+        const order = Array.isArray(paidRows) ? paidRows[0] : paidRows;
+        if (!order) {
+          // Aucune ligne pending → déjà paid (retry/race) : skip les
+          // side-effects (idempotence assurée par la garde pending de la RPC).
+          console.log(`Order already paid or not found: ${session.id}`);
+          return NextResponse.json({ received: true });
         }
 
         // ─── Parrainage : générer le code de CE client (qu'il pourra partager)
