@@ -88,7 +88,7 @@ function buildSteps(order: Order, now: Date): Step[] {
       ? "Votre vidéo a été envoyée par WhatsApp."
       : videoReady
         ? "La vidéo est prête, envoi par WhatsApp imminent."
-        : "Vidéo envoyée par WhatsApp dans les 24h après le sacrifice.",
+        : "Vidéo envoyée par WhatsApp une fois le sacrifice accompli — le jour de l'Aïd, jusqu'aux 3 jours de l'Aïd selon la zone et les imprévus sur place.",
     Icon: Video,
     status: videoSent ? "done" : videoReady ? "current" : "pending",
     doneAt: videoSent ? order.updated_at : null,

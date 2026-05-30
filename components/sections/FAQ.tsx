@@ -15,7 +15,7 @@ const faqs = [
   },
   {
     q: "Comment reçois-je la preuve vidéo ?",
-    a: "Vous recevez votre vidéo nominative directement par WhatsApp dans les 24h suivant le sacrifice. La vidéo montre le sacrifice de votre mouton spécifiquement. Assurez-vous que votre numéro WhatsApp est correct lors de la commande.",
+    a: "Vous recevez votre vidéo nominative directement par WhatsApp une fois le sacrifice accompli — nous visons le jour de l'Aïd, et au plus tard durant les 3 jours de l'Aïd selon la zone et les imprévus sur place. La vidéo montre le sacrifice de votre mouton spécifiquement. Assurez-vous que votre numéro WhatsApp est correct lors de la commande.",
   },
   {
     q: "Puis-je commander pour quelqu'un d'autre ?",
@@ -51,7 +51,7 @@ const faqs = [
   },
   {
     q: "Quand vais-je recevoir ma vidéo ?",
-    a: "Votre vidéo nominative est envoyée par WhatsApp dans les 24h suivant le sacrifice. Généralement, vous la recevez le jour même.",
+    a: "Nous faisons notre maximum pour que votre sacrifice et votre vidéo nominative soient réalisés le jour de l'Aïd. Selon la zone du village où nous intervenons et les imprévus rencontrés sur place, cela peut toutefois prendre jusqu'aux 3 jours de l'Aïd (les jours de Tashriq), période durant laquelle le sacrifice reste pleinement valide. Dès que vous recevez votre vidéo par WhatsApp, c'est le signe que votre sacrifice a bien été accompli en votre nom.",
   },
   {
     q: "Puis-je commander pour plusieurs personnes ?",

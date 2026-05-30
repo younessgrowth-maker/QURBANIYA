@@ -174,7 +174,7 @@ export function FAQPageJsonLd() {
         name: "Quand vais-je recevoir ma vidéo ?",
         acceptedAnswer: {
           "@type": "Answer",
-          text: "Votre vidéo nominative est envoyée par WhatsApp dans les 24h suivant le sacrifice. Généralement, vous la recevez le jour même.",
+          text: "Nous faisons notre maximum pour que votre sacrifice et votre vidéo nominative soient réalisés le jour de l'Aïd. Selon la zone et les imprévus rencontrés sur place, cela peut prendre jusqu'aux 3 jours de l'Aïd (jours de Tashriq), période durant laquelle le sacrifice reste pleinement valide.",
         },
       },
     ],

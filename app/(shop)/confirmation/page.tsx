@@ -753,7 +753,7 @@ function NextStepsCard() {
     { icon: Mail, text: "Email de confirmation envoyé immédiatement" },
     { icon: Calendar, text: "Rappel 7 jours avant le sacrifice" },
     { icon: Check, text: "Notification le jour du sacrifice" },
-    { icon: Video, text: "Preuve vidéo envoyée sous 24h" },
+    { icon: Video, text: "Preuve vidéo par WhatsApp — le jour de l'Aïd, jusqu'à 3 jours selon la zone" },
   ];
 
   return (
