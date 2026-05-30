@@ -10,10 +10,16 @@ import {
   sanitizeReferralCode,
   REFERRAL_DISCOUNT_EUR,
 } from "@/lib/referral";
-import { computeSelfPromo, hasRedeemedSelfPromo } from "@/lib/self-promo";
+import { computeSelfPromo } from "@/lib/self-promo";
 import { sanitizeAffiliateCode } from "@/lib/affiliate";
 
 export async function POST(req: NextRequest) {
+  // Déclarés en portée fonction pour que le catch puisse relâcher une
+  // réservation self-promo orpheline (createServiceRoleClient / randomUUID
+  // ne lèvent pas). orderId est embarqué dans le success_url Stripe.
+  const supabase = createServiceRoleClient();
+  const orderId = randomUUID();
+  let selfPromoReserved = false;
   try {
     // Hard cutoff : aucune commande après le jour de l'Aïd. Vérifié AVANT le parse
     // pour court-circuiter Stripe et la DB si la fenêtre est fermée.
@@ -30,7 +36,6 @@ export async function POST(req: NextRequest) {
 
     const body = await req.json();
     const data = orderSchema.parse(body);
-    const supabase = createServiceRoleClient();
 
     // Garde-fou : refuser la commande si les réservations sont closes ou complètes.
     // Fail-open si Supabase injoignable (inventory null) — on préfère accepter une
@@ -58,11 +63,10 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Pré-génération du UUID de la commande. Permet de l'embarquer dans le
+    // orderId est pré-généré en tête de fonction. Embarqué dans le
     // success_url Stripe pour que /confirmation et /api/orders/by-session
     // exigent à la fois session_id ET order_id (PII protégée par 122 bits
     // d'entropie supplémentaires, contre lookup par session_id seul).
-    const orderId = randomUUID();
 
     // ─── Codes : résoudre le rôle du code saisi (filleul vs self-promo) ───
     // On ne fait confiance qu'à un code dont la commande propriétaire est
@@ -91,19 +95,32 @@ export async function POST(req: NextRequest) {
         const sameEmail = owner.email?.toLowerCase() === data.email.toLowerCase();
         if (sameEmail) {
           // ── Promo retour client : le client utilise SON propre code ──
-          // Éligibilité calculée sur l'activité de la saison précédente,
-          // puis verrou d'usage unique pour la saison courante.
+          // Éligibilité calculée sur l'activité de la saison précédente.
           const promo = await computeSelfPromo(supabase, data.email, CURRENT_YEAR);
           if (promo.amountEur > 0) {
-            const alreadyUsed = await hasRedeemedSelfPromo(
-              supabase,
-              data.email,
-              CURRENT_YEAR
-            );
-            if (!alreadyUsed) {
+            // Verrou d'usage unique posé MAINTENANT (avant la session
+            // remisée), pas au webhook : on insère la réservation et on
+            // laisse la contrainte unique(email, season) trancher. Un 2e
+            // checkout concurrent échoue ici (23505) et n'a pas de remise →
+            // ferme le TOCTOU. La réservation est relâchée si la commande
+            // échoue/expire (cf. catch + insertError + webhook expired).
+            const { error: reserveErr } = await supabase
+              .from("self_promo_redemptions")
+              .insert({
+                email: data.email.trim().toLowerCase(),
+                season: CURRENT_YEAR,
+                order_id: orderId,
+                amount_eur: promo.amountEur,
+              });
+            if (!reserveErr) {
+              selfPromoReserved = true;
               selfPromoCode = requestedCode;
               selfPromoAmount = promo.amountEur;
               discountAmount = promo.amountEur;
+            } else if ((reserveErr as { code?: string }).code !== "23505") {
+              // Erreur DB autre que "déjà réservé" : pas de remise
+              // (fail-closed sur l'argent), sans bloquer la commande.
+              console.error("Self-promo reserve failed:", reserveErr);
             }
           }
         } else {
@@ -254,6 +271,14 @@ export async function POST(req: NextRequest) {
       // La session Stripe créée mais non utilisée expire d'elle-même (~24h)
       // et reste invisible de notre DB.
       console.error("Order insert failed:", insertError);
+      // La commande n'existera pas → relâcher la réservation self-promo
+      // pour que le client retrouve sa promo lors d'un retry.
+      if (selfPromoReserved) {
+        await supabase
+          .from("self_promo_redemptions")
+          .delete()
+          .eq("order_id", orderId);
+      }
       return NextResponse.json(
         {
           error:
@@ -273,6 +298,21 @@ export async function POST(req: NextRequest) {
       console.error("Order error:", error.name, error.message);
     } else {
       console.error("Order error: unknown");
+    }
+    // Relâcher une réservation self-promo orpheline (ex : Stripe lève après
+    // la réservation mais avant l'insert de la commande). Best-effort.
+    if (selfPromoReserved) {
+      try {
+        await supabase
+          .from("self_promo_redemptions")
+          .delete()
+          .eq("order_id", orderId);
+      } catch (relError) {
+        console.error(
+          "Self-promo release in catch failed:",
+          relError instanceof Error ? relError.message : "unknown"
+        );
+      }
     }
     return NextResponse.json(
       { error: "Erreur lors de la création de la commande." },

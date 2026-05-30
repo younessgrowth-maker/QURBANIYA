@@ -75,34 +75,21 @@ async function attributeAffiliateCommission(
   }
 }
 
-// ─── Rédemption promo retour client (usage unique) ─────────────────
-// Quand une commande payée porte une promo retour client (self_promo),
-// on enregistre la rédemption (email normalisé, saison). La contrainte
-// unique(email, season) rend l'opération idempotente (retry webhook → pas
-// de double ligne) et matérialise le verrou d'usage unique. Échec non
-// bloquant : la commande reste valide.
-async function recordSelfPromoRedemption(
+// ─── Relâchement promo retour client sur abandon ───────────────────
+// Quand un checkout expire (commande pending → failed), on relâche la
+// réservation self-promo posée à la création (cf. /api/orders), pour que
+// le client retrouve sa promo lors d'un futur checkout cette saison.
+// Best-effort, non bloquant.
+async function releaseSelfPromoReservation(
   supabase: ReturnType<typeof createServiceRoleClient>,
-  order: {
-    id: string;
-    email?: string | null;
-    season?: number | null;
-    self_promo_amount?: number | null;
-  }
+  orderId: string
 ): Promise<void> {
-  const amount = order.self_promo_amount ?? 0;
-  if (amount <= 0 || !order.email || !order.season) return;
-
-  const { error } = await supabase.from("self_promo_redemptions").insert({
-    email: order.email.trim().toLowerCase(),
-    season: order.season,
-    order_id: order.id,
-    amount_eur: amount,
-  });
-
-  // 23505 = unique(email, season) → déjà enregistré (retry), idempotent.
-  if (error && (error as { code?: string }).code !== "23505") {
-    console.error("Self-promo redemption insert failed:", order.id, error);
+  const { error } = await supabase
+    .from("self_promo_redemptions")
+    .delete()
+    .eq("order_id", orderId);
+  if (error) {
+    console.error("Self-promo release failed:", orderId, error);
   }
 }
 
@@ -278,38 +265,35 @@ export async function POST(req: NextRequest) {
           );
         }
 
-        // Promo retour client : matérialise l'usage unique (non-bloquant,
-        // idempotent). Ne touche ni le prix, ni l'email, ni le statut.
-        try {
-          await recordSelfPromoRedemption(
-            supabase,
-            order as {
-              id: string;
-              email?: string | null;
-              season?: number | null;
-              self_promo_amount?: number | null;
-            }
-          );
-        } catch (spError) {
-          console.error(
-            "Self-promo redemption error:",
-            spError instanceof Error ? spError.message : "unknown"
-          );
-        }
+        // Promo retour client : l'usage unique est désormais réservé à la
+        // CRÉATION de la commande (cf. /api/orders + migration 0022), pas
+        // ici. Une commande payée garde simplement sa réservation. Rien à
+        // faire au paiement.
 
         break;
       }
 
       case "checkout.session.expired": {
         const session = event.data.object;
-        const { error: updateError } = await supabase
+        const { data: expired, error: updateError } = await supabase
           .from("orders")
           .update({ payment_status: "failed", updated_at: new Date().toISOString() })
           .eq("stripe_session_id", session.id)
-          .eq("payment_status", "pending");
+          .eq("payment_status", "pending")
+          .select("id, self_promo_amount")
+          .maybeSingle();
 
         if (updateError && updateError.code !== "PGRST116") {
           console.error("Order update failed on expired:", session.id, updateError);
+        }
+
+        // Panier abandonné : relâcher la réservation self-promo si présente,
+        // pour ne pas brûler la promo du client.
+        if (expired && (expired as { self_promo_amount?: number }).self_promo_amount) {
+          await releaseSelfPromoReservation(
+            supabase,
+            (expired as { id: string }).id
+          );
         }
         break;
       }
