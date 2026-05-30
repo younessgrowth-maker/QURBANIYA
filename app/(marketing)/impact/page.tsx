@@ -27,8 +27,8 @@ const VIDEOS = [
 export default function ImpactPage() {
   return (
     <main className="bg-bg-primary">
-      {/* Hero */}
-      <section className="section-padding">
+      {/* Hero — pt augmenté pour dégager le header fixe (72px) */}
+      <section className="section-padding pt-28 md:pt-36">
         <div className="max-w-4xl mx-auto text-center px-4">
           <p className="text-gold font-bold uppercase tracking-[0.2em] text-xs mb-4">
             Aïd al-Adha 2026 · Madagascar
