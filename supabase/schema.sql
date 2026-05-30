@@ -2,6 +2,14 @@
 -- QURBANIYA — SCHEMA COMPLET DE LA BASE DE DONNÉES
 -- ══════════════════════════════════════════════════════════════════════════
 --
+-- ⚠️⚠️ SNAPSHOT OBSOLÈTE (figé ~migration 0002, avril 2026). Ne reflète PAS
+-- l'état réel : il manque ~22 migrations (parrainage, self-promo, refund,
+-- quantity, sacrifices, affiliés, waitlist, RPC mark_paid_and_reserve /
+-- release_slots, colonnes season/self_promo_*, etc.).
+-- 👉 La SOURCE DE VÉRITÉ est `supabase/migrations/*.sql` (chronologique).
+-- Ce fichier est conservé pour contexte historique uniquement, en attendant
+-- une régénération propre du snapshot.
+--
 -- Fichier de RÉFÉRENCE — représente l'état complet de la DB Supabase prod.
 -- À lire en premier pour comprendre la structure. À maintenir à jour quand
 -- une nouvelle table / colonne / RLS est ajoutée.

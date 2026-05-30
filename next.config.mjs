@@ -57,8 +57,11 @@ const nextConfig = {
             value: "DENY",
           },
           {
+            // Header XSS auditeur déprécié : "1; mode=block" peut introduire
+            // des vulnérabilités sur de vieux navigateurs. La reco moderne est
+            // "0" (désactivé) + s'appuyer sur une CSP (à ajouter séparément).
             key: "X-XSS-Protection",
-            value: "1; mode=block",
+            value: "0",
           },
           {
             key: "Referrer-Policy",

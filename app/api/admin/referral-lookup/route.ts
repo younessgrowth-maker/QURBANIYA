@@ -88,8 +88,18 @@ export async function GET(req: NextRequest) {
   } else if (q.includes("@")) {
     candidatesQuery = candidatesQuery.ilike("email", `%${escapeLike(q)}%`);
   } else {
+    // Recherche par nom : q est interpolé dans la grammaire `.or()` de
+    // PostgREST. On retire les caractères structurels de cette grammaire et
+    // les jokers LIKE — virgule, parenthèses, %, _, ", \, *, : — qui
+    // altéreraient le filtre. Les lettres accentuées/espaces/'/- sont
+    // préservés (liste noire plutôt que blanche pour éviter \p{L}, qui
+    // exigerait une cible TS es6+).
+    const safeName = q.replace(/[,()%_"\\:*]/g, "").trim();
+    if (!safeName) {
+      return NextResponse.json({ ok: true, q, candidates: [] });
+    }
     candidatesQuery = candidatesQuery.or(
-      `prenom.ilike.%${q}%,nom.ilike.%${q}%`,
+      `prenom.ilike.%${safeName}%,nom.ilike.%${safeName}%`,
     );
   }
 
