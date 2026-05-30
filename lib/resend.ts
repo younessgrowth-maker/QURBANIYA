@@ -325,7 +325,7 @@ export async function sendOrderConfirmation(order: Order) {
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 28px;">
       ${stepItem("1", "Rappel à J-7", "Un email pour vous rappeler la date du sacrifice et confirmer votre numéro WhatsApp.")}
       ${stepItem("2", "Jour de l'Aïd", "Le sacrifice est effectué en votre nom par le cheikh, dans le respect total de la Sunnah.")}
-      ${stepItem("3", "Vidéo nominative", "Vous recevez la preuve vidéo par WhatsApp dans les 24 heures qui suivent.")}
+      ${stepItem("3", "Vidéo nominative", "Vous recevez la preuve vidéo par WhatsApp une fois le sacrifice accompli — le jour de l'Aïd, et au plus tard durant les 3 jours de l'Aïd selon la zone et les imprévus sur place.")}
     </table>
 
     <!-- Encart WhatsApp important -->
@@ -1015,7 +1015,7 @@ export async function sendAidReminder(order: Order) {
           📱 Confirmez votre numéro WhatsApp
         </p>
         <p style="margin:0 0 4px;color:#1B4332;font-size:13px;line-height:1.6;">
-          La vidéo nominative de votre sacrifice vous sera envoyée par WhatsApp dans les 24h après le 27 mai. Vérifiez que votre numéro est correct&nbsp;:
+          La vidéo nominative de votre sacrifice vous sera envoyée par WhatsApp une fois le sacrifice accompli — nous visons le 27 mai (jour de l'Aïd), et au plus tard durant les 3 jours de l'Aïd selon la zone. Vérifiez que votre numéro est correct&nbsp;:
         </p>
         <p style="margin:8px 0 0;color:#1A1A18;font-size:15px;font-weight:bold;font-family:monospace;">
           ${order.telephone || "—"}
@@ -1029,7 +1029,7 @@ export async function sendAidReminder(order: Order) {
     <!-- Étapes restantes -->
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 24px;">
       ${stepItem("1", "Jour de l'Aïd — 27 mai", qty > 1 ? `Le cheikh effectue ${qty > 1 ? `vos ${qty} sacrifices` : "votre sacrifice"} en votre nom, dans le respect total de la Sunnah.` : "Le cheikh effectue le sacrifice en votre nom, dans le respect total de la Sunnah.")}
-      ${stepItem("2", qty > 1 ? "Vidéos nominatives" : "Vidéo nominative", qty > 1 ? `Vous recevez vos ${qty} vidéos par WhatsApp dans les 48h qui suivent. Aucune action à faire de votre côté.` : "Vous la recevez par WhatsApp dans les 24h qui suivent. Aucune action à faire de votre côté.")}
+      ${stepItem("2", qty > 1 ? "Vidéos nominatives" : "Vidéo nominative", qty > 1 ? `Vous recevez vos ${qty} vidéos par WhatsApp une fois les sacrifices accomplis — le jour de l'Aïd, jusqu'aux 3 jours de l'Aïd selon la zone. Aucune action à faire de votre côté.` : "Vous la recevez par WhatsApp une fois le sacrifice accompli — le jour de l'Aïd, jusqu'aux 3 jours de l'Aïd selon la zone. Aucune action à faire de votre côté.")}
     </table>
 
     <p style="margin:24px 0 0;color:#5C5347;font-size:14px;line-height:1.6;text-align:center;">

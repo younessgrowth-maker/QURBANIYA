@@ -74,7 +74,7 @@ function CommanderFaqJsonLd() {
         name: "Comment ai-je la preuve que mon sacrifice a été effectué ?",
         acceptedAnswer: {
           "@type": "Answer",
-          text: "Vous recevez une vidéo nominative par WhatsApp dans les 24h suivant le sacrifice. Votre nom est prononcé lors de l'invocation, et la vidéo montre l'animal et l'abattage rituel complet.",
+          text: "Vous recevez une vidéo nominative par WhatsApp une fois le sacrifice accompli. Nous visons le jour de l'Aïd, mais selon la zone et les imprévus sur place cela peut aller jusqu'aux 3 jours de l'Aïd, durant lesquels le sacrifice reste pleinement valide. Votre nom est prononcé lors de l'invocation, et la vidéo montre l'animal et l'abattage rituel complet.",
         },
       },
       {
@@ -260,7 +260,7 @@ export default async function CommanderPage() {
                   <span className="text-gold text-xl group-open:rotate-45 transition-transform">+</span>
                 </summary>
                 <p className="mt-3 text-text-muted leading-relaxed text-sm">
-                  Vous recevez une <strong className="text-text-primary">vidéo nominative par WhatsApp dans les 24h suivant le sacrifice</strong>. Votre nom est prononcé lors de l&apos;invocation, et la vidéo montre l&apos;animal et l&apos;abattage rituel complet.
+                  Vous recevez une <strong className="text-text-primary">vidéo nominative par WhatsApp une fois le sacrifice accompli</strong> — nous visons le jour de l&apos;Aïd, et au plus tard durant les 3 jours de l&apos;Aïd selon la zone et les imprévus sur place. Votre nom est prononcé lors de l&apos;invocation, et la vidéo montre l&apos;animal et l&apos;abattage rituel complet.
                 </p>
               </details>
 
