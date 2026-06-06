@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createServiceRoleClient } from "@/lib/supabase/server";
 import { parseOrderReference, escapeLike } from "@/lib/utils";
 import { expandOrderToSacrifices } from "@/lib/sacrifices";
+import { buildOrderSteps } from "@/lib/order-status";
 import type { Order } from "@/types";
 
 // ─── Recherche publique de la vidéo nominative ────────────────────────────
@@ -107,25 +108,23 @@ export async function POST(req: NextRequest) {
 
     if (!order) return NOT_FOUND;
 
-    if (order.payment_status !== "paid") {
-      return NextResponse.json({
-        status: "unpaid",
-        prenom: order.prenom,
-        message:
-          "Cette commande n'est pas encore réglée. Une fois le paiement confirmé, votre vidéo apparaîtra ici dès qu'elle sera prête.",
-      });
-    }
-
-    // Commande payée : la/les vidéo(s) sont-elles toutes uploadées ?
+    // Vidéo prête = commande payée ET toutes les vidéos uploadées.
     const items = expandOrderToSacrifices(order, 0);
-    const allReady = items.length > 0 && items.every((it) => it.videoPath);
+    const allReady =
+      order.payment_status === "paid" &&
+      items.length > 0 &&
+      items.every((it) => it.videoPath);
 
+    // Pas encore prête (non réglée OU vidéos pas toutes uploadées) → on
+    // renvoie le suivi de commande (même timeline que /ma-commande) plutôt
+    // qu'un simple message, pour que le client voie où en est sa commande.
     if (!allReady) {
       return NextResponse.json({
-        status: "pending_video",
+        status: "tracking",
         prenom: order.prenom,
-        message:
-          "Votre sacrifice est confirmé. La vidéo nominative est en cours de préparation — elle s'affichera ici dès qu'elle sera disponible (le jour de l'Aïd, jusqu'à 3 jours selon la zone).",
+        reference: `QRB-2026-${order.id.replace(/-/g, "").slice(0, 8).toUpperCase()}`,
+        orderId: order.id,
+        steps: buildOrderSteps(order, new Date()),
       });
     }
 
