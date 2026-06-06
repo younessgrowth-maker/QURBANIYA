@@ -1,13 +1,16 @@
 "use client";
 
 import { useState } from "react";
-import { Search, Video, Download, Clock, AlertCircle, MessageCircle } from "lucide-react";
+import Link from "next/link";
+import { Search, Video, Download, AlertCircle, MessageCircle } from "lucide-react";
 import { whatsappUrl } from "@/lib/constants";
 import { cn } from "@/lib/utils";
+import type { OrderStep } from "@/lib/order-status";
+import OrderTimeline from "@/components/orders/OrderTimeline";
 
 type LookupResult =
   | { status: "ready"; prenom: string; reference: string; videos: { niyyah: string; url: string; downloadUrl: string }[] }
-  | { status: "unpaid" | "pending_video"; prenom: string; message: string }
+  | { status: "tracking"; prenom: string; reference: string; orderId: string; steps: OrderStep[] }
   | { status: "not_found" | "rate_limited" | "error"; message: string };
 
 export default function VideoFinder() {
@@ -135,10 +138,42 @@ export default function VideoFinder() {
         </div>
       )}
 
-      {result && (result.status === "unpaid" || result.status === "pending_video") && (
-        <InfoCard tone="gold" icon={Clock} title={`Bonjour ${result.prenom}`}>
-          {result.message}
-        </InfoCard>
+      {result?.status === "tracking" && (
+        <div className="space-y-4">
+          <div className="text-center">
+            <p className="text-text-primary font-bold text-lg">
+              As-salâmu ʿalaykum {result.prenom},
+            </p>
+            <p className="text-text-muted text-sm">
+              Votre vidéo n&apos;est pas encore disponible. Voici où en est votre
+              commande · {result.reference}
+            </p>
+          </div>
+          <OrderTimeline steps={result.steps} />
+          <div className="text-center bg-bg-secondary rounded-card p-4 border border-gray-100/80">
+            <p className="text-sm text-text-muted mb-3">
+              Vous recevrez aussi votre vidéo par WhatsApp dès qu&apos;elle sera prête.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-2 justify-center">
+              <Link
+                href={`/ma-commande/${result.orderId}`}
+                className="inline-flex items-center justify-center gap-2 border border-gold text-gold hover:bg-gold/5 font-bold uppercase text-xs px-4 py-2 rounded-lg transition-colors font-inter"
+              >
+                Suivi détaillé
+              </Link>
+              <a
+                href={whatsappUrl(
+                  `Bonjour, une question sur ma commande ${result.reference}.`
+                )}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center justify-center gap-2 bg-[#25D366] hover:bg-[#1ebd5a] text-white font-bold uppercase text-xs px-4 py-2 rounded-lg transition-colors font-inter"
+              >
+                <MessageCircle size={14} /> Nous écrire
+              </a>
+            </div>
+          </div>
+        </div>
       )}
 
       {result && (result.status === "not_found" || result.status === "rate_limited" || result.status === "error") && (
@@ -167,7 +202,7 @@ function InfoCard({
   children,
 }: {
   tone: "gold" | "muted";
-  icon: typeof Clock;
+  icon: typeof AlertCircle;
   title: string;
   children: React.ReactNode;
 }) {
