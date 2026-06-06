@@ -130,8 +130,16 @@ export async function POST(req: NextRequest) {
     }
 
     // Génère une URL signée courte par sacrifice.
-    const videos: Array<{ niyyah: string; url: string }> = [];
+    // - `url`         : lecture inline (<video>) — pas de Content-Disposition.
+    // - `downloadUrl` : même URL + `&download=<nom>`. Le param `download` ne
+    //   fait PAS partie du token signé : Supabase Storage répond alors avec
+    //   `Content-Disposition: attachment`, ce qui force le téléchargement
+    //   même en cross-origin (l'attribut HTML `download` est ignoré entre
+    //   qurbaniya.fr et supabase.co).
+    const videos: Array<{ niyyah: string; url: string; downloadUrl: string }> = [];
+    let idx = 0;
     for (const it of items) {
+      idx += 1;
       if (!it.videoPath) continue;
       const { data: signed, error: signError } = await supabase.storage
         .from("sacrifice-videos")
@@ -143,7 +151,17 @@ export async function POST(req: NextRequest) {
           { status: 500 }
         );
       }
-      videos.push({ niyyah: it.niyyah, url: signed.signedUrl });
+      const ext = (it.videoPath.split(".").pop() || "mp4").toLowerCase();
+      const slug =
+        (it.niyyah || order.prenom)
+          .normalize("NFD")
+          .replace(/[̀-ͯ]/g, "") // retire les accents
+          .replace(/[^a-zA-Z0-9]+/g, "-")
+          .replace(/^-+|-+$/g, "")
+          .toLowerCase() || "sacrifice";
+      const filename = `qurbaniya-${slug}${items.length > 1 ? `-${idx}` : ""}.${ext}`;
+      const downloadUrl = `${signed.signedUrl}&download=${encodeURIComponent(filename)}`;
+      videos.push({ niyyah: it.niyyah, url: signed.signedUrl, downloadUrl });
     }
 
     return NextResponse.json({

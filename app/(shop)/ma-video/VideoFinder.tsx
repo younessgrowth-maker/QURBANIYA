@@ -6,7 +6,7 @@ import { whatsappUrl } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 
 type LookupResult =
-  | { status: "ready"; prenom: string; reference: string; videos: { niyyah: string; url: string }[] }
+  | { status: "ready"; prenom: string; reference: string; videos: { niyyah: string; url: string; downloadUrl: string }[] }
   | { status: "unpaid" | "pending_video"; prenom: string; message: string }
   | { status: "not_found" | "rate_limited" | "error"; message: string };
 
@@ -121,8 +121,7 @@ export default function VideoFinder() {
                 className="w-full rounded-lg bg-black aspect-video"
               />
               <a
-                href={v.url}
-                download
+                href={v.downloadUrl}
                 className="inline-flex items-center gap-1.5 text-sm text-text-muted hover:text-gold transition-colors mt-3 font-semibold"
               >
                 <Download size={14} /> Télécharger la vidéo
