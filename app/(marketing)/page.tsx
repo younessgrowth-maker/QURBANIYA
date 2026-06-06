@@ -73,7 +73,7 @@ export default function HomePage() {
       <Divider />
       <Testimonials />
 
-      {/* 6bis. AVIS GOOGLE — 18 avis 5.0/5 collectés sur GBP J+1 Aïd 2026.
+      {/* 6bis. AVIS GOOGLE — 33 avis 5.0/5 collectés sur GBP (Aïd 2026).
           Source unique de social proof publique : on a retiré la section
           RealTestimonials (avis internes /avis) car elle dupliquait la
           preuve sociale et les avis Google avec badge "G" sont plus
