@@ -6,7 +6,7 @@ import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import { createServiceRoleClient } from "@/lib/supabase/server";
 import { AID_DATE, whatsappUrl } from "@/lib/constants";
-import { cn } from "@/lib/utils";
+import { cn, orderRef } from "@/lib/utils";
 import type { Order } from "@/types";
 
 export const dynamic = "force-dynamic";
@@ -156,7 +156,7 @@ export default async function OrderTrackingPage({
         ? "Pour votre famille"
         : "En sadaqa";
 
-  const ref = `QRB-2026-${typed.id.slice(0, 4).toUpperCase()}`;
+  const ref = orderRef(typed.id);
 
   return (
     <>
