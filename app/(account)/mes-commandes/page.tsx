@@ -6,7 +6,7 @@ import { motion } from "framer-motion";
 import { Package, Download, Video, LogOut, Check } from "lucide-react";
 import Header from "@/components/layout/Header";
 import Button from "@/components/ui/Button";
-import { cn } from "@/lib/utils";
+import { cn, orderRef } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
 import type { Order } from "@/types";
 
@@ -69,7 +69,7 @@ function StatusTimeline({ status }: { status: string }) {
 /* ── Order Card ── */
 function OrderCard({ order }: { order: Order }) {
   const status = STATUS_MAP[order.payment_status] || STATUS_MAP.pending;
-  const orderNum = `QRB-2026-${String(order.id).slice(0, 4).toUpperCase()}`;
+  const orderNum = orderRef(order.id);
 
   return (
     <motion.div

@@ -16,6 +16,7 @@ const NAV_LINKS = [
   { label: "Nos actions", href: "/impact" },
   { label: "Blog", href: "/blog" },
   { label: "FAQ", href: "#faq" },
+  { label: "Ma vidéo", href: "/ma-video" },
 ];
 
 const SECTION_IDS = ["comment-ca-marche", "temoignages", "faq"];

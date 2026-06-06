@@ -16,8 +16,29 @@ export function getBaseUrl(): string {
   return process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
 }
 
+// Référence client lisible : QRB-2026-<8 hex du uuid>. 8 caractères ≈
+// 4,3 milliards de combinaisons → non énumérable sur une page publique
+// (recherche vidéo par email + numéro). Avant 2026-06 : 4 caractères ;
+// les confirmations déjà envoyées avec un ref à 4 car. restent reconnues
+// par parseOrderReference (préfixe du même uuid).
 export function orderRef(orderId: string): string {
-  return `QRB-2026-${orderId.slice(0, 4).toUpperCase()}`;
+  return `QRB-2026-${orderId.replace(/-/g, "").slice(0, 8).toUpperCase()}`;
+}
+
+/**
+ * Normalise une référence saisie librement par un client en préfixe hex du
+ * uuid de commande. Tolère « QRB-2026-ABCD1234 », « qrb2026abcd1234 »,
+ * « ABCD1234 », espaces et tirets. Retourne le préfixe en minuscule (8 car.
+ * = format courant, 4 car. = legacy confirmations < 2026-06) pour matcher
+ * `order.id`, ou null si la saisie est inexploitable.
+ */
+export function parseOrderReference(input: string | null | undefined): string | null {
+  if (!input) return null;
+  const cleaned = input.trim().toUpperCase().replace(/[^A-Z0-9]/g, "");
+  const code = cleaned.replace(/^QRB\d{0,4}/, "");
+  if (/^[0-9A-F]{8}/.test(code)) return code.slice(0, 8).toLowerCase();
+  if (/^[0-9A-F]{4}$/.test(code)) return code.toLowerCase();
+  return null;
 }
 
 /**

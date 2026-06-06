@@ -147,7 +147,7 @@ function stepItem(num: string, title: string, text: string): string {
 
 /* ── Helper: référence commande ── */
 function orderRef(order: Order): string {
-  return `QRB-2026-${order.id.slice(0, 4).toUpperCase()}`;
+  return `QRB-2026-${order.id.replace(/-/g, "").slice(0, 8).toUpperCase()}`;
 }
 
 /* ── Helper: bloc parrainage (email confirmation) ── */
